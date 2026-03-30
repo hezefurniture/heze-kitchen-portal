@@ -90,6 +90,13 @@ model OrderItem {
   @@index([barcode, orderId])
 }
 
+model AppSettings {
+  id        String  @id @default("singleton")
+  navLogo   String? // base64 encoded image for header navigation
+  mainLogo  String? // base64 encoded image for login/dashboard pages
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
 model ScanLog {
   id          String   @id @default(cuid())
   orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
