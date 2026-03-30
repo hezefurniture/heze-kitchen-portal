@@ -12,7 +12,7 @@ interface OrderSummary {
   scannedQty: number;
 }
 
-export default function InStockPage() {
+export default function ToBookPage() {
   const params = useParams();
   const slug = params.slug as string;
   const [orders, setOrders] = useState<OrderSummary[]>([]);
@@ -22,7 +22,7 @@ export default function InStockPage() {
   const [editError, setEditError] = useState("");
 
   const loadOrders = useCallback(async () => {
-    const res = await fetch(`/api/orders?slug=${slug}&status=IN_STOCK`);
+    const res = await fetch(`/api/orders?slug=${slug}&status=PENDING`);
     const data = await res.json();
     if (data.orders) setOrders(data.orders);
     setLoading(false);
@@ -31,7 +31,7 @@ export default function InStockPage() {
   useEffect(() => { loadOrders(); }, [loadOrders]);
 
   const handleDelete = async (id: string, orderNumber: string) => {
-    if (!confirm(`Are you sure you want to remove order ${orderNumber}? This will delete the order and all its scan data.`)) return;
+    if (!confirm(`Are you sure you want to remove order ${orderNumber}? This will delete the order and all its data.`)) return;
     const res = await fetch(`/api/orders/${id}`, { method: "DELETE" });
     if (res.ok) loadOrders();
   };
@@ -65,15 +65,21 @@ export default function InStockPage() {
 
   return (
     <div className="flex flex-col items-center pt-8 px-4">
-      <h1 className="text-4xl font-black text-white mb-2">Kitchens In Stock</h1>
-      <p className="text-white/80 mb-8 text-lg">Fully scanned kitchens ready for despatch</p>
+      <h1 className="text-4xl font-black text-white mb-2">Kitchens to Book</h1>
+      <p className="text-white/80 mb-8 text-lg">Scan items to confirm delivery and move to stock</p>
 
       <div className="w-full max-w-4xl space-y-4">
         {orders.length === 0 && (
-          <p className="text-white/60 text-center text-lg mt-12">No kitchens in stock. Upload a delivery to get started.</p>
+          <div className="text-center mt-12">
+            <p className="text-white/60 text-lg mb-4">No kitchens waiting to be booked.</p>
+            <Link href={`/supplier/${slug}/delivery`} className="px-8 py-3 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition">
+              Upload New Delivery
+            </Link>
+          </div>
         )}
 
         {orders.map((order) => {
+          const progress = order.totalQty > 0 ? Math.round((order.scannedQty / order.totalQty) * 100) : 0;
           const isEditing = editingId === order.id;
 
           return (
@@ -99,18 +105,22 @@ export default function InStockPage() {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-scan-green rounded flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
+                  <div className="w-12 h-12 bg-amber-500 rounded flex items-center justify-center">
+                    <span className="text-white font-black text-lg">{progress}%</span>
                   </div>
                   <div>
                     <h3 className="text-xl font-black text-white">ORDER: {order.orderNumber}</h3>
-                    <p className="text-white/70 text-sm">DELIVERED {order.scannedQty}/{order.totalQty}</p>
+                    <p className="text-white/70 text-sm">SCANNED {order.scannedQty}/{order.totalQty}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Link href={`/supplier/${slug}/in-stock/${order.id}/despatch`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-6 py-3 rounded transition text-lg">Despatch</Link>
-                  <Link href={`/supplier/${slug}/in-stock/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-6 py-3 rounded transition text-lg">View</Link>
+                  <Link href={`/supplier/${slug}/to-book/${order.id}/scan`} className="bg-accent hover:bg-accent-light text-white font-bold px-6 py-3 rounded transition text-lg">
+                    Scan
+                  </Link>
+                  <Link href={`/supplier/${slug}/in-stock/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-6 py-3 rounded transition text-lg">
+                    View
+                  </Link>
                   <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white p-3 rounded transition" title="Edit order number">
                     <EditIcon />
                   </button>

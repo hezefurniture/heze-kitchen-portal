@@ -29,10 +29,9 @@ export default function FinishedPage() {
       <h1 className="text-4xl font-black text-white mb-6">Finished</h1>
 
       <div className="text-center text-white/80 text-lg max-w-md leading-relaxed">
-        <p>Kitchens have been moved to &ldquo;Kitchens in Stock&rdquo; tab.</p>
+        <p>All items have been scanned and moved to &ldquo;Kitchens In Stock&rdquo;.</p>
         <p className="mt-2">
-          Use that tab to despatch the kitchen when packing the kitchen
-          when it leaves our warehouse.
+          Use that tab to despatch the kitchen when it leaves the warehouse.
         </p>
       </div>
 
@@ -44,10 +43,10 @@ export default function FinishedPage() {
           Go to Kitchens In Stock
         </Link>
         <Link
-          href={`/supplier/${slug}/delivery`}
+          href={`/supplier/${slug}/to-book`}
           className="px-8 py-3 rounded border-2 border-white text-white font-bold text-lg hover:bg-white/10 transition"
         >
-          New Delivery
+          Back to Kitchens to Book
         </Link>
       </div>
     </div>

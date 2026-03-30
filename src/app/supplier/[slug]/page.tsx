@@ -5,5 +5,5 @@ export default function SupplierPage({
 }: {
   params: { slug: string };
 }) {
-  redirect(`/supplier/${params.slug}/in-stock`);
+  redirect(`/supplier/${params.slug}/to-book`);
 }

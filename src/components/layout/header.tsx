@@ -52,7 +52,7 @@ export function Header() {
           </div>
         </div>
 
-        <nav className="flex items-center gap-8">
+        <nav className="flex items-center gap-6">
           <Link
             href={`/supplier/${slug}/delivery`}
             className={`text-lg font-bold px-4 py-1 rounded transition ${
@@ -62,9 +62,17 @@ export function Header() {
             New Delivery
           </Link>
           <Link
+            href={`/supplier/${slug}/to-book`}
+            className={`text-lg font-bold px-4 py-1 rounded transition ${
+              isActive("/to-book") ? "bg-white/20 border border-white" : "border border-transparent hover:border-white/30"
+            }`}
+          >
+            Kitchens to Book
+          </Link>
+          <Link
             href={`/supplier/${slug}/in-stock`}
-            className={`text-lg font-bold transition ${
-              isActive("/in-stock") ? "underline underline-offset-4" : "hover:underline hover:underline-offset-4"
+            className={`text-lg font-bold px-4 py-1 rounded transition ${
+              isActive("/in-stock") ? "bg-white/20 border border-white" : "border border-transparent hover:border-white/30"
             }`}
           >
             Kitchens In Stock

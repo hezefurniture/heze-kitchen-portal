@@ -3,9 +3,22 @@
 import { useState, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 
+interface ParsedRow {
+  itemName: string;
+  barcode: string;
+  quantity: number;
+  orderNumber: string;
+}
+
 interface ParsedFile {
   name: string;
-  rows: { itemName: string; barcode: string; quantity: number; orderNumber: string }[];
+  rows: ParsedRow[];
+}
+
+interface OrderGroup {
+  orderNumber: string;
+  editedOrderNumber: string;
+  items: { itemName: string; barcode: string; quantity: number }[];
 }
 
 export default function DeliveryUploadPage() {
@@ -16,6 +29,8 @@ export default function DeliveryUploadPage() {
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [reviewStep, setReviewStep] = useState(false);
+  const [orderGroups, setOrderGroups] = useState<OrderGroup[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const parseFile = useCallback((file: File): Promise<ParsedFile> => {
@@ -23,14 +38,13 @@ export default function DeliveryUploadPage() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const text = e.target?.result as string;
-        // Dynamic import papaparse on client
         import("papaparse").then((Papa) => {
           const result = Papa.default.parse(text, {
             header: true,
             skipEmptyLines: true,
             transformHeader: (h: string) => h.trim(),
           });
-          const rows: ParsedFile["rows"] = [];
+          const rows: ParsedRow[] = [];
           for (const row of result.data as Record<string, string>[]) {
             const itemName = (
               row["Item Name"] || row["item name"] || row["ItemName"] || row["item_name"] || ""
@@ -83,13 +97,43 @@ export default function DeliveryUploadPage() {
     [handleFiles]
   );
 
+  const handleReview = () => {
+    const allRows = files.flatMap((f) => f.rows);
+    const groupMap = new Map<string, { itemName: string; barcode: string; quantity: number }[]>();
+    for (const row of allRows) {
+      const items = groupMap.get(row.orderNumber) || [];
+      const existing = items.find((i) => i.barcode === row.barcode);
+      if (existing) {
+        existing.quantity += row.quantity;
+      } else {
+        items.push({ itemName: row.itemName, barcode: row.barcode, quantity: row.quantity });
+      }
+      groupMap.set(row.orderNumber, items);
+    }
+    const groups: OrderGroup[] = [];
+    for (const [orderNumber, items] of groupMap) {
+      groups.push({ orderNumber, editedOrderNumber: orderNumber, items });
+    }
+    setOrderGroups(groups);
+    setReviewStep(true);
+  };
+
   const handleUpload = async () => {
-    if (files.length === 0) return;
     setUploading(true);
     setError("");
 
-    // Merge all rows
-    const allRows = files.flatMap((f) => f.rows);
+    // Build rows with edited order numbers
+    const allRows: ParsedRow[] = [];
+    for (const group of orderGroups) {
+      for (const item of group.items) {
+        allRows.push({
+          itemName: item.itemName,
+          barcode: item.barcode,
+          quantity: item.quantity,
+          orderNumber: group.editedOrderNumber.trim() || group.orderNumber,
+        });
+      }
+    }
 
     try {
       const res = await fetch("/api/delivery", {
@@ -103,8 +147,7 @@ export default function DeliveryUploadPage() {
         throw new Error(data.error || "Upload failed");
       }
 
-      const data = await res.json();
-      router.push(`/supplier/${slug}/delivery/${data.deliveryId}/scan`);
+      router.push(`/supplier/${slug}/to-book`);
     } catch (err: any) {
       setError(err.message);
       setUploading(false);
@@ -114,9 +157,70 @@ export default function DeliveryUploadPage() {
   const totalOrders = new Set(files.flatMap((f) => f.rows.map((r) => r.orderNumber))).size;
   const totalItems = files.reduce((sum, f) => sum + f.rows.length, 0);
 
+  if (reviewStep) {
+    return (
+      <div className="flex flex-col items-center pt-12 px-4">
+        <h1 className="text-4xl font-black text-white mb-2">Review Orders</h1>
+        <p className="text-white/80 mb-8 text-lg">
+          Review and edit order numbers before uploading
+        </p>
+
+        <div className="w-full max-w-3xl space-y-4">
+          {orderGroups.map((group, idx) => (
+            <div key={idx} className="bg-card rounded-lg px-6 py-4">
+              <div className="flex items-center gap-4 mb-3">
+                <label className="text-white/70 text-sm font-bold whitespace-nowrap">Order Number:</label>
+                <input
+                  type="text"
+                  value={group.editedOrderNumber}
+                  onChange={(e) => {
+                    const updated = [...orderGroups];
+                    updated[idx].editedOrderNumber = e.target.value;
+                    setOrderGroups(updated);
+                  }}
+                  className="flex-1 px-3 py-2 rounded bg-white text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+              </div>
+              <div className="text-white/60 text-sm">
+                {group.items.length} item{group.items.length !== 1 ? "s" : ""} &middot;{" "}
+                {group.items.reduce((s, i) => s + i.quantity, 0)} total qty
+              </div>
+              <div className="mt-2 space-y-1">
+                {group.items.map((item, i) => (
+                  <div key={i} className="text-white/50 text-xs flex justify-between px-2">
+                    <span>{item.itemName}</span>
+                    <span>x{item.quantity}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          {error && <p className="text-red-300 text-sm">{error}</p>}
+
+          <div className="flex gap-4 mt-4">
+            <button
+              onClick={() => setReviewStep(false)}
+              className="flex-1 py-3 rounded border-2 border-white text-white font-bold text-lg hover:bg-white/10 transition"
+            >
+              Back
+            </button>
+            <button
+              onClick={handleUpload}
+              disabled={uploading}
+              className="flex-1 py-3 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition disabled:opacity-50"
+            >
+              {uploading ? "Processing..." : "Upload"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col items-center pt-12 px-4">
-      <h1 className="text-4xl font-black text-white mb-2">Step 1</h1>
+      <h1 className="text-4xl font-black text-white mb-2">New Delivery</h1>
       <p className="text-white/80 mb-8 text-lg">
         Upload your files to create new kitchen delivery in the warehouse
       </p>
@@ -178,11 +282,10 @@ export default function DeliveryUploadPage() {
           {error && <p className="text-red-300 text-sm">{error}</p>}
 
           <button
-            onClick={handleUpload}
-            disabled={uploading}
-            className="w-full py-3 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition mt-4 disabled:opacity-50"
+            onClick={handleReview}
+            className="w-full py-3 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition mt-4"
           >
-            {uploading ? "Processing..." : "Upload & Start Scanning"}
+            Review & Upload
           </button>
         </div>
       )}
