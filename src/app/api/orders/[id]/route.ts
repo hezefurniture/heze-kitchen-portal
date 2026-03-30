@@ -23,3 +23,70 @@ export async function GET(
 
   return NextResponse.json(order);
 }
+
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { orderNumber } = await req.json();
+  if (!orderNumber || !orderNumber.trim()) {
+    return NextResponse.json({ error: "Order number is required" }, { status: 400 });
+  }
+
+  const order = await prisma.order.findUnique({ where: { id: params.id } });
+  if (!order) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  // Check for duplicate order number within same supplier
+  const duplicate = await prisma.order.findFirst({
+    where: {
+      supplierId: order.supplierId,
+      orderNumber: orderNumber.trim(),
+      id: { not: params.id },
+    },
+  });
+  if (duplicate) {
+    return NextResponse.json({ error: "Order number already exists for this supplier" }, { status: 400 });
+  }
+
+  const updated = await prisma.order.update({
+    where: { id: params.id },
+    data: { orderNumber: orderNumber.trim() },
+  });
+
+  return NextResponse.json(updated);
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const order = await prisma.order.findUnique({
+    where: { id: params.id },
+    include: { items: { include: { scanLogs: true } } },
+  });
+
+  if (!order) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  // Delete in order: scan logs -> order items -> order
+  for (const item of order.items) {
+    await prisma.scanLog.deleteMany({ where: { orderItemId: item.id } });
+  }
+  await prisma.orderItem.deleteMany({ where: { orderId: params.id } });
+  await prisma.order.delete({ where: { id: params.id } });
+
+  return NextResponse.json({ success: true });
+}

@@ -21,6 +21,9 @@ export default function ArchivePage() {
   const [filterOrderId, setFilterOrderId] = useState("");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [editError, setEditError] = useState("");
 
   const loadOrders = useCallback(async () => {
     const res = await fetch(`/api/orders?slug=${slug}&status=DESPATCHED`);
@@ -29,32 +32,53 @@ export default function ArchivePage() {
     setLoading(false);
   }, [slug]);
 
-  useEffect(() => {
+  useEffect(() => { loadOrders(); }, [loadOrders]);
+
+  const handleDelete = async (id: string, orderNumber: string) => {
+    if (!confirm(`Are you sure you want to remove archived order ${orderNumber}? This will permanently delete all data for this order.`)) return;
+    const res = await fetch(`/api/orders/${id}`, { method: "DELETE" });
+    if (res.ok) loadOrders();
+  };
+
+  const handleEditStart = (order: OrderSummary) => {
+    setEditingId(order.id);
+    setEditValue(order.orderNumber);
+    setEditError("");
+  };
+
+  const handleEditSave = async () => {
+    if (!editingId) return;
+    setEditError("");
+    const res = await fetch(`/api/orders/${editingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderNumber: editValue }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      setEditError(data.error || "Failed to update");
+      return;
+    }
+    setEditingId(null);
     loadOrders();
-  }, [loadOrders]);
+  };
 
   const filteredOrders = orders.filter((o) => {
-    if (filterOrderId && !o.orderNumber.toLowerCase().includes(filterOrderId.toLowerCase())) {
-      return false;
-    }
+    if (filterOrderId && !o.orderNumber.toLowerCase().includes(filterOrderId.toLowerCase())) return false;
     if (filterDateFrom && o.despatchedAt) {
-      const d = new Date(o.despatchedAt);
-      const from = new Date(filterDateFrom);
-      if (d < from) return false;
+      if (new Date(o.despatchedAt) < new Date(filterDateFrom)) return false;
     }
     if (filterDateTo && o.despatchedAt) {
-      const d = new Date(o.despatchedAt);
       const to = new Date(filterDateTo);
       to.setHours(23, 59, 59);
-      if (d > to) return false;
+      if (new Date(o.despatchedAt) > to) return false;
     }
     return true;
   });
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "-";
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-GB");
+    return new Date(dateStr).toLocaleDateString("en-GB");
   };
 
   return (
@@ -64,72 +88,69 @@ export default function ArchivePage() {
         <span className="text-white font-black text-xl">FILTER</span>
         <div className="flex flex-col">
           <label className="text-white text-xs font-bold mb-1">Order ID</label>
-          <input
-            type="text"
-            placeholder="SQ-2424"
-            value={filterOrderId}
-            onChange={(e) => setFilterOrderId(e.target.value)}
-            className="px-3 py-2 rounded bg-white text-gray-800 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-accent"
-          />
+          <input type="text" placeholder="SQ-2424" value={filterOrderId} onChange={(e) => setFilterOrderId(e.target.value)}
+            className="px-3 py-2 rounded bg-white text-gray-800 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-accent" />
         </div>
         <div className="flex flex-col">
           <label className="text-white text-xs font-bold mb-1">Despatch Time Range</label>
           <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={filterDateFrom}
-              onChange={(e) => setFilterDateFrom(e.target.value)}
-              className="px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
+            <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)}
+              className="px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
             <span className="text-white">-</span>
-            <input
-              type="date"
-              value={filterDateTo}
-              onChange={(e) => setFilterDateTo(e.target.value)}
-              className="px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
+            <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)}
+              className="px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
           </div>
         </div>
       </div>
 
       {/* Orders list */}
       <div className="w-full max-w-5xl space-y-3">
-        {loading && (
-          <p className="text-white text-center text-xl mt-12">Loading...</p>
-        )}
-
-        {!loading && filteredOrders.length === 0 && (
-          <p className="text-white/60 text-center text-lg mt-12">
-            No despatched orders found.
-          </p>
-        )}
+        {loading && <p className="text-white text-center text-xl mt-12">Loading...</p>}
+        {!loading && filteredOrders.length === 0 && <p className="text-white/60 text-center text-lg mt-12">No despatched orders found.</p>}
 
         {filteredOrders.map((order) => (
-          <div
-            key={order.id}
-            className="bg-card rounded-lg px-6 py-4 flex items-center justify-between fade-in"
-          >
-            <div className="flex items-center gap-8">
-              <h3 className="text-lg font-black text-white min-w-[200px]">
-                ORDER: {order.orderNumber}
-              </h3>
-              <span className="text-white/80 text-sm">
-                Despatched: {formatDate(order.despatchedAt)}
-              </span>
-              <span className="text-white/80 text-sm">
-                Packer: {order.despatchedBy || "-"}
-              </span>
-            </div>
+          <div key={order.id} className="bg-card rounded-lg px-6 py-4 fade-in">
+            {editingId === order.id && (
+              <div className="mb-4 bg-white/10 rounded-lg p-4">
+                <label className="text-white text-sm font-bold block mb-2">Change Order Number</label>
+                <div className="flex gap-2">
+                  <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleEditSave(); if (e.key === "Escape") setEditingId(null); }}
+                    className="flex-1 px-3 py-2 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-accent" autoFocus />
+                  <button onClick={handleEditSave} className="px-4 py-2 bg-accent text-white font-bold rounded hover:bg-accent-light transition">Save</button>
+                  <button onClick={() => setEditingId(null)} className="px-4 py-2 border border-white text-white font-bold rounded hover:bg-white/10 transition">Cancel</button>
+                </div>
+                {editError && <p className="text-red-300 text-sm mt-2">{editError}</p>}
+              </div>
+            )}
 
-            <Link
-              href={`/supplier/${slug}/archive/${order.id}`}
-              className="bg-card-light hover:bg-gray-500 text-white font-bold px-6 py-2 rounded transition"
-            >
-              View
-            </Link>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-8">
+                <h3 className="text-lg font-black text-white min-w-[200px]">ORDER: {order.orderNumber}</h3>
+                <span className="text-white/80 text-sm">Despatched: {formatDate(order.despatchedAt)}</span>
+                <span className="text-white/80 text-sm">Packer: {order.despatchedBy || "-"}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link href={`/supplier/${slug}/archive/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-6 py-2 rounded transition">View</Link>
+                <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white p-2 rounded transition" title="Edit order number">
+                  <EditIcon />
+                </button>
+                <button onClick={() => handleDelete(order.id, order.orderNumber)} className="bg-red-600/80 hover:bg-red-600 text-white p-2 rounded transition" title="Remove order">
+                  <TrashIcon />
+                </button>
+              </div>
+            </div>
           </div>
         ))}
       </div>
     </div>
   );
+}
+
+function EditIcon() {
+  return <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>;
+}
+
+function TrashIcon() {
+  return <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,6 5,6 21,6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>;
 }

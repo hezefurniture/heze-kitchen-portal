@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { playSuccessSound, playErrorSound, isSoundEnabled, setSoundEnabled } from "@/lib/sounds";
 
 interface OrderItem {
   id: string;
@@ -39,6 +40,9 @@ export default function ScanPage() {
   const [supplierId, setSupplierId] = useState<string>("");
   const [scanBuffer, setScanBuffer] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+
+  useEffect(() => { setSoundOn(isSoundEnabled()); }, []);
 
   // Get supplier ID
   useEffect(() => {
@@ -86,8 +90,11 @@ export default function ScanPage() {
     setLastScan(result);
 
     if (result.matched) {
+      if (soundOn) playSuccessSound();
       setShowConfirmation(true);
       setTimeout(() => setShowConfirmation(false), 2000);
+    } else {
+      if (soundOn) playErrorSound();
     }
 
     await loadOrders();
@@ -104,14 +111,11 @@ export default function ScanPage() {
     router.push(`/supplier/${slug}/delivery/${deliveryId}/finished`);
   };
 
-  const totalItems = orders.reduce(
-    (sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0),
-    0
-  );
-  const totalScanned = orders.reduce(
-    (sum, o) => sum + o.items.reduce((s, i) => s + i.scannedQty, 0),
-    0
-  );
+  const toggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setSoundEnabled(next);
+  };
 
   return (
     <div className="flex flex-col items-center pt-8 px-4 relative">
@@ -138,7 +142,12 @@ export default function ScanPage() {
         autoFocus
       />
 
-      <h1 className="text-4xl font-black text-white mb-2">Step 2</h1>
+      <div className="flex items-center gap-4 mb-2">
+        <h1 className="text-4xl font-black text-white">Step 2</h1>
+        <button onClick={toggleSound} className="text-white/70 hover:text-white transition" title={soundOn ? "Mute sounds" : "Unmute sounds"}>
+          {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
+        </button>
+      </div>
       <p className="text-white/80 mb-8 text-lg">
         Scan the items to accept kitchens to the warehouse
       </p>
@@ -238,19 +247,26 @@ export default function ScanPage() {
 
 function ChevronIcon({ expanded }: { expanded: boolean }) {
   return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="28"
-      height="28"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="white"
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={`transition-transform ${expanded ? "rotate-180" : ""}`}
-    >
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${expanded ? "rotate-180" : ""}`}>
       <polyline points="6,9 12,15 18,9" />
+    </svg>
+  );
+}
+
+function SoundOnIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
+      <path d="M19.07 4.93a10 10 0 0 1 0 14.14" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+    </svg>
+  );
+}
+
+function SoundOffIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polygon points="11,5 6,9 2,9 2,15 6,15 11,19" />
+      <line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" />
     </svg>
   );
 }
