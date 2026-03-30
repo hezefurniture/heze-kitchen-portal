@@ -1,0 +1,25 @@
+{
+  "name": "Kitchens Portal - Heze Furniture",
+  "short_name": "Kitchens Portal",
+  "description": "Kitchen warehouse barcode scanning portal",
+  "start_url": "/login",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#7B2D5F",
+  "theme_color": "#7B2D5F",
+  "categories": ["business", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
