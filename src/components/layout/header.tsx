@@ -27,7 +27,6 @@ export function Header() {
       .catch(() => {});
   }, []);
 
-  // Close menu on route change
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   const isActive = (path: string) => pathname?.includes(path);
@@ -41,66 +40,69 @@ export function Header() {
 
   return (
     <>
-      <header className="bg-header text-white flex items-center justify-between px-3 py-2 sticky top-0 z-50">
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          <Link href="/dashboard" className="flex items-center gap-2 shrink-0">
-            {navLogo ? (
-              <img src={navLogo} alt="Logo" className="h-8 max-w-[100px] sm:max-w-[150px] object-contain" />
-            ) : (
-              <span className="text-xs font-bold leading-tight">
-                <span className="text-[10px]">KITCHENS</span><br />
-                <span className="text-lg font-black">PORTAL</span>
+      <header className="bg-header text-white sticky top-0 z-50">
+        <div className="flex items-center justify-between px-3 py-2">
+          {/* Left: logo + supplier */}
+          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+            <Link href="/dashboard" className="shrink-0">
+              {navLogo ? (
+                <img src={navLogo} alt="Logo" className="h-8 max-w-[120px] object-contain" />
+              ) : (
+                <span className="text-xs font-bold leading-tight block">
+                  <span className="text-[10px]">KITCHENS</span><br />
+                  <span className="text-lg font-black">PORTAL</span>
+                </span>
+              )}
+            </Link>
+            <div className="flex flex-col shrink-0">
+              <span className="bg-white text-gray-800 text-[10px] px-2 py-0.5 rounded font-bold text-center">
+                {supplierName}
               </span>
-            )}
-          </Link>
-          <div className="flex flex-col ml-1 sm:ml-4">
-            <span className="bg-white text-gray-800 text-[10px] sm:text-xs px-2 sm:px-3 py-0.5 rounded font-bold text-center truncate max-w-[100px] sm:max-w-none">
-              {supplierName}
-            </span>
-            <Link href="/dashboard" className="text-yellow-400 text-[10px] hover:underline text-center">
-              change &gt;
-            </Link>
+              <Link href="/dashboard" className="text-yellow-400 text-[10px] hover:underline text-center">
+                change &gt;
+              </Link>
+            </div>
           </div>
+
+          {/* Desktop nav */}
+          <nav className="hidden lg:flex items-center gap-3">
+            {navLinks.map((link) => (
+              <Link
+                key={link.key}
+                href={link.href}
+                className={`text-sm font-bold px-3 py-1 rounded transition whitespace-nowrap ${
+                  isActive(link.key) ? "bg-white/20 border border-white" : "border border-transparent hover:border-white/30"
+                }`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Mobile hamburger */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="lg:hidden p-2 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Menu"
+          >
+            {menuOpen ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            )}
+          </button>
         </div>
-
-        {/* Desktop nav */}
-        <nav className="hidden lg:flex items-center gap-4">
-          {navLinks.map((link) => (
-            <Link
-              key={link.key}
-              href={link.href}
-              className={`text-base font-bold px-3 py-1 rounded transition ${
-                isActive(link.key) ? "bg-white/20 border border-white" : "border border-transparent hover:border-white/30"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        {/* Mobile hamburger */}
-        <button
-          onClick={() => setMenuOpen(!menuOpen)}
-          className="lg:hidden p-2 -mr-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
-          aria-label="Menu"
-        >
-          {menuOpen ? (
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-          )}
-        </button>
       </header>
 
       {/* Mobile dropdown menu */}
       {menuOpen && (
-        <div className="lg:hidden fixed top-[48px] left-0 right-0 bg-header border-t border-white/10 z-50 shadow-xl">
+        <div className="lg:hidden fixed top-[52px] left-0 right-0 bg-header z-50 shadow-xl border-t border-white/10">
           <nav className="flex flex-col">
             {navLinks.map((link) => (
               <Link
                 key={link.key}
                 href={link.href}
-                className={`text-lg font-bold px-6 py-4 border-b border-white/10 transition ${
+                className={`text-lg font-bold px-6 py-4 border-b border-white/10 ${
                   isActive(link.key) ? "bg-white/20 text-white" : "text-white/90 active:bg-white/10"
                 }`}
               >
@@ -112,10 +114,9 @@ export function Header() {
       )}
 
       {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-200 px-3 sm:px-6 py-2 flex justify-between items-center text-gray-700 text-xs sm:text-sm z-50">
-        <span className="truncate">User: {(session?.user as any)?.username || session?.user?.name || "..."}</span>
-        <span className="font-medium hidden sm:inline">Heze Furniture 2026</span>
-        <div className="flex gap-3 sm:gap-4 shrink-0">
+      <div className="fixed bottom-0 left-0 right-0 bg-gray-200 px-3 py-2 flex justify-between items-center text-gray-700 text-xs z-50">
+        <span className="truncate mr-2">User: {(session?.user as any)?.username || session?.user?.name || "..."}</span>
+        <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={() => signOut({ callbackUrl: "/login" })}
             className="flex items-center gap-1 hover:text-gray-900 min-h-[44px]"
@@ -123,7 +124,7 @@ export function Header() {
             <LogoutIcon /> <span className="font-bold">Logout</span>
           </button>
           <Link href={`/admin/users`} className="flex items-center gap-1 hover:text-gray-900 min-h-[44px]">
-            <SettingsIcon /> <span className="font-bold hidden sm:inline">Settings</span>
+            <SettingsIcon />
           </Link>
         </div>
       </div>

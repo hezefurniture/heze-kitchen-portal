@@ -82,23 +82,25 @@ export default function ArchivePage() {
   };
 
   return (
-    <div className="flex flex-col items-center pt-4 px-4">
+    <div className="flex flex-col items-center pt-4 px-3 pb-20">
       {/* Filter bar */}
-      <div className="w-full max-w-5xl bg-gray-600 rounded-lg px-6 py-4 flex items-center gap-6 mb-6">
-        <span className="text-white font-black text-xl">FILTER</span>
-        <div className="flex flex-col">
-          <label className="text-white text-xs font-bold mb-1">Order ID</label>
-          <input type="text" placeholder="SQ-2424" value={filterOrderId} onChange={(e) => setFilterOrderId(e.target.value)}
-            className="px-3 py-2 rounded bg-white text-gray-800 text-sm w-48 focus:outline-none focus:ring-2 focus:ring-accent" />
-        </div>
-        <div className="flex flex-col">
-          <label className="text-white text-xs font-bold mb-1">Despatch Time Range</label>
-          <div className="flex items-center gap-2">
-            <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)}
-              className="px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
-            <span className="text-white">-</span>
-            <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)}
-              className="px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+      <div className="w-full max-w-5xl bg-gray-600 rounded-lg px-3 sm:px-6 py-3 sm:py-4 mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-6">
+          <span className="text-white font-black text-lg sm:text-xl">FILTER</span>
+          <div className="flex flex-col">
+            <label className="text-white text-xs font-bold mb-1">Order ID</label>
+            <input type="text" placeholder="SQ-2424" value={filterOrderId} onChange={(e) => setFilterOrderId(e.target.value)}
+              className="px-3 py-2 rounded bg-white text-gray-800 text-sm w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-accent" />
+          </div>
+          <div className="flex flex-col">
+            <label className="text-white text-xs font-bold mb-1">Despatch Date Range</label>
+            <div className="flex items-center gap-2">
+              <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)}
+                className="px-2 sm:px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent flex-1 min-w-0" />
+              <span className="text-white">-</span>
+              <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)}
+                className="px-2 sm:px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent flex-1 min-w-0" />
+            </div>
           </div>
         </div>
       </div>
@@ -109,36 +111,39 @@ export default function ArchivePage() {
         {!loading && filteredOrders.length === 0 && <p className="text-white/60 text-center text-lg mt-12">No despatched orders found.</p>}
 
         {filteredOrders.map((order) => (
-          <div key={order.id} className="bg-card rounded-lg px-6 py-4 fade-in">
+          <div key={order.id} className="bg-card rounded-lg px-3 sm:px-5 py-3 sm:py-4 fade-in">
             {editingId === order.id && (
-              <div className="mb-4 bg-white/10 rounded-lg p-4">
+              <div className="mb-3 bg-white/10 rounded-lg p-3">
                 <label className="text-white text-sm font-bold block mb-2">Change Order Number</label>
+                <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") handleEditSave(); if (e.key === "Escape") setEditingId(null); }}
+                  className="w-full px-3 py-2 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-accent mb-2" autoFocus />
                 <div className="flex gap-2">
-                  <input type="text" value={editValue} onChange={(e) => setEditValue(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleEditSave(); if (e.key === "Escape") setEditingId(null); }}
-                    className="flex-1 px-3 py-2 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-accent" autoFocus />
-                  <button onClick={handleEditSave} className="px-4 py-2 bg-accent text-white font-bold rounded hover:bg-accent-light transition">Save</button>
-                  <button onClick={() => setEditingId(null)} className="px-4 py-2 border border-white text-white font-bold rounded hover:bg-white/10 transition">Cancel</button>
+                  <button onClick={handleEditSave} className="flex-1 py-2 bg-accent text-white font-bold rounded hover:bg-accent-light transition">Save</button>
+                  <button onClick={() => setEditingId(null)} className="flex-1 py-2 border border-white text-white font-bold rounded hover:bg-white/10 transition">Cancel</button>
                 </div>
                 {editError && <p className="text-red-300 text-sm mt-2">{editError}</p>}
               </div>
             )}
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-8">
-                <h3 className="text-lg font-black text-white min-w-[200px]">ORDER: {order.orderNumber}</h3>
-                <span className="text-white/80 text-sm">Despatched: {formatDate(order.despatchedAt)}</span>
-                <span className="text-white/80 text-sm">Packer: {order.despatchedBy || "-"}</span>
+            {/* Order info */}
+            <div className="mb-2">
+              <h3 className="text-base sm:text-lg font-black text-white truncate">ORDER: {order.orderNumber}</h3>
+              <div className="flex flex-wrap gap-x-4 text-white/70 text-xs sm:text-sm">
+                <span>Despatched: {formatDate(order.despatchedAt)}</span>
+                <span>Packer: {order.despatchedBy || "-"}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Link href={`/supplier/${slug}/archive/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-6 py-2 rounded transition">View</Link>
-                <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white p-2 rounded transition" title="Edit order number">
-                  <EditIcon />
-                </button>
-                <button onClick={() => handleDelete(order.id, order.orderNumber)} className="bg-red-600/80 hover:bg-red-600 text-white p-2 rounded transition" title="Remove order">
-                  <TrashIcon />
-                </button>
-              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex flex-wrap gap-2 sm:justify-end">
+              <Link href={`/supplier/${slug}/archive/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-4 sm:px-6 py-2 rounded transition text-sm">View</Link>
+              <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white p-2 rounded transition" title="Edit order number">
+                <EditIcon />
+              </button>
+              <button onClick={() => handleDelete(order.id, order.orderNumber)} className="bg-red-600/80 hover:bg-red-600 text-white p-2 rounded transition" title="Remove order">
+                <TrashIcon />
+              </button>
             </div>
           </div>
         ))}

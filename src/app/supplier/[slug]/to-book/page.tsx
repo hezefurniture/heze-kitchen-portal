@@ -64,20 +64,20 @@ export default function ToBookPage() {
   }
 
   return (
-    <div className="flex flex-col items-center pt-8 px-4">
-      <h1 className="text-4xl font-black text-white mb-2">Kitchens to Book</h1>
-      <p className="text-white/80 mb-4 text-lg">Scan items to confirm delivery and move to stock</p>
+    <div className="flex flex-col items-center pt-6 px-3 pb-20">
+      <h1 className="text-2xl sm:text-4xl font-black text-white mb-1 text-center">Kitchens to Book</h1>
+      <p className="text-white/80 mb-4 text-sm sm:text-lg text-center">Scan items to confirm delivery and move to stock</p>
 
       {orders.length > 0 && (
         <Link
           href={`/supplier/${slug}/to-book/scan-all`}
-          className="mb-8 px-12 py-4 rounded-lg bg-accent text-white font-black text-2xl hover:bg-accent-light transition inline-block"
+          className="mb-6 px-8 sm:px-12 py-3 sm:py-4 rounded-lg bg-accent text-white font-black text-xl sm:text-2xl hover:bg-accent-light transition text-center"
         >
           Scan All Orders
         </Link>
       )}
 
-      <div className="w-full max-w-4xl space-y-4">
+      <div className="w-full max-w-4xl space-y-3">
         {orders.length === 0 && (
           <div className="text-center mt-12">
             <p className="text-white/60 text-lg mb-4">No kitchens waiting to be booked.</p>
@@ -92,51 +92,52 @@ export default function ToBookPage() {
           const isEditing = editingId === order.id;
 
           return (
-            <div key={order.id} className="bg-card rounded-lg px-6 py-4 fade-in">
+            <div key={order.id} className="bg-card rounded-lg px-3 sm:px-5 py-3 sm:py-4 fade-in">
+              {/* Edit order number */}
               {isEditing && (
-                <div className="mb-4 bg-white/10 rounded-lg p-4">
+                <div className="mb-3 bg-white/10 rounded-lg p-3">
                   <label className="text-white text-sm font-bold block mb-2">Change Order Number</label>
+                  <input
+                    type="text"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleEditSave(); if (e.key === "Escape") setEditingId(null); }}
+                    className="w-full px-3 py-2 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-accent mb-2"
+                    autoFocus
+                  />
                   <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") handleEditSave(); if (e.key === "Escape") setEditingId(null); }}
-                      className="flex-1 px-3 py-2 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-accent"
-                      autoFocus
-                    />
-                    <button onClick={handleEditSave} className="px-4 py-2 bg-accent text-white font-bold rounded hover:bg-accent-light transition">Save</button>
-                    <button onClick={() => setEditingId(null)} className="px-4 py-2 border border-white text-white font-bold rounded hover:bg-white/10 transition">Cancel</button>
+                    <button onClick={handleEditSave} className="flex-1 py-2 bg-accent text-white font-bold rounded hover:bg-accent-light transition">Save</button>
+                    <button onClick={() => setEditingId(null)} className="flex-1 py-2 border border-white text-white font-bold rounded hover:bg-white/10 transition">Cancel</button>
                   </div>
                   {editError && <p className="text-red-300 text-sm mt-2">{editError}</p>}
                 </div>
               )}
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-amber-500 rounded flex items-center justify-center">
-                    <span className="text-white font-black text-lg">{progress}%</span>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black text-white">ORDER: {order.orderNumber}</h3>
-                    <p className="text-white/70 text-sm">SCANNED {order.scannedQty}/{order.totalQty}</p>
-                  </div>
+              {/* Order info row */}
+              <div className="flex items-center gap-3 mb-2 sm:mb-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-500 rounded flex items-center justify-center shrink-0">
+                  <span className="text-white font-black text-sm sm:text-lg">{progress}%</span>
                 </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base sm:text-xl font-black text-white truncate">ORDER: {order.orderNumber}</h3>
+                  <p className="text-white/70 text-xs sm:text-sm">SCANNED {order.scannedQty}/{order.totalQty}</p>
+                </div>
+              </div>
 
-                <div className="flex items-center gap-2">
-                  <Link href={`/supplier/${slug}/to-book/${order.id}/scan`} className="bg-accent hover:bg-accent-light text-white font-bold px-6 py-3 rounded transition text-lg">
-                    Scan
-                  </Link>
-                  <Link href={`/supplier/${slug}/in-stock/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-6 py-3 rounded transition text-lg">
-                    View
-                  </Link>
-                  <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white p-3 rounded transition" title="Edit order number">
-                    <EditIcon />
-                  </button>
-                  <button onClick={() => handleDelete(order.id, order.orderNumber)} className="bg-red-600/80 hover:bg-red-600 text-white p-3 rounded transition" title="Remove order">
-                    <TrashIcon />
-                  </button>
-                </div>
+              {/* Action buttons - wrap on mobile */}
+              <div className="flex flex-wrap gap-2 sm:justify-end">
+                <Link href={`/supplier/${slug}/to-book/${order.id}/scan`} className="bg-accent hover:bg-accent-light text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded transition text-sm sm:text-base">
+                  Scan
+                </Link>
+                <Link href={`/supplier/${slug}/in-stock/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded transition text-sm sm:text-base">
+                  View
+                </Link>
+                <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white p-2 sm:p-3 rounded transition" title="Edit order number">
+                  <EditIcon />
+                </button>
+                <button onClick={() => handleDelete(order.id, order.orderNumber)} className="bg-red-600/80 hover:bg-red-600 text-white p-2 sm:p-3 rounded transition" title="Remove order">
+                  <TrashIcon />
+                </button>
               </div>
             </div>
           );
