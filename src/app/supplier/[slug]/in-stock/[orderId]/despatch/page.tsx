@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { playSuccessSound, playErrorSound, isSoundEnabled, setSoundEnabled } from "@/lib/sounds";
+import { addToQueue } from "@/lib/offline-queue";
+import { useOnlineStatus } from "@/lib/use-online-status";
 
 interface OrderItem {
   id: string;
@@ -31,17 +33,26 @@ export default function DespatchPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  const { isOnline, queueCount, refreshQueueCount } = useOnlineStatus();
 
   useEffect(() => { setSoundOn(isSoundEnabled()); }, []);
 
   const loadOrder = useCallback(async () => {
-    const res = await fetch(`/api/orders/${orderId}`);
-    const data = await res.json();
-    setOrder(data);
-    if (data.status === "DESPATCHED") setIsComplete(true);
+    try {
+      const res = await fetch(`/api/orders/${orderId}`);
+      const data = await res.json();
+      setOrder(data);
+      if (data.status === "DESPATCHED") setIsComplete(true);
+    } catch {}
   }, [orderId]);
 
   useEffect(() => { loadOrder(); }, [loadOrder]);
+
+  useEffect(() => {
+    const handler = () => loadOrder();
+    window.addEventListener("scans-flushed", handler);
+    return () => window.removeEventListener("scans-flushed", handler);
+  }, [loadOrder]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -52,36 +63,55 @@ export default function DespatchPage() {
 
   const handleScan = async (barcode: string) => {
     if (!barcode.trim()) return;
-    const res = await fetch(`/api/orders/${orderId}/despatch`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ barcode: barcode.trim() }),
-    });
-    const result = await res.json();
-    setLastScan(result);
-    if (result.matched) {
+    const scanUrl = `/api/orders/${orderId}/despatch`;
+    const scanBody = { barcode: barcode.trim() };
+    try {
+      const res = await fetch(scanUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(scanBody),
+      });
+      const result = await res.json();
+      setLastScan(result);
+      if (result.matched) {
+        if (soundOn) playSuccessSound();
+        setShowConfirmation(true);
+        setTimeout(() => setShowConfirmation(false), 1500);
+      } else {
+        if (soundOn) playErrorSound();
+      }
+      await loadOrder();
+    } catch {
+      addToQueue(scanUrl, scanBody);
+      refreshQueueCount();
       if (soundOn) playSuccessSound();
+      setLastScan({ matched: true, itemName: barcode.trim(), orderNumber: "QUEUED" });
       setShowConfirmation(true);
       setTimeout(() => setShowConfirmation(false), 1500);
-    } else {
-      if (soundOn) playErrorSound();
     }
-    await loadOrder();
+  };
+
+  const handleManualScan = async (itemId: string, action: "increment" | "decrement") => {
+    try {
+      await fetch(`/api/orders/${orderId}/manual-scan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId, action, type: "despatch" }),
+      });
+      await loadOrder();
+    } catch {}
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") { handleScan(scanBuffer); setScanBuffer(""); }
   };
-
   const toggleSound = () => { const next = !soundOn; setSoundOn(next); setSoundEnabled(next); };
 
   if (isComplete) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[80vh]">
         <div className="w-40 h-40 rounded-full border-4 border-scan-green flex items-center justify-center mb-8">
-          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#00C853" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="20,6 9,17 4,12" />
-          </svg>
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#00C853" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
         </div>
         <h1 className="text-4xl font-black text-white mb-6">Despatch Complete</h1>
         <p className="text-white/80 text-lg mb-8">Order {order?.orderNumber} has been despatched and moved to archive.</p>
@@ -104,10 +134,20 @@ export default function DespatchPage() {
     <div className="flex flex-col items-center pt-8 px-4 relative">
       {showConfirmation && lastScan?.matched && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30" onClick={() => setShowConfirmation(false)}>
-          <div className="bg-scan-green rounded-2xl mx-4 w-full max-w-3xl py-16 flex flex-col items-center justify-center scan-flash">
-            <h2 className="text-3xl font-black text-white mb-2">DESPATCHED</h2>
-            <p className="text-xl text-white">{lastScan.itemName}</p>
-            <p className="text-lg text-white/80 mt-2">{lastScan.newScannedQty}/{lastScan.totalQty}</p>
+          <div className={`${lastScan.orderNumber === "QUEUED" ? "bg-yellow-500" : "bg-scan-green"} rounded-2xl mx-4 w-full max-w-3xl py-16 flex flex-col items-center justify-center scan-flash`}>
+            {lastScan.orderNumber === "QUEUED" ? (
+              <>
+                <h2 className="text-3xl font-black text-white mb-2">QUEUED OFFLINE</h2>
+                <p className="text-xl text-white">{lastScan.itemName}</p>
+                <p className="text-lg text-white/80 mt-2">Will sync when back online</p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-3xl font-black text-white mb-2">DESPATCHED</h2>
+                <p className="text-xl text-white">{lastScan.itemName}</p>
+                <p className="text-lg text-white/80 mt-2">{lastScan.newScannedQty}/{lastScan.totalQty}</p>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -116,9 +156,11 @@ export default function DespatchPage() {
 
       <div className="flex items-center gap-4 mb-2">
         <h1 className="text-3xl font-black text-white">Despatch: {order.orderNumber}</h1>
-        <button onClick={toggleSound} className="text-white/70 hover:text-white transition" title={soundOn ? "Mute sounds" : "Unmute sounds"}>
+        <button onClick={toggleSound} className="text-white/70 hover:text-white transition" title={soundOn ? "Mute" : "Unmute"}>
           {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
         </button>
+        {!isOnline && <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">OFFLINE</span>}
+        {queueCount > 0 && <span className="bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full">{queueCount} queued</span>}
       </div>
       <p className="text-white/80 mb-6 text-lg">Scan items to confirm despatch ({totalDespatched}/{totalQty})</p>
 
@@ -135,6 +177,7 @@ export default function DespatchPage() {
             <th className="py-3 px-4 text-center font-bold">NAME</th>
             <th className="py-3 px-4 text-center font-bold w-24">QTY</th>
             <th className="py-3 px-4 text-center font-bold w-28">DESPATCHED</th>
+            <th className="py-3 px-4 text-center font-bold w-32">MANUAL</th>
           </tr></thead>
           <tbody>
             {order.items.map((item) => {
@@ -145,6 +188,14 @@ export default function DespatchPage() {
                   <td className="py-3 px-4 text-center text-gray-800">{item.itemName}</td>
                   <td className="py-3 px-4 text-center text-gray-800">{item.quantity}</td>
                   <td className="py-3 px-4 text-center text-gray-800">{item.despatchedQty}</td>
+                  <td className="py-3 px-4 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.despatchedQty <= 0}
+                        className="w-8 h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
+                      <button onClick={() => handleManualScan(item.id, "increment")} disabled={item.despatchedQty >= item.quantity}
+                        className="w-8 h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
+                    </div>
+                  </td>
                 </tr>
               );
             })}

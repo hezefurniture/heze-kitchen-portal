@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { playSuccessSound, playErrorSound, isSoundEnabled, setSoundEnabled } from "@/lib/sounds";
+import { addToQueue } from "@/lib/offline-queue";
+import { useOnlineStatus } from "@/lib/use-online-status";
 
 interface OrderItem {
   id: string;
@@ -31,16 +33,25 @@ export default function ScanExtraPage() {
   const [lastScan, setLastScan] = useState<any>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  const { isOnline, queueCount, refreshQueueCount } = useOnlineStatus();
 
   useEffect(() => { setSoundOn(isSoundEnabled()); }, []);
 
   const loadOrder = useCallback(async () => {
-    const res = await fetch(`/api/orders/${orderId}`);
-    const data = await res.json();
-    setOrder(data);
+    try {
+      const res = await fetch(`/api/orders/${orderId}`);
+      const data = await res.json();
+      setOrder(data);
+    } catch {}
   }, [orderId]);
 
   useEffect(() => { loadOrder(); }, [loadOrder]);
+
+  useEffect(() => {
+    const handler = () => loadOrder();
+    window.addEventListener("scans-flushed", handler);
+    return () => window.removeEventListener("scans-flushed", handler);
+  }, [loadOrder]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -51,27 +62,48 @@ export default function ScanExtraPage() {
 
   const handleScan = async (barcode: string) => {
     if (!barcode.trim() || !order) return;
-    const res = await fetch("/api/scan", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ barcode: barcode.trim(), supplierId: order.supplier.id }),
-    });
-    const result = await res.json();
-    setLastScan(result);
-    if (result.matched) {
+    const scanUrl = "/api/scan";
+    const scanBody = { barcode: barcode.trim(), supplierId: order.supplier.id };
+    try {
+      const res = await fetch(scanUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(scanBody),
+      });
+      const result = await res.json();
+      setLastScan(result);
+      if (result.matched) {
+        if (soundOn) playSuccessSound();
+        setShowConfirmation(true);
+        setTimeout(() => setShowConfirmation(false), 2000);
+      } else {
+        if (soundOn) playErrorSound();
+      }
+      await loadOrder();
+    } catch {
+      addToQueue(scanUrl, scanBody);
+      refreshQueueCount();
       if (soundOn) playSuccessSound();
+      setLastScan({ matched: true, orderNumber: "QUEUED", itemName: barcode.trim() });
       setShowConfirmation(true);
       setTimeout(() => setShowConfirmation(false), 2000);
-    } else {
-      if (soundOn) playErrorSound();
     }
-    await loadOrder();
+  };
+
+  const handleManualScan = async (itemId: string, action: "increment" | "decrement") => {
+    try {
+      await fetch(`/api/orders/${orderId}/manual-scan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId, action, type: "delivery" }),
+      });
+      await loadOrder();
+    } catch {}
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") { handleScan(scanBuffer); setScanBuffer(""); }
   };
-
   const toggleSound = () => { const next = !soundOn; setSoundOn(next); setSoundEnabled(next); };
 
   if (!order) {
@@ -86,9 +118,19 @@ export default function ScanExtraPage() {
     <div className="flex flex-col items-center pt-8 px-4 relative">
       {showConfirmation && lastScan?.matched && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30" onClick={() => setShowConfirmation(false)}>
-          <div className="bg-scan-green rounded-2xl mx-4 w-full max-w-5xl h-[70vh] flex flex-col items-center justify-center scan-flash">
-            <h2 className="text-5xl font-black text-white mb-4">ORDER</h2>
-            <p className="text-[12vw] font-black text-white leading-none">{lastScan.orderNumber}</p>
+          <div className={`${lastScan.orderNumber === "QUEUED" ? "bg-yellow-500" : "bg-scan-green"} rounded-2xl mx-4 w-full max-w-5xl h-[70vh] flex flex-col items-center justify-center scan-flash`}>
+            {lastScan.orderNumber === "QUEUED" ? (
+              <>
+                <h2 className="text-4xl font-black text-white mb-4">QUEUED OFFLINE</h2>
+                <p className="text-2xl text-white">{lastScan.itemName}</p>
+                <p className="text-lg text-white/80 mt-4">Will sync when back online</p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-5xl font-black text-white mb-4">ORDER</h2>
+                <p className="text-[12vw] font-black text-white leading-none">{lastScan.orderNumber}</p>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -97,9 +139,11 @@ export default function ScanExtraPage() {
 
       <div className="flex items-center gap-4 mb-2">
         <h1 className="text-3xl font-black text-white">Scan Extra: {order.orderNumber}</h1>
-        <button onClick={toggleSound} className="text-white/70 hover:text-white transition" title={soundOn ? "Mute sounds" : "Unmute sounds"}>
+        <button onClick={toggleSound} className="text-white/70 hover:text-white transition" title={soundOn ? "Mute" : "Unmute"}>
           {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
         </button>
+        {!isOnline && <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">OFFLINE</span>}
+        {queueCount > 0 && <span className="bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full">{queueCount} queued</span>}
       </div>
       <p className="text-white/80 mb-6 text-lg">Scanned {totalScanned}/{totalQty} items</p>
 
@@ -116,6 +160,7 @@ export default function ScanExtraPage() {
             <th className="py-3 px-4 text-center font-bold">NAME</th>
             <th className="py-3 px-4 text-center font-bold w-24">QTY</th>
             <th className="py-3 px-4 text-center font-bold w-24">SCANNED</th>
+            <th className="py-3 px-4 text-center font-bold w-32">MANUAL</th>
           </tr></thead>
           <tbody>
             {order.items.map((item) => {
@@ -126,6 +171,14 @@ export default function ScanExtraPage() {
                   <td className="py-3 px-4 text-center text-gray-800">{item.itemName}</td>
                   <td className="py-3 px-4 text-center text-gray-800">{item.quantity}</td>
                   <td className="py-3 px-4 text-center text-gray-800">{item.scannedQty}</td>
+                  <td className="py-3 px-4 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.scannedQty <= 0}
+                        className="w-8 h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
+                      <button onClick={() => handleManualScan(item.id, "increment")} disabled={item.scannedQty >= item.quantity}
+                        className="w-8 h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
+                    </div>
+                  </td>
                 </tr>
               );
             })}
