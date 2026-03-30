@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { playSuccessSound, playErrorSound, isSoundEnabled, setSoundEnabled } from "@/lib/sounds";
 import { addToQueue } from "@/lib/offline-queue";
 import { useOnlineStatus } from "@/lib/use-online-status";
+import { useWakeLock } from "@/lib/use-wake-lock";
 
 interface OrderItem {
   id: string;
@@ -26,6 +27,7 @@ export default function DespatchPage() {
   const slug = params.slug as string;
   const orderId = params.orderId as string;
   const inputRef = useRef<HTMLInputElement>(null);
+  const scanningRef = useRef(false);
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [scanBuffer, setScanBuffer] = useState("");
@@ -34,6 +36,8 @@ export default function DespatchPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const { isOnline, queueCount, refreshQueueCount } = useOnlineStatus();
+
+  useWakeLock();
 
   useEffect(() => { setSoundOn(isSoundEnabled()); }, []);
 
@@ -63,6 +67,8 @@ export default function DespatchPage() {
 
   const handleScan = async (barcode: string) => {
     if (!barcode.trim()) return;
+    if (scanningRef.current) return;
+    scanningRef.current = true;
     const scanUrl = `/api/orders/${orderId}/despatch`;
     const scanBody = { barcode: barcode.trim() };
     try {
@@ -88,6 +94,8 @@ export default function DespatchPage() {
       setLastScan({ matched: true, itemName: barcode.trim(), orderNumber: "QUEUED" });
       setShowConfirmation(true);
       setTimeout(() => setShowConfirmation(false), 1500);
+    } finally {
+      scanningRef.current = false;
     }
   };
 
@@ -131,7 +139,7 @@ export default function DespatchPage() {
   const totalDespatched = order.items.reduce((s, i) => s + i.despatchedQty, 0);
 
   return (
-    <div className="flex flex-col items-center pt-8 px-4 relative">
+    <div className="scan-page flex flex-col items-center pt-4 sm:pt-8 px-2 sm:px-4 relative pb-20">
       {showConfirmation && lastScan?.matched && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30" onClick={() => setShowConfirmation(false)}>
           <div className={`${lastScan.orderNumber === "QUEUED" ? "bg-yellow-500" : "bg-scan-green"} rounded-2xl mx-4 w-full max-w-3xl py-16 flex flex-col items-center justify-center scan-flash`}>
@@ -152,7 +160,7 @@ export default function DespatchPage() {
         </div>
       )}
 
-      <input ref={inputRef} type="text" value={scanBuffer} onChange={(e) => setScanBuffer(e.target.value)} onKeyDown={handleKeyDown} className="absolute opacity-0 w-0 h-0" autoFocus />
+      <input ref={inputRef} type="text" value={scanBuffer} onChange={(e) => setScanBuffer(e.target.value)} onKeyDown={handleKeyDown} className="absolute opacity-0 w-0 h-0" autoFocus inputMode="none" />
 
       <div className="flex items-center gap-4 mb-2">
         <h1 className="text-3xl font-black text-white">Despatch: {order.orderNumber}</h1>
@@ -191,9 +199,9 @@ export default function DespatchPage() {
                   <td className="py-3 px-4 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.despatchedQty <= 0}
-                        className="w-8 h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
+                        className="w-10 h-10 sm:w-8 sm:h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
                       <button onClick={() => handleManualScan(item.id, "increment")} disabled={item.despatchedQty >= item.quantity}
-                        className="w-8 h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
+                        className="w-10 h-10 sm:w-8 sm:h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
                     </div>
                   </td>
                 </tr>

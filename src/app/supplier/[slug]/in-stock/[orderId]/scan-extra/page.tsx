@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { playSuccessSound, playErrorSound, isSoundEnabled, setSoundEnabled } from "@/lib/sounds";
 import { addToQueue } from "@/lib/offline-queue";
 import { useOnlineStatus } from "@/lib/use-online-status";
+import { useWakeLock } from "@/lib/use-wake-lock";
 
 interface OrderItem {
   id: string;
@@ -27,6 +28,7 @@ export default function ScanExtraPage() {
   const slug = params.slug as string;
   const orderId = params.orderId as string;
   const inputRef = useRef<HTMLInputElement>(null);
+  const scanningRef = useRef(false);
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [scanBuffer, setScanBuffer] = useState("");
@@ -34,6 +36,8 @@ export default function ScanExtraPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const { isOnline, queueCount, refreshQueueCount } = useOnlineStatus();
+
+  useWakeLock();
 
   useEffect(() => { setSoundOn(isSoundEnabled()); }, []);
 

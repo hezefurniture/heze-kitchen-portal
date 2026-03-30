@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { playSuccessSound, playErrorSound, isSoundEnabled, setSoundEnabled } from "@/lib/sounds";
 import { addToQueue, flushQueue, getQueueLength } from "@/lib/offline-queue";
 import { useOnlineStatus } from "@/lib/use-online-status";
+import { useWakeLock } from "@/lib/use-wake-lock";
 
 interface OrderItem {
   id: string;
@@ -35,6 +36,7 @@ export default function ScanPage() {
   const slug = params.slug as string;
   const deliveryId = params.id as string;
   const inputRef = useRef<HTMLInputElement>(null);
+  const scanningRef = useRef(false);
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -44,6 +46,8 @@ export default function ScanPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const { isOnline, queueCount, refreshQueueCount } = useOnlineStatus();
+
+  useWakeLock();
 
   useEffect(() => { setSoundOn(isSoundEnabled()); }, []);
 
@@ -81,6 +85,8 @@ export default function ScanPage() {
 
   const handleScan = async (barcode: string) => {
     if (!barcode.trim() || !supplierId) return;
+    if (scanningRef.current) return;
+    scanningRef.current = true;
 
     const scanUrl = "/api/scan";
     const scanBody = { barcode: barcode.trim(), supplierId, deliveryId };
@@ -96,19 +102,20 @@ export default function ScanPage() {
       if (result.matched) {
         if (soundOn) playSuccessSound();
         setShowConfirmation(true);
-        setTimeout(() => setShowConfirmation(false), 2000);
+        setTimeout(() => setShowConfirmation(false), 1500);
       } else {
         if (soundOn) playErrorSound();
       }
       await loadOrders();
     } catch {
-      // Offline - queue the scan
       addToQueue(scanUrl, scanBody);
       refreshQueueCount();
       if (soundOn) playSuccessSound();
       setLastScan({ matched: true, orderNumber: "QUEUED", itemName: barcode.trim() });
       setShowConfirmation(true);
-      setTimeout(() => setShowConfirmation(false), 2000);
+      setTimeout(() => setShowConfirmation(false), 1500);
+    } finally {
+      scanningRef.current = false;
     }
   };
 
@@ -130,7 +137,7 @@ export default function ScanPage() {
   const toggleSound = () => { const next = !soundOn; setSoundOn(next); setSoundEnabled(next); };
 
   return (
-    <div className="flex flex-col items-center pt-8 px-4 relative">
+    <div className="scan-page flex flex-col items-center pt-4 sm:pt-8 px-2 sm:px-4 relative pb-20">
       {showConfirmation && lastScan?.matched && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30" onClick={() => setShowConfirmation(false)}>
           <div className={`${lastScan.orderNumber === "QUEUED" ? "bg-yellow-500" : "bg-scan-green"} rounded-2xl mx-4 w-full max-w-5xl h-[70vh] flex flex-col items-center justify-center scan-flash`}>
@@ -150,7 +157,7 @@ export default function ScanPage() {
         </div>
       )}
 
-      <input ref={inputRef} type="text" value={scanBuffer} onChange={(e) => setScanBuffer(e.target.value)} onKeyDown={handleKeyDown} className="absolute opacity-0 w-0 h-0" autoFocus />
+      <input ref={inputRef} type="text" value={scanBuffer} onChange={(e) => setScanBuffer(e.target.value)} onKeyDown={handleKeyDown} className="absolute opacity-0 w-0 h-0" autoFocus inputMode="none" />
 
       <div className="flex items-center gap-4 mb-2">
         <h1 className="text-4xl font-black text-white">Step 2</h1>

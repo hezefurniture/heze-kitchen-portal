@@ -55,3 +55,34 @@ body {
 .fade-in {
   animation: fadeIn 0.3s ease-out;
 }
+
+/* Mobile / Zebra TC27 optimizations */
+@media (max-width: 768px) {
+  /* Larger touch targets for gloved use (min 44px per WCAG) */
+  button, a, [role="button"] {
+    min-height: 44px;
+  }
+
+  /* Prevent text selection during rapid scanning */
+  .scan-page {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Compact table cells on small screens */
+  table th, table td {
+    padding: 8px 4px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Prevent pull-to-refresh during scanning */
+.scan-page {
+  overscroll-behavior-y: contain;
+}
+
+/* Ensure touch targets are easy to hit */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+}

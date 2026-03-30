@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { playSuccessSound, playErrorSound, isSoundEnabled, setSoundEnabled } from "@/lib/sounds";
 import { addToQueue } from "@/lib/offline-queue";
 import { useOnlineStatus } from "@/lib/use-online-status";
+import { useWakeLock } from "@/lib/use-wake-lock";
 
 interface OrderItem {
   id: string;
@@ -27,6 +28,7 @@ export default function BookScanPage() {
   const slug = params.slug as string;
   const orderId = params.orderId as string;
   const inputRef = useRef<HTMLInputElement>(null);
+  const scanningRef = useRef(false);
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [scanBuffer, setScanBuffer] = useState("");
@@ -34,6 +36,8 @@ export default function BookScanPage() {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const { isOnline, queueCount, refreshQueueCount } = useOnlineStatus();
+
+  useWakeLock();
 
   useEffect(() => { setSoundOn(isSoundEnabled()); }, []);
 
@@ -62,6 +66,9 @@ export default function BookScanPage() {
 
   const handleScan = async (barcode: string) => {
     if (!barcode.trim() || !order) return;
+    if (scanningRef.current) return;
+    scanningRef.current = true;
+
     const scanUrl = "/api/scan";
     const scanBody = { barcode: barcode.trim(), supplierId: order.supplier.id };
     try {
@@ -75,7 +82,7 @@ export default function BookScanPage() {
       if (result.matched) {
         if (soundOn) playSuccessSound();
         setShowConfirmation(true);
-        setTimeout(() => setShowConfirmation(false), 2000);
+        setTimeout(() => setShowConfirmation(false), 1500);
       } else {
         if (soundOn) playErrorSound();
       }
@@ -86,7 +93,9 @@ export default function BookScanPage() {
       if (soundOn) playSuccessSound();
       setLastScan({ matched: true, orderNumber: "QUEUED", itemName: barcode.trim() });
       setShowConfirmation(true);
-      setTimeout(() => setShowConfirmation(false), 2000);
+      setTimeout(() => setShowConfirmation(false), 1500);
+    } finally {
+      scanningRef.current = false;
     }
   };
 
@@ -115,52 +124,54 @@ export default function BookScanPage() {
   const allDone = totalScanned >= totalQty;
 
   return (
-    <div className="flex flex-col items-center pt-8 px-4 relative">
+    <div className="scan-page flex flex-col items-center pt-4 sm:pt-8 px-2 sm:px-4 relative pb-20">
       {showConfirmation && lastScan?.matched && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30" onClick={() => setShowConfirmation(false)}>
-          <div className={`${lastScan.orderNumber === "QUEUED" ? "bg-yellow-500" : "bg-scan-green"} rounded-2xl mx-4 w-full max-w-5xl h-[70vh] flex flex-col items-center justify-center scan-flash`}>
+          <div className={`${lastScan.orderNumber === "QUEUED" ? "bg-yellow-500" : "bg-scan-green"} rounded-2xl mx-2 sm:mx-4 w-full max-w-5xl h-[60vh] sm:h-[70vh] flex flex-col items-center justify-center scan-flash`}>
             {lastScan.orderNumber === "QUEUED" ? (
               <>
-                <h2 className="text-4xl font-black text-white mb-4">QUEUED OFFLINE</h2>
-                <p className="text-2xl text-white">{lastScan.itemName}</p>
-                <p className="text-lg text-white/80 mt-4">Will sync when back online</p>
+                <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">QUEUED OFFLINE</h2>
+                <p className="text-xl sm:text-2xl text-white">{lastScan.itemName}</p>
+                <p className="text-base sm:text-lg text-white/80 mt-4">Will sync when back online</p>
               </>
             ) : (
               <>
-                <h2 className="text-5xl font-black text-white mb-4">ORDER</h2>
-                <p className="text-[12vw] font-black text-white leading-none">{lastScan.orderNumber}</p>
+                <h2 className="text-3xl sm:text-5xl font-black text-white mb-4">ORDER</h2>
+                <p className="text-[15vw] sm:text-[12vw] font-black text-white leading-none">{lastScan.orderNumber}</p>
               </>
             )}
           </div>
         </div>
       )}
 
-      <input ref={inputRef} type="text" value={scanBuffer} onChange={(e) => setScanBuffer(e.target.value)} onKeyDown={handleKeyDown} className="absolute opacity-0 w-0 h-0" autoFocus />
+      <input ref={inputRef} type="text" value={scanBuffer} onChange={(e) => setScanBuffer(e.target.value)} onKeyDown={handleKeyDown} className="absolute opacity-0 w-0 h-0" autoFocus inputMode="none" />
 
-      <div className="flex items-center gap-4 mb-2">
-        <h1 className="text-3xl font-black text-white">Book In: {order.orderNumber}</h1>
-        <button onClick={toggleSound} className="text-white/70 hover:text-white transition" title={soundOn ? "Mute" : "Unmute"}>
-          {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
-        </button>
-        {!isOnline && <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">OFFLINE</span>}
-        {queueCount > 0 && <span className="bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full">{queueCount} queued</span>}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-2 justify-center">
+        <h1 className="text-xl sm:text-3xl font-black text-white">Book In: {order.orderNumber}</h1>
+        <div className="flex items-center gap-2">
+          <button onClick={toggleSound} className="text-white/70 hover:text-white transition p-2 min-w-[44px] min-h-[44px] flex items-center justify-center" title={soundOn ? "Mute" : "Unmute"}>
+            {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
+          </button>
+          {!isOnline && <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">OFFLINE</span>}
+          {queueCount > 0 && <span className="bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full">{queueCount} queued</span>}
+        </div>
       </div>
-      <p className="text-white/80 mb-6 text-lg">Scanned {totalScanned}/{totalQty} items</p>
+      <p className="text-white/80 mb-4 sm:mb-6 text-base sm:text-lg">Scanned {totalScanned}/{totalQty} items</p>
 
       {lastScan && !lastScan.matched && (
-        <div className="w-full max-w-4xl bg-red-500/80 text-white rounded-lg px-6 py-3 mb-4 fade-in">
+        <div className="w-full max-w-4xl bg-red-500/80 text-white rounded-lg px-4 sm:px-6 py-3 mb-4 fade-in">
           <p className="font-bold">Item not found</p>
           <p className="text-sm text-white/80">{lastScan.error}</p>
         </div>
       )}
 
-      <div className="w-full max-w-4xl bg-white rounded-lg overflow-hidden">
+      <div className="w-full max-w-4xl bg-white rounded-lg overflow-x-auto">
         <table className="w-full">
-          <thead><tr className="bg-gray-100 text-gray-700 text-sm">
-            <th className="py-3 px-4 text-center font-bold">NAME</th>
-            <th className="py-3 px-4 text-center font-bold w-24">QTY</th>
-            <th className="py-3 px-4 text-center font-bold w-24">SCANNED</th>
-            <th className="py-3 px-4 text-center font-bold w-32">MANUAL</th>
+          <thead><tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">NAME</th>
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold w-16 sm:w-24">QTY</th>
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold w-16 sm:w-24">DONE</th>
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold w-24 sm:w-32">+/-</th>
           </tr></thead>
           <tbody>
             {order.items.map((item) => {
@@ -168,15 +179,15 @@ export default function BookScanPage() {
               const partial = item.scannedQty > 0 && !done;
               return (
                 <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
-                  <td className="py-3 px-4 text-center text-gray-800">{item.itemName}</td>
-                  <td className="py-3 px-4 text-center text-gray-800">{item.quantity}</td>
-                  <td className="py-3 px-4 text-center text-gray-800">{item.scannedQty}</td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-sm sm:text-base">{item.itemName}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800">{item.quantity}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800">{item.scannedQty}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.scannedQty <= 0}
-                        className="w-8 h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
+                        className="w-10 h-10 sm:w-8 sm:h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
                       <button onClick={() => handleManualScan(item.id, "increment")} disabled={item.scannedQty >= item.quantity}
-                        className="w-8 h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
+                        className="w-10 h-10 sm:w-8 sm:h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
                     </div>
                   </td>
                 </tr>
@@ -188,7 +199,7 @@ export default function BookScanPage() {
 
       {allDone && (
         <div className="mt-6">
-          <button onClick={() => router.push(`/supplier/${slug}/to-book`)} className="px-12 py-3 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition">Done - Back to Kitchens to Book</button>
+          <button onClick={() => router.push(`/supplier/${slug}/to-book`)} className="px-8 sm:px-12 py-4 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition min-h-[56px]">Done - Back to Kitchens to Book</button>
         </div>
       )}
     </div>
