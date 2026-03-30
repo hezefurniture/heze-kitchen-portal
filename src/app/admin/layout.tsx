@@ -38,6 +38,13 @@ export default function AdminLayout({
           <span className="font-bold">Admin Settings</span>
         </div>
         <div className="flex items-center gap-4">
+          <Link href="/admin/users" className="text-white/80 hover:text-white">
+            Users
+          </Link>
+          <Link href="/admin/settings" className="text-white/80 hover:text-white">
+            Logos
+          </Link>
+          <span className="text-white/30">|</span>
           <Link href="/dashboard" className="text-white/80 hover:text-white">
             Back to Dashboard
           </Link>

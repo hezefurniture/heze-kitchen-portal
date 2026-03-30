@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 
@@ -11,6 +12,14 @@ const suppliers = [
 
 export default function DashboardPage() {
   const { data: session } = useSession();
+  const [mainLogo, setMainLogo] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((data) => setMainLogo(data.mainLogo || null))
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen bg-primary flex flex-col">
@@ -30,8 +39,14 @@ export default function DashboardPage() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col items-center justify-center pb-16">
-        <h1 className="text-5xl font-bold text-white mb-1">KITCHENS</h1>
-        <h2 className="text-6xl font-black text-white mb-16">PORTAL</h2>
+        {mainLogo ? (
+          <img src={mainLogo} alt="Logo" className="h-32 max-w-[400px] object-contain mb-16" />
+        ) : (
+          <>
+            <h1 className="text-5xl font-bold text-white mb-1">KITCHENS</h1>
+            <h2 className="text-6xl font-black text-white mb-16">PORTAL</h2>
+          </>
+        )}
 
         <div className="flex gap-8 flex-wrap justify-center">
           {suppliers.map((s) => (

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
@@ -16,6 +17,14 @@ export function Header() {
   const { data: session } = useSession();
   const slug = params?.slug as string;
   const supplierName = supplierNames[slug] || "";
+  const [navLogo, setNavLogo] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((r) => r.json())
+      .then((data) => setNavLogo(data.navLogo || null))
+      .catch(() => {});
+  }, []);
 
   const isActive = (path: string) => pathname?.includes(path);
 
@@ -24,10 +33,14 @@ export function Header() {
       <header className="bg-header text-white flex items-center justify-between px-4 py-2 sticky top-0 z-50">
         <div className="flex items-center gap-4">
           <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="text-xs font-bold leading-tight">
-              <span className="text-[10px]">KITCHENS</span><br />
-              <span className="text-lg font-black">PORTAL</span>
-            </span>
+            {navLogo ? (
+              <img src={navLogo} alt="Logo" className="h-8 max-w-[150px] object-contain" />
+            ) : (
+              <span className="text-xs font-bold leading-tight">
+                <span className="text-[10px]">KITCHENS</span><br />
+                <span className="text-lg font-black">PORTAL</span>
+              </span>
+            )}
           </Link>
           <div className="flex flex-col ml-4">
             <span className="bg-white text-gray-800 text-xs px-3 py-0.5 rounded font-bold text-center">
