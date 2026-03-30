@@ -1,0 +1,100 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum OrderStatus {
+  PENDING
+  IN_STOCK
+  DESPATCHING
+  DESPATCHED
+}
+
+enum ScanType {
+  DELIVERY
+  DESPATCH
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  name      String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+
+  deliveries Delivery[]
+  scanLogs   ScanLog[]
+}
+
+model Supplier {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+
+  orders     Order[]
+  deliveries Delivery[]
+}
+
+model Delivery {
+  id           String   @id @default(cuid())
+  supplier     Supplier @relation(fields: [supplierId], references: [id])
+  supplierId   String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  uploadedById String
+  uploadedAt   DateTime @default(now())
+
+  items OrderItem[]
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  supplier      Supplier    @relation(fields: [supplierId], references: [id])
+  supplierId    String
+  orderNumber   String
+  status        OrderStatus @default(PENDING)
+  createdAt     DateTime    @default(now())
+  despatchedAt  DateTime?
+  despatchedBy  String?
+
+  items OrderItem[]
+
+  @@unique([supplierId, orderNumber])
+}
+
+model OrderItem {
+  id            String   @id @default(cuid())
+  order         Order    @relation(fields: [orderId], references: [id])
+  orderId       String
+  delivery      Delivery @relation(fields: [deliveryId], references: [id])
+  deliveryId    String
+  itemName      String
+  quantity      Int
+  scannedQty    Int      @default(0)
+  despatchedQty Int      @default(0)
+
+  scanLogs ScanLog[]
+
+  @@index([itemName, orderId])
+}
+
+model ScanLog {
+  id          String   @id @default(cuid())
+  orderItem   OrderItem @relation(fields: [orderItemId], references: [id])
+  orderItemId String
+  scannedBy   User     @relation(fields: [scannedById], references: [id])
+  scannedById String
+  scanType    ScanType
+  barcode     String
+  scannedAt   DateTime @default(now())
+}

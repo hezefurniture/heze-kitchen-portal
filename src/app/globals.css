@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: #7B2D5F;
+  color: white;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #5A1B45;
+}
+::-webkit-scrollbar-thumb {
+  background: #9B4D7F;
+  border-radius: 4px;
+}
+
+/* File drop zone */
+.drop-zone {
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  transition: all 0.2s;
+}
+.drop-zone:hover,
+.drop-zone.dragging {
+  border-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Scan flash animation */
+@keyframes scanFlash {
+  0% { opacity: 0; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.scan-flash {
+  animation: scanFlash 0.3s ease-out;
+}
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
