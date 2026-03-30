@@ -66,7 +66,16 @@ export default function ToBookPage() {
   return (
     <div className="flex flex-col items-center pt-8 px-4">
       <h1 className="text-4xl font-black text-white mb-2">Kitchens to Book</h1>
-      <p className="text-white/80 mb-8 text-lg">Scan items to confirm delivery and move to stock</p>
+      <p className="text-white/80 mb-4 text-lg">Scan items to confirm delivery and move to stock</p>
+
+      {orders.length > 0 && (
+        <Link
+          href={`/supplier/${slug}/to-book/scan-all`}
+          className="mb-8 px-12 py-4 rounded-lg bg-accent text-white font-black text-2xl hover:bg-accent-light transition inline-block"
+        >
+          Scan All Orders
+        </Link>
+      )}
 
       <div className="w-full max-w-4xl space-y-4">
         {orders.length === 0 && (
