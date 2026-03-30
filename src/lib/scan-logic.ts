@@ -20,7 +20,7 @@ export async function assignDeliveryScan(
     // Find the first order item matching this barcode with open quantity
     const items = await tx.orderItem.findMany({
       where: {
-        itemName: barcode,
+        barcode,
         order: {
           supplierId,
           status: { in: ["PENDING"] },
@@ -91,7 +91,7 @@ export async function assignDespatchScan(
     const items = await tx.orderItem.findMany({
       where: {
         orderId,
-        itemName: barcode,
+        barcode,
       },
       include: { order: true },
     });

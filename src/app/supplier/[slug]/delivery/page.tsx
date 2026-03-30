@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 interface ParsedFile {
   name: string;
-  rows: { itemName: string; quantity: number; orderNumber: string }[];
+  rows: { itemName: string; barcode: string; quantity: number; orderNumber: string }[];
 }
 
 export default function DeliveryUploadPage() {
@@ -35,6 +35,9 @@ export default function DeliveryUploadPage() {
             const itemName = (
               row["Item Name"] || row["item name"] || row["ItemName"] || row["item_name"] || ""
             ).trim();
+            const barcode = (
+              row["Barcode"] || row["barcode"] || row["BARCODE"] || row["bar_code"] || ""
+            ).trim();
             const quantityStr = (
               row["Quantity"] || row["quantity"] || row["Qty"] || row["qty"] || "0"
             ).trim();
@@ -42,10 +45,10 @@ export default function DeliveryUploadPage() {
               row["Order Number"] || row["order number"] || row["OrderNumber"] || row["order_number"] || ""
             ).trim();
 
-            if (!itemName || !orderNumber) continue;
+            if (!itemName || !barcode || !orderNumber) continue;
             const quantity = parseInt(quantityStr, 10);
             if (isNaN(quantity) || quantity <= 0) continue;
-            rows.push({ itemName, quantity, orderNumber });
+            rows.push({ itemName, barcode, quantity, orderNumber });
           }
           resolve({ name: file.name, rows });
         });

@@ -80,13 +80,14 @@ model OrderItem {
   delivery      Delivery @relation(fields: [deliveryId], references: [id])
   deliveryId    String
   itemName      String
+  barcode       String
   quantity      Int
   scannedQty    Int      @default(0)
   despatchedQty Int      @default(0)
 
   scanLogs ScanLog[]
 
-  @@index([itemName, orderId])
+  @@index([barcode, orderId])
 }
 
 model ScanLog {

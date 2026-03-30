@@ -31,14 +31,14 @@ export async function POST(req: NextRequest) {
   });
 
   // Group rows by order number
-  const orderMap = new Map<string, { itemName: string; quantity: number }[]>();
+  const orderMap = new Map<string, { itemName: string; barcode: string; quantity: number }[]>();
   for (const row of rows) {
     const items = orderMap.get(row.orderNumber) || [];
-    const existing = items.find((i) => i.itemName === row.itemName);
+    const existing = items.find((i) => i.barcode === row.barcode);
     if (existing) {
       existing.quantity += row.quantity;
     } else {
-      items.push({ itemName: row.itemName, quantity: row.quantity });
+      items.push({ itemName: row.itemName, barcode: row.barcode, quantity: row.quantity });
     }
     orderMap.set(row.orderNumber, items);
   }
@@ -68,6 +68,7 @@ export async function POST(req: NextRequest) {
           orderId: order.id,
           deliveryId: delivery.id,
           itemName: item.itemName,
+          barcode: item.barcode,
           quantity: item.quantity,
         },
       });
