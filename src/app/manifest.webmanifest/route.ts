@@ -1,0 +1,49 @@
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  const manifest = {
+    id: "/",
+    name: "Kitchens Portal - Heze Furniture",
+    short_name: "Kitchens Portal",
+    description: "Kitchen warehouse barcode scanning portal",
+    start_url: "/login",
+    scope: "/",
+    display: "standalone",
+    orientation: "portrait",
+    background_color: "#7B2D5F",
+    theme_color: "#7B2D5F",
+    categories: ["business", "utilities"],
+    icons: [
+      {
+        src: "/icons/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icons/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icons/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/icons/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
+    ],
+  };
+
+  return new Response(JSON.stringify(manifest), {
+    headers: {
+      "Content-Type": "application/manifest+json",
+    },
+  });
+}
