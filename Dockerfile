@@ -27,18 +27,18 @@ RUN apk add --no-cache openssl
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy Next.js standalone server (base layer - includes minimal node_modules)
-COPY --from=builder /app/.next/standalone ./
-
-# Copy static assets and public files on top
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
-
-# Overlay full node_modules for Prisma CLI (entrypoint runs migrations)
+# Copy full node_modules (prisma CLI, @prisma/client, next, react, etc.)
 COPY --from=builder /app/node_modules ./node_modules
 
 # Copy prisma schema + migrations
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/package.json ./package.json
+
+# Copy the full .next build output
+COPY --from=builder /app/.next ./.next
+
+# Copy public files (manifest, sw.js, icons) — must be at ./public for Next.js to serve them
+COPY --from=builder /app/public ./public
 
 # Entrypoint script
 COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
