@@ -35,8 +35,8 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
 
 # Copy Next.js standalone server + static assets + public
-COPY --from=builder /app/.next/standalone/server.js ./server.js
-COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
 # Entrypoint script
