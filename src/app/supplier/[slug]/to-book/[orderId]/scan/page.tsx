@@ -6,6 +6,7 @@ import { playSuccessSound, playErrorSound, isSoundEnabled, setSoundEnabled } fro
 import { addToQueue } from "@/lib/offline-queue";
 import { useOnlineStatus } from "@/lib/use-online-status";
 import { useWakeLock } from "@/lib/use-wake-lock";
+import { useBarcodeScanner } from "@/lib/use-barcode-scanner";
 
 interface OrderItem {
   id: string;
@@ -27,11 +28,10 @@ export default function BookScanPage() {
   const router = useRouter();
   const slug = params.slug as string;
   const orderId = params.orderId as string;
-  const inputRef = useRef<HTMLInputElement>(null);
   const scanningRef = useRef(false);
+  const [manualInput, setManualInput] = useState("");
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
-  const [scanBuffer, setScanBuffer] = useState("");
   const [lastScan, setLastScan] = useState<any>(null);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
@@ -57,14 +57,7 @@ export default function BookScanPage() {
     return () => window.removeEventListener("scans-flushed", handler);
   }, [loadOrder]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (inputRef.current && document.activeElement !== inputRef.current) inputRef.current.focus();
-    }, 300);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleScan = async (barcode: string) => {
+  const handleScan = useCallback(async (barcode: string) => {
     if (!barcode.trim() || !order) return;
     if (scanningRef.current) return;
     scanningRef.current = true;
@@ -97,7 +90,10 @@ export default function BookScanPage() {
     } finally {
       scanningRef.current = false;
     }
-  };
+  }, [order, soundOn, loadOrder, refreshQueueCount]);
+
+  // Document-level barcode capture (DataWedge + USB scanners)
+  const { handleManualSubmit } = useBarcodeScanner(handleScan);
 
   const handleManualScan = async (itemId: string, action: "increment" | "decrement") => {
     try {
@@ -110,9 +106,6 @@ export default function BookScanPage() {
     } catch {}
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") { handleScan(scanBuffer); setScanBuffer(""); }
-  };
   const toggleSound = () => { const next = !soundOn; setSoundOn(next); setSoundEnabled(next); };
 
   if (!order) {
@@ -144,8 +137,6 @@ export default function BookScanPage() {
         </div>
       )}
 
-      <input ref={inputRef} type="text" value={scanBuffer} onChange={(e) => setScanBuffer(e.target.value)} onKeyDown={handleKeyDown} className="absolute opacity-0 w-0 h-0" autoFocus inputMode="none" />
-
       <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-2 justify-center">
         <h1 className="text-xl sm:text-3xl font-black text-white">Book In: {order.orderNumber}</h1>
         <div className="flex items-center gap-2">
@@ -156,7 +147,23 @@ export default function BookScanPage() {
           {queueCount > 0 && <span className="bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full">{queueCount} queued</span>}
         </div>
       </div>
-      <p className="text-white/80 mb-4 sm:mb-6 text-base sm:text-lg">Scanned {totalScanned}/{totalQty} items</p>
+      <p className="text-white/80 mb-3 text-base sm:text-lg">Scanned {totalScanned}/{totalQty} items</p>
+
+      {/* Manual barcode input - visible, works as fallback */}
+      <div className="w-full max-w-md mb-4">
+        <div className="flex gap-2">
+          <input
+            data-scan-input="true"
+            type="text"
+            value={manualInput}
+            onChange={(e) => setManualInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { handleManualSubmit(manualInput); setManualInput(""); } }}
+            placeholder="Barcode will appear here..."
+            className="flex-1 px-3 py-3 rounded bg-white/10 border border-white/30 text-white placeholder-white/40 text-center font-mono focus:outline-none focus:ring-2 focus:ring-accent"
+          />
+          <button onClick={() => { handleManualSubmit(manualInput); setManualInput(""); }} className="px-4 py-3 bg-accent text-white font-bold rounded hover:bg-accent-light transition min-w-[44px]">Go</button>
+        </div>
+      </div>
 
       {lastScan && !lastScan.matched && (
         <div className="w-full max-w-4xl bg-red-500/80 text-white rounded-lg px-4 sm:px-6 py-3 mb-4 fade-in">

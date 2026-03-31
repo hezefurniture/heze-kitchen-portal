@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { playSuccessSound, playErrorSound, isSoundEnabled, setSoundEnabled } from "@/lib/sounds";
-import { addToQueue, flushQueue, getQueueLength } from "@/lib/offline-queue";
+import { addToQueue } from "@/lib/offline-queue";
 import { useOnlineStatus } from "@/lib/use-online-status";
 import { useWakeLock } from "@/lib/use-wake-lock";
+import { useBarcodeScanner } from "@/lib/use-barcode-scanner";
 
 interface OrderItem {
   id: string;
@@ -35,14 +36,13 @@ export default function ScanPage() {
   const router = useRouter();
   const slug = params.slug as string;
   const deliveryId = params.id as string;
-  const inputRef = useRef<HTMLInputElement>(null);
   const scanningRef = useRef(false);
+  const [manualInput, setManualInput] = useState("");
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [lastScan, setLastScan] = useState<ScanResult | null>(null);
   const [supplierId, setSupplierId] = useState<string>("");
-  const [scanBuffer, setScanBuffer] = useState("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const { isOnline, queueCount, refreshQueueCount } = useOnlineStatus();
@@ -76,14 +76,7 @@ export default function ScanPage() {
     return () => window.removeEventListener("scans-flushed", handler);
   }, [loadOrders]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (inputRef.current && document.activeElement !== inputRef.current) inputRef.current.focus();
-    }, 300);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleScan = async (barcode: string) => {
+  const handleScan = useCallback(async (barcode: string) => {
     if (!barcode.trim() || !supplierId) return;
     if (scanningRef.current) return;
     scanningRef.current = true;
@@ -117,7 +110,10 @@ export default function ScanPage() {
     } finally {
       scanningRef.current = false;
     }
-  };
+  }, [supplierId, deliveryId, soundOn, loadOrders, refreshQueueCount]);
+
+  // Document-level barcode capture (DataWedge + USB scanners)
+  const { handleManualSubmit } = useBarcodeScanner(handleScan);
 
   const handleManualScan = async (orderId: string, itemId: string, action: "increment" | "decrement") => {
     try {
@@ -128,10 +124,6 @@ export default function ScanPage() {
       });
       await loadOrders();
     } catch {}
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") { handleScan(scanBuffer); setScanBuffer(""); }
   };
 
   const toggleSound = () => { const next = !soundOn; setSoundOn(next); setSoundEnabled(next); };
@@ -157,9 +149,7 @@ export default function ScanPage() {
         </div>
       )}
 
-      <input ref={inputRef} type="text" value={scanBuffer} onChange={(e) => setScanBuffer(e.target.value)} onKeyDown={handleKeyDown} className="absolute opacity-0 w-0 h-0" autoFocus inputMode="none" />
-
-      <div className="flex items-center gap-4 mb-2">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-2 justify-center">
         <h1 className="text-4xl font-black text-white">Step 2</h1>
         <button onClick={toggleSound} className="text-white/70 hover:text-white transition" title={soundOn ? "Mute sounds" : "Unmute sounds"}>
           {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
@@ -167,7 +157,23 @@ export default function ScanPage() {
         {!isOnline && <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">OFFLINE</span>}
         {queueCount > 0 && <span className="bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full">{queueCount} queued</span>}
       </div>
-      <p className="text-white/80 mb-8 text-lg">Scan the items to accept kitchens to the warehouse</p>
+      <p className="text-white/80 mb-3 text-base sm:text-lg text-center">Scan the items to accept kitchens to the warehouse</p>
+
+      {/* Manual barcode input - visible, works as fallback */}
+      <div className="w-full max-w-md mb-4">
+        <div className="flex gap-2">
+          <input
+            data-scan-input="true"
+            type="text"
+            value={manualInput}
+            onChange={(e) => setManualInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { handleManualSubmit(manualInput); setManualInput(""); } }}
+            placeholder="Barcode will appear here..."
+            className="flex-1 px-3 py-3 rounded bg-white/10 border border-white/30 text-white placeholder-white/40 text-center font-mono focus:outline-none focus:ring-2 focus:ring-accent"
+          />
+          <button onClick={() => { handleManualSubmit(manualInput); setManualInput(""); }} className="px-4 py-3 bg-accent text-white font-bold rounded hover:bg-accent-light transition min-w-[44px]">Go</button>
+        </div>
+      </div>
 
       {lastScan && !lastScan.matched && (
         <div className="w-full max-w-4xl bg-red-500/80 text-white rounded-lg px-6 py-3 mb-4 fade-in">
