@@ -54,4 +54,4 @@ seed().catch(e => console.error("Seed error:", e)).finally(() => prisma.$disconn
 ' 2>&1 || echo "Seed skipped"
 
 echo "Starting server..."
-exec ./node_modules/.bin/next start -p ${PORT:-3000} -H ${HOSTNAME:-0.0.0.0}
+exec ./node_modules/.bin/next start --port ${PORT:-3000} --hostname ${HOSTNAME:-0.0.0.0}
