@@ -25,26 +25,10 @@ export async function GET() {
       {
         src: `/api/icon-192?v=${v}`,
         sizes: "192x192",
-        type: "image/png",
-        purpose: "any",
       },
       {
         src: `/api/icon-512?v=${v}`,
         sizes: "512x512",
-        type: "image/png",
-        purpose: "any",
-      },
-      {
-        src: `/api/icon-192?v=${v}`,
-        sizes: "192x192",
-        type: "image/png",
-        purpose: "maskable",
-      },
-      {
-        src: `/api/icon-512?v=${v}`,
-        sizes: "512x512",
-        type: "image/png",
-        purpose: "maskable",
       },
     ],
   };
