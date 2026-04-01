@@ -7,6 +7,7 @@ import { addToQueue } from "@/lib/offline-queue";
 import { useOnlineStatus } from "@/lib/use-online-status";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import { useBarcodeScanner } from "@/lib/use-barcode-scanner";
+import { ManualBarcodeInput } from "@/components/manual-barcode-input";
 
 interface OrderItem {
   id: string;
@@ -29,7 +30,6 @@ export default function BookScanPage() {
   const slug = params.slug as string;
   const orderId = params.orderId as string;
   const scanningRef = useRef(false);
-  const [manualInput, setManualInput] = useState("");
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [lastScan, setLastScan] = useState<any>(null);
@@ -149,22 +149,7 @@ export default function BookScanPage() {
       </div>
       <p className="text-white/80 mb-3 text-base sm:text-lg">Scanned {totalScanned}/{totalQty} items</p>
 
-      {/* Manual barcode input - visible, works as fallback */}
-      <div className="w-full max-w-md mb-4">
-        <div className="flex gap-2">
-          <input
-            data-scan-input="true"
-            type="text"
-            inputMode="none"
-            value={manualInput}
-            onChange={(e) => setManualInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { handleManualSubmit(manualInput); setManualInput(""); } }}
-            placeholder="Barcode will appear here..."
-            className="flex-1 px-3 py-3 rounded bg-white/10 border border-white/30 text-white placeholder-white/40 text-center font-mono focus:outline-none focus:ring-2 focus:ring-accent"
-          />
-          <button onClick={() => { handleManualSubmit(manualInput); setManualInput(""); }} className="px-4 py-3 bg-accent text-white font-bold rounded hover:bg-accent-light transition min-w-[44px]">Go</button>
-        </div>
-      </div>
+      <ManualBarcodeInput onSubmit={handleManualSubmit} />
 
       {lastScan && !lastScan.matched && (
         <div className="w-full max-w-4xl bg-red-500/80 text-white rounded-lg px-4 sm:px-6 py-3 mb-4 fade-in">

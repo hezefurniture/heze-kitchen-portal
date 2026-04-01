@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { playSuccessSound, playErrorSound, isSoundEnabled, setSoundEnabled } from "@/lib/sounds";
+import { ManualBarcodeInput } from "@/components/manual-barcode-input";
 import { addToQueue } from "@/lib/offline-queue";
 import { useOnlineStatus } from "@/lib/use-online-status";
 import { useWakeLock } from "@/lib/use-wake-lock";
@@ -36,7 +37,6 @@ export default function ScanAllPage() {
   const router = useRouter();
   const slug = params.slug as string;
   const scanningRef = useRef(false);
-  const [manualInput, setManualInput] = useState("");
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -158,22 +158,7 @@ export default function ScanAllPage() {
       </div>
       <p className="text-white/80 mb-3 text-base sm:text-lg text-center">Scan items across all pending orders</p>
 
-      {/* Manual barcode input - visible, works as fallback */}
-      <div className="w-full max-w-md mb-4">
-        <div className="flex gap-2">
-          <input
-            data-scan-input="true"
-            type="text"
-            inputMode="none"
-            value={manualInput}
-            onChange={(e) => setManualInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { handleManualSubmit(manualInput); setManualInput(""); } }}
-            placeholder="Barcode will appear here..."
-            className="flex-1 px-3 py-3 rounded bg-white/10 border border-white/30 text-white placeholder-white/40 text-center font-mono focus:outline-none focus:ring-2 focus:ring-accent"
-          />
-          <button onClick={() => { handleManualSubmit(manualInput); setManualInput(""); }} className="px-4 py-3 bg-accent text-white font-bold rounded hover:bg-accent-light transition min-w-[44px]">Go</button>
-        </div>
-      </div>
+      <ManualBarcodeInput onSubmit={handleManualSubmit} />
 
       {lastScan && !lastScan.matched && (
         <div className="w-full max-w-4xl bg-red-500/80 text-white rounded-lg px-4 sm:px-6 py-3 mb-4 fade-in">
