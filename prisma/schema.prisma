@@ -92,10 +92,12 @@ model OrderItem {
 }
 
 model AppSettings {
-  id        String  @id @default("singleton")
-  navLogo   String? // base64 encoded image for header navigation
-  mainLogo  String? // base64 encoded image for login/dashboard pages
-  updatedAt DateTime @default(now()) @updatedAt
+  id         String  @id @default("singleton")
+  navLogo    String? // base64 encoded image for header navigation
+  mainLogo   String? // base64 encoded image for login/dashboard pages
+  appIcon192 String? // base64 encoded 192x192 PWA icon
+  appIcon512 String? // base64 encoded 512x512 PWA icon
+  updatedAt  DateTime @default(now()) @updatedAt
 }
 
 // Column mapping configuration per supplier for file imports

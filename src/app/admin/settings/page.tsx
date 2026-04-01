@@ -5,10 +5,14 @@ import { useState, useEffect, useRef } from "react";
 export default function SettingsPage() {
   const [navLogo, setNavLogo] = useState<string | null>(null);
   const [mainLogo, setMainLogo] = useState<string | null>(null);
+  const [appIcon192, setAppIcon192] = useState<string | null>(null);
+  const [appIcon512, setAppIcon512] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const navInputRef = useRef<HTMLInputElement>(null);
   const mainInputRef = useRef<HTMLInputElement>(null);
+  const icon192InputRef = useRef<HTMLInputElement>(null);
+  const icon512InputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -16,6 +20,8 @@ export default function SettingsPage() {
       .then((data) => {
         setNavLogo(data.navLogo || null);
         setMainLogo(data.mainLogo || null);
+        setAppIcon192(data.appIcon192 || null);
+        setAppIcon512(data.appIcon512 || null);
       })
       .catch(() => {});
   }, []);
@@ -46,7 +52,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ navLogo, mainLogo }),
+        body: JSON.stringify({ navLogo, mainLogo, appIcon192, appIcon512 }),
       });
       if (res.ok) {
         setMessage("Settings saved successfully");
@@ -62,7 +68,7 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-6 py-8">
-      <h1 className="text-3xl font-black text-white mb-8">Logo Settings</h1>
+      <h1 className="text-3xl font-black text-white mb-8">Settings</h1>
 
       {message && (
         <div className={`mb-6 px-4 py-3 rounded text-white font-bold ${message.includes("success") ? "bg-green-500" : "bg-red-500"}`}>
@@ -130,6 +136,74 @@ export default function SettingsPage() {
           onChange={(e) => handleFileSelect(e, setMainLogo)}
           className="text-sm text-gray-600"
         />
+      </div>
+
+      {/* App Icons */}
+      <div className="bg-white rounded-lg p-6 mb-6">
+        <h2 className="text-lg font-bold text-gray-800 mb-2">App Icons (PWA)</h2>
+        <p className="text-sm text-gray-500 mb-4">Icons used when the app is installed on a device. Upload square PNG images.</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {/* 192x192 icon */}
+          <div>
+            <h3 className="text-sm font-bold text-gray-700 mb-2">192 x 192 px</h3>
+            {appIcon192 ? (
+              <div className="mb-3">
+                <div className="bg-gray-100 rounded p-3 inline-block mb-2 border border-gray-200">
+                  <img src={appIcon192} alt="App icon 192" className="w-16 h-16 object-contain" />
+                </div>
+                <br />
+                <button
+                  onClick={() => { setAppIcon192(null); if (icon192InputRef.current) icon192InputRef.current.value = ""; }}
+                  className="text-red-500 text-sm font-bold hover:text-red-700"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mb-3">
+                <p className="text-gray-400 text-sm">No icon</p>
+              </div>
+            )}
+            <input
+              ref={icon192InputRef}
+              type="file"
+              accept="image/png"
+              onChange={(e) => handleFileSelect(e, setAppIcon192)}
+              className="text-sm text-gray-600 w-full"
+            />
+          </div>
+
+          {/* 512x512 icon */}
+          <div>
+            <h3 className="text-sm font-bold text-gray-700 mb-2">512 x 512 px</h3>
+            {appIcon512 ? (
+              <div className="mb-3">
+                <div className="bg-gray-100 rounded p-3 inline-block mb-2 border border-gray-200">
+                  <img src={appIcon512} alt="App icon 512" className="w-16 h-16 object-contain" />
+                </div>
+                <br />
+                <button
+                  onClick={() => { setAppIcon512(null); if (icon512InputRef.current) icon512InputRef.current.value = ""; }}
+                  className="text-red-500 text-sm font-bold hover:text-red-700"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mb-3">
+                <p className="text-gray-400 text-sm">No icon</p>
+              </div>
+            )}
+            <input
+              ref={icon512InputRef}
+              type="file"
+              accept="image/png"
+              onChange={(e) => handleFileSelect(e, setAppIcon512)}
+              className="text-sm text-gray-600 w-full"
+            />
+          </div>
+        </div>
       </div>
 
       <button

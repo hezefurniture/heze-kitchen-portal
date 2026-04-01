@@ -41,8 +41,8 @@ export function Header() {
   return (
     <>
       <header className="bg-header text-white sticky top-0 z-50">
-        <div className="flex items-center justify-between px-3 py-2">
-          {/* Left: logo */}
+        {/* Mobile: 3-column grid — logo left, supplier center, hamburger right */}
+        <div className="grid grid-cols-[auto_1fr_auto] items-center px-3 py-2 lg:hidden">
           <Link href="/dashboard" className="shrink-0">
             {navLogo ? (
               <img src={navLogo} alt="Logo" className="h-10 max-w-[120px] object-contain" />
@@ -53,9 +53,40 @@ export function Header() {
               </span>
             )}
           </Link>
+          <div className="flex flex-col items-center justify-self-center">
+            <span className="bg-white text-gray-800 text-[11px] px-2 py-0.5 rounded font-bold leading-tight">
+              {supplierName}
+            </span>
+            <Link href="/dashboard" className="text-yellow-400 text-[10px] hover:underline leading-tight mt-0.5">
+              change &gt;
+            </Link>
+          </div>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="p-2 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center justify-self-end"
+            aria-label="Menu"
+          >
+            {menuOpen ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+            )}
+          </button>
+        </div>
 
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-3">
+        {/* Desktop: flex layout with nav links */}
+        <div className="hidden lg:flex items-center justify-between px-3 py-2">
+          <Link href="/dashboard" className="shrink-0">
+            {navLogo ? (
+              <img src={navLogo} alt="Logo" className="h-10 max-w-[120px] object-contain" />
+            ) : (
+              <span className="font-bold leading-none block">
+                <span className="text-[9px] tracking-wider block">KITCHENS</span>
+                <span className="text-xl font-black block -mt-0.5">PORTAL</span>
+              </span>
+            )}
+          </Link>
+          <nav className="flex items-center gap-3">
             {navLinks.map((link) => (
               <Link
                 key={link.key}
@@ -68,28 +99,13 @@ export function Header() {
               </Link>
             ))}
           </nav>
-
-          {/* Right: supplier badge + hamburger */}
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col items-center shrink-0">
-              <span className="bg-white text-gray-800 text-[11px] px-2 py-0.5 rounded font-bold leading-tight">
-                {supplierName}
-              </span>
-              <Link href="/dashboard" className="text-yellow-400 text-[10px] hover:underline leading-tight mt-0.5">
-                change &gt;
-              </Link>
-            </div>
-            <button
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="lg:hidden p-2 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center"
-              aria-label="Menu"
-            >
-            {menuOpen ? (
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-            )}
-            </button>
+          <div className="flex flex-col items-center shrink-0">
+            <span className="bg-white text-gray-800 text-[11px] px-2 py-0.5 rounded font-bold leading-tight">
+              {supplierName}
+            </span>
+            <Link href="/dashboard" className="text-yellow-400 text-[10px] hover:underline leading-tight mt-0.5">
+              change &gt;
+            </Link>
           </div>
         </div>
       </header>

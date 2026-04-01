@@ -15,25 +15,25 @@ export async function GET() {
     categories: ["business", "utilities"],
     icons: [
       {
-        src: "/icons/icon-192.png",
+        src: "/api/icons?size=192",
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icons/icon-512.png",
+        src: "/api/icons?size=512",
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icons/icon-192.png",
+        src: "/api/icons?size=192",
         sizes: "192x192",
         type: "image/png",
         purpose: "maskable",
       },
       {
-        src: "/icons/icon-512.png",
+        src: "/api/icons?size=512",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
