@@ -2,7 +2,14 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { parseFileToRawRows, applyMappingsToRows, type ParsedRow, type ColumnMappingConfig } from "@/lib/file-parser";
+import type { ColumnMappingConfig } from "@/lib/file-parser";
+
+interface ParsedRow {
+  itemName: string;
+  barcode: string;
+  quantity: number;
+  orderNumber: string;
+}
 
 interface ParsedFile {
   name: string;
@@ -22,6 +29,7 @@ export default function DeliveryUploadPage() {
   const [files, setFiles] = useState<ParsedFile[]>([]);
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [parsing, setParsing] = useState(false);
   const [error, setError] = useState("");
   const [reviewStep, setReviewStep] = useState(false);
   const [orderGroups, setOrderGroups] = useState<OrderGroup[]>([]);
@@ -53,49 +61,59 @@ export default function DeliveryUploadPage() {
       .catch(() => {});
   }, [slug]);
 
-  const handleFiles = useCallback(
-    async (fileList: FileList) => {
+  const processFile = async (file: File): Promise<ParsedFile | null> => {
+    const { parseFileToRawRows, applyMappingsToRows } = await import("@/lib/file-parser");
+    const rawRows = await parseFileToRawRows(file);
+    if (rawRows.length === 0) {
+      setError(`${file.name}: File is empty or has no data rows.`);
+      return null;
+    }
+    const rows = applyMappingsToRows(rawRows, mappings);
+    if (rows.length === 0) {
+      const headers = Object.keys(rawRows[0] || {}).join(", ");
+      setError(
+        `${file.name}: Could not map any rows. Detected columns: ${headers}. ` +
+        `Check column mappings in Admin → Import Mappings, or ensure your file has columns like "Order Number", "Item Name", "Barcode", "Quantity".`
+      );
+      return null;
+    }
+    return { name: file.name, rows };
+  };
+
+  const handleFiles = async (fileList: FileList) => {
+    setError("");
+    setParsing(true);
+    try {
       const newFiles: ParsedFile[] = [];
       for (const file of Array.from(fileList)) {
         const name = file.name.toLowerCase();
-        if (!name.endsWith(".csv") && !name.endsWith(".xlsx") && !name.endsWith(".xls") && file.type !== "text/csv") {
+        const isValid = name.endsWith(".csv") || name.endsWith(".xlsx") || name.endsWith(".xls") || file.type === "text/csv";
+        if (!isValid) {
+          setError(`${file.name}: Unsupported file type. Use CSV or Excel (.xlsx) files.`);
           continue;
         }
         try {
-          const rawRows = await parseFileToRawRows(file);
-          if (rawRows.length === 0) {
-            setError(`${file.name}: File is empty or has no data rows.`);
-            continue;
-          }
-          const rows = applyMappingsToRows(rawRows, mappings);
-          if (rows.length === 0) {
-            // Show detected headers to help user configure mappings
-            const headers = Object.keys(rawRows[0] || {}).join(", ");
-            setError(
-              `${file.name}: Could not map any rows. ` +
-              `Detected columns: ${headers}. ` +
-              `Please check column mappings in Admin → Import Mappings, or ensure your file has columns named like "Order Number", "Item Name", "Barcode", "Quantity".`
-            );
-            continue;
-          }
-          newFiles.push({ name: file.name, rows });
+          const result = await processFile(file);
+          if (result) newFiles.push(result);
         } catch (err: any) {
-          setError(`Error parsing ${file.name}: ${err.message}`);
+          setError(`Error parsing ${file.name}: ${err.message || "Unknown error"}`);
         }
       }
-      setFiles((prev) => [...prev, ...newFiles]);
-    },
-    [mappings]
-  );
+      if (newFiles.length > 0) {
+        setFiles((prev) => [...prev, ...newFiles]);
+      }
+    } catch (err: any) {
+      setError(`Unexpected error: ${err.message || "Unknown error"}`);
+    } finally {
+      setParsing(false);
+    }
+  };
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setDragging(false);
-      handleFiles(e.dataTransfer.files);
-    },
-    [handleFiles]
-  );
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    handleFiles(e.dataTransfer.files);
+  };
 
   const handleReview = () => {
     const allRows = files.flatMap((f) => f.rows);
@@ -238,17 +256,33 @@ export default function DeliveryUploadPage() {
         onClick={() => fileRef.current?.click()}
       >
         <CloudUploadIcon />
-        <p className="text-white text-lg mt-4 font-medium">Drag your files here</p>
-        <p className="text-white/50 text-sm mt-1">CSV or Excel (.xlsx) files</p>
+        {parsing ? (
+          <p className="text-white text-lg mt-4 font-medium">Parsing file...</p>
+        ) : (
+          <>
+            <p className="text-white text-lg mt-4 font-medium">Drag your files here</p>
+            <p className="text-white/50 text-sm mt-1">CSV or Excel (.xlsx) files</p>
+          </>
+        )}
         <input
           ref={fileRef}
           type="file"
           accept=".csv,.xlsx,.xls"
           multiple
           className="hidden"
-          onChange={(e) => e.target.files && handleFiles(e.target.files)}
+          onChange={(e) => {
+            if (e.target.files) handleFiles(e.target.files);
+            e.target.value = "";
+          }}
         />
       </div>
+
+      {/* Error display */}
+      {error && (
+        <div className="w-full max-w-2xl mt-4 bg-red-500/80 text-white rounded-lg px-4 py-3">
+          <p className="text-sm">{error}</p>
+        </div>
+      )}
 
       {/* File list */}
       {files.length > 0 && (
@@ -278,8 +312,6 @@ export default function DeliveryUploadPage() {
             </span>
           </div>
 
-          {error && <p className="text-red-300 text-sm">{error}</p>}
-
           <button
             onClick={handleReview}
             className="w-full py-3 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition mt-4"
@@ -289,11 +321,11 @@ export default function DeliveryUploadPage() {
         </div>
       )}
 
-      {files.length === 0 && mappings.length === 0 && (
-        <p className="text-white/40 text-sm mt-4 text-center">
-          No column mappings configured for this supplier. Using auto-detect.
-          <br />
-          Admin can set up mappings in Settings &rarr; Import Mappings.
+      {files.length === 0 && !error && (
+        <p className="text-white/40 text-sm mt-4 text-center max-w-md">
+          {mappings.filter(m => m.sourceColumns.length > 0).length > 0
+            ? "Column mappings configured for this supplier."
+            : "No column mappings configured. Using auto-detect (expects columns: Order Number, Item Name, Barcode, Quantity)."}
         </p>
       )}
     </div>

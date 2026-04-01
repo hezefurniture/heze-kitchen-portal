@@ -99,7 +99,8 @@ export async function parseFileToRawRows(
 
   if (name.endsWith(".csv") || file.type === "text/csv") {
     const text = await file.text();
-    const Papa = (await import("papaparse")).default;
+    const PapaMod = await import("papaparse");
+    const Papa = PapaMod.default || PapaMod;
     const result = Papa.parse(text, {
       header: true,
       skipEmptyLines: true,
@@ -109,11 +110,12 @@ export async function parseFileToRawRows(
   }
 
   if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
-    const XLSX = await import("xlsx");
+    const XLSXMod = await import("xlsx");
+    const XLSX = (XLSXMod as any).default || XLSXMod;
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: "array" });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    return XLSX.utils.sheet_to_json<Record<string, string>>(sheet, {
+    return XLSX.utils.sheet_to_json(sheet, {
       defval: "",
       raw: false,
     });
