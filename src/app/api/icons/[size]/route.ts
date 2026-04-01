@@ -5,11 +5,14 @@ export const dynamic = "force-dynamic";
 
 /**
  * Serves PWA app icons from the database.
- * GET /api/icons?size=192 or ?size=512
- * Returns the icon image or a 1x1 transparent PNG fallback.
+ * GET /api/icons/192 or /api/icons/512
+ * Returns the icon image or a 404 if not uploaded.
  */
-export async function GET(req: NextRequest) {
-  const size = req.nextUrl.searchParams.get("size");
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { size: string } }
+) {
+  const size = params.size;
 
   const settings = await prisma.appSettings.findUnique({
     where: { id: "singleton" },
@@ -19,17 +22,7 @@ export async function GET(req: NextRequest) {
   const base64Data = size === "512" ? settings?.appIcon512 : settings?.appIcon192;
 
   if (!base64Data) {
-    // Return a 1x1 transparent PNG as fallback
-    const fallback = Buffer.from(
-      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-      "base64"
-    );
-    return new Response(fallback, {
-      headers: {
-        "Content-Type": "image/png",
-        "Cache-Control": "public, max-age=60",
-      },
-    });
+    return new Response(null, { status: 404 });
   }
 
   // base64Data is a data URL like "data:image/png;base64,..."
@@ -44,7 +37,7 @@ export async function GET(req: NextRequest) {
   return new Response(buffer, {
     headers: {
       "Content-Type": contentType,
-      "Cache-Control": "public, max-age=3600",
+      "Cache-Control": "public, max-age=300",
     },
   });
 }
