@@ -6,7 +6,6 @@ export const dynamic = "force-dynamic";
 /**
  * Serves PWA app icons from the database.
  * GET /api/icons/192 or /api/icons/512
- * Returns the icon image or a 404 if not uploaded.
  */
 export async function GET(
   req: NextRequest,
@@ -38,6 +37,7 @@ export async function GET(
     headers: {
       "Content-Type": contentType,
       "Cache-Control": "public, max-age=300",
+      "Access-Control-Allow-Origin": "*",
     },
   });
 }

@@ -1,6 +1,15 @@
+import { prisma } from "@/lib/db";
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // Fetch settings to get a cache-busting timestamp
+  const settings = await prisma.appSettings.findUnique({
+    where: { id: "singleton" },
+    select: { updatedAt: true },
+  });
+  const v = settings?.updatedAt ? new Date(settings.updatedAt).getTime() : 0;
+
   const manifest = {
     id: "/",
     name: "Kitchens Portal - Heze Furniture",
@@ -15,25 +24,25 @@ export async function GET() {
     categories: ["business", "utilities"],
     icons: [
       {
-        src: "/api/icons/192",
+        src: `/api/icons/192?v=${v}`,
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/api/icons/512",
+        src: `/api/icons/512?v=${v}`,
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/api/icons/192",
+        src: `/api/icons/192?v=${v}`,
         sizes: "192x192",
         type: "image/png",
         purpose: "maskable",
       },
       {
-        src: "/api/icons/512",
+        src: `/api/icons/512?v=${v}`,
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
@@ -44,6 +53,7 @@ export async function GET() {
   return new Response(JSON.stringify(manifest), {
     headers: {
       "Content-Type": "application/manifest+json",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
     },
   });
 }
