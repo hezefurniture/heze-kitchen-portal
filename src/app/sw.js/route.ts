@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const sw = `const CACHE_NAME = "kitchens-portal-v1";
+  const sw = `const CACHE_NAME = "kitchens-portal-v2";
 
 // Assets to pre-cache on install
 const PRECACHE_URLS = ["/login", "/dashboard"];

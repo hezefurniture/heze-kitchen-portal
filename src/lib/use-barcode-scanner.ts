@@ -44,7 +44,7 @@ export function useBarcodeScanner(onScan: (barcode: string) => void) {
   useEffect(() => {
     const input = document.createElement("input");
     input.setAttribute("type", "text");
-    input.setAttribute("inputmode", "none"); // suppress keyboard
+    // Note: do NOT set inputmode="none" — it prevents DataWedge from injecting text on Zebra devices
     input.setAttribute("autocomplete", "off");
     input.setAttribute("autocorrect", "off");
     input.setAttribute("autocapitalize", "off");
