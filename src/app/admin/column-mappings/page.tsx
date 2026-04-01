@@ -96,17 +96,26 @@ export default function ColumnMappingsPage() {
     const name = file.name.toLowerCase();
     if (name.endsWith(".csv")) {
       const text = await file.text();
-      const Papa = (await import("papaparse")).default;
+      const PapaMod = await import("papaparse");
+      const Papa = (PapaMod as any).default || PapaMod;
       const result = Papa.parse(text, { header: true, preview: 1, transformHeader: (h: string) => h.trim() });
       setSampleHeaders(result.meta.fields || []);
     } else if (name.endsWith(".xlsx") || name.endsWith(".xls")) {
-      const XLSX = await import("xlsx");
+      const XLSXMod = await import("xlsx");
+      const XLSX = (XLSXMod as any).default || XLSXMod;
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(buffer, { type: "array" });
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { header: 1 });
-      if (json.length > 0) {
-        setSampleHeaders((json[0] as any[]).map((h: any) => String(h).trim()));
+      const allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", raw: false }) as any[][];
+      // Find the first row with at least 3 non-empty cells (the header row)
+      for (let i = 0; i < Math.min(allRows.length, 20); i++) {
+        const row = allRows[i];
+        if (!Array.isArray(row)) continue;
+        const nonEmpty = row.filter((c: any) => c !== null && c !== undefined && String(c).trim() !== "");
+        if (nonEmpty.length >= 3) {
+          setSampleHeaders(row.map((h: any) => String(h).trim()).filter((h: string) => h !== ""));
+          break;
+        }
       }
     }
   };

@@ -115,10 +115,51 @@ export async function parseFileToRawRows(
     const buffer = await file.arrayBuffer();
     const workbook = XLSX.read(buffer, { type: "array" });
     const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    return XLSX.utils.sheet_to_json(sheet, {
-      defval: "",
-      raw: false,
-    });
+
+    // First try default parsing (header in row 1)
+    const defaultRows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: false }) as Record<string, string>[];
+    if (defaultRows.length > 0) {
+      const firstKeys = Object.keys(defaultRows[0]);
+      const hasRealHeaders = firstKeys.some((k) => !k.startsWith("__EMPTY"));
+      if (hasRealHeaders) return defaultRows;
+    }
+
+    // Headers not in row 1 — scan raw rows to find the header row
+    const allRows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "", raw: false }) as any[][];
+    let headerRowIdx = -1;
+    for (let i = 0; i < Math.min(allRows.length, 20); i++) {
+      const row = allRows[i];
+      if (!Array.isArray(row)) continue;
+      const nonEmpty = row.filter((c: any) => c !== null && c !== undefined && String(c).trim() !== "");
+      // A header row should have at least 3 non-empty cells and not look like data
+      if (nonEmpty.length >= 3) {
+        headerRowIdx = i;
+        break;
+      }
+    }
+
+    if (headerRowIdx === -1 || headerRowIdx >= allRows.length - 1) {
+      return defaultRows; // fallback
+    }
+
+    // Build rows using the detected header
+    const headers = allRows[headerRowIdx].map((h: any) => String(h).trim());
+    const dataRows: Record<string, string>[] = [];
+    for (let i = headerRowIdx + 1; i < allRows.length; i++) {
+      const cells = allRows[i];
+      if (!Array.isArray(cells)) continue;
+      const row: Record<string, string> = {};
+      let hasData = false;
+      for (let j = 0; j < headers.length; j++) {
+        const key = headers[j];
+        if (!key) continue;
+        const val = cells[j] !== null && cells[j] !== undefined ? String(cells[j]).trim() : "";
+        row[key] = val;
+        if (val) hasData = true;
+      }
+      if (hasData) dataRows.push(row);
+    }
+    return dataRows;
   }
 
   throw new Error(`Unsupported file type: ${file.name}`);
