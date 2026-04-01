@@ -6,10 +6,11 @@ import { useEffect, useRef, useCallback } from "react";
  * Captures barcode scans from Zebra DataWedge (and USB scanners).
  *
  * Works via three methods:
- * 1. Document-level keydown listener - captures DataWedge keystroke output
- *    without needing a focused input (most reliable on Zebra TC devices)
- * 2. DataWedge intent broadcast via BroadcastChannel (for Capacitor/Enterprise Browser)
- * 3. Fallback: a visible text input for manual entry
+ * 1. Hidden focused input - DataWedge on Android injects keystrokes into the
+ *    focused input. A hidden off-screen input stays focused to capture these.
+ *    inputMode="none" prevents the soft keyboard from appearing.
+ * 2. Document-level keydown listener - fallback for desktop USB scanners
+ * 3. DataWedge intent broadcast via custom event (for Capacitor/Enterprise Browser)
  *
  * DataWedge should be configured to output keystrokes with an ENTER suffix.
  * Barcode characters arrive as rapid keydown events, terminated by Enter.
@@ -18,10 +19,66 @@ export function useBarcodeScanner(onScan: (barcode: string) => void) {
   const bufferRef = useRef("");
   const lastKeyTime = useRef(0);
   const onScanRef = useRef(onScan);
+  const hiddenInputRef = useRef<HTMLInputElement | null>(null);
   onScanRef.current = onScan;
 
-  // Method 1: Document-level keydown listener
-  // DataWedge injects keystrokes at the OS level - no input focus needed
+  // Method 1: Hidden focused input for DataWedge keystroke capture on Android
+  // DataWedge injects keystrokes into the focused element - without a focused
+  // input, keystrokes are lost on Android WebView/Chrome
+  useEffect(() => {
+    const input = document.createElement("input");
+    input.setAttribute("type", "text");
+    input.setAttribute("inputmode", "none"); // suppress keyboard
+    input.setAttribute("autocomplete", "off");
+    input.setAttribute("autocorrect", "off");
+    input.setAttribute("autocapitalize", "off");
+    input.setAttribute("data-scan-input", "true");
+    input.style.position = "fixed";
+    input.style.left = "-9999px";
+    input.style.top = "-9999px";
+    input.style.width = "1px";
+    input.style.height = "1px";
+    input.style.opacity = "0";
+    input.style.pointerEvents = "none";
+    document.body.appendChild(input);
+    hiddenInputRef.current = input;
+
+    // Focus the hidden input
+    const focusInput = () => {
+      // Don't steal focus from manual barcode input or other user inputs
+      const active = document.activeElement as HTMLElement | null;
+      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.tagName === "SELECT")) {
+        if (active !== input) return; // user is typing somewhere, don't steal
+      }
+      input.focus({ preventScroll: true });
+    };
+
+    focusInput();
+
+    // Re-focus when user taps on the page background (not on an interactive element)
+    const handleTap = (e: Event) => {
+      const target = e.target as HTMLElement;
+      const tag = target.tagName;
+      // Don't steal focus from buttons, links, inputs
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "BUTTON" || tag === "A") return;
+      if (target.closest("button") || target.closest("a") || target.closest("input")) return;
+      setTimeout(() => focusInput(), 50);
+    };
+
+    // Re-focus periodically to recover after dialogs, confirmations, etc.
+    const refocusInterval = setInterval(focusInput, 2000);
+
+    document.addEventListener("click", handleTap);
+
+    return () => {
+      clearInterval(refocusInterval);
+      document.removeEventListener("click", handleTap);
+      if (input.parentNode) input.parentNode.removeChild(input);
+      hiddenInputRef.current = null;
+    };
+  }, []);
+
+  // Method 2: Document-level keydown listener (captures from hidden input + desktop USB scanners)
   useEffect(() => {
     const BUFFER_TIMEOUT = 100; // ms - reset buffer if gap between keys > this
     let resetTimer: ReturnType<typeof setTimeout> | null = null;
@@ -31,7 +88,7 @@ export function useBarcodeScanner(onScan: (barcode: string) => void) {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
         const input = e.target as HTMLInputElement;
-        // Allow scan capture from our dedicated scan input
+        // Allow scan capture from our dedicated hidden scan input
         if (!input.dataset.scanInput) return;
       }
 
@@ -48,6 +105,8 @@ export function useBarcodeScanner(onScan: (barcode: string) => void) {
           e.preventDefault();
           const barcode = bufferRef.current;
           bufferRef.current = "";
+          // Clear the hidden input value
+          if (hiddenInputRef.current) hiddenInputRef.current.value = "";
           onScanRef.current(barcode);
         }
         return;
@@ -62,6 +121,7 @@ export function useBarcodeScanner(onScan: (barcode: string) => void) {
         if (resetTimer) clearTimeout(resetTimer);
         resetTimer = setTimeout(() => {
           bufferRef.current = "";
+          if (hiddenInputRef.current) hiddenInputRef.current.value = "";
         }, 500);
       }
     };
