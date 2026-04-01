@@ -43,22 +43,22 @@ export function Header() {
       <header className="bg-header text-white sticky top-0 z-50">
         <div className="flex items-center justify-between px-3 py-2">
           {/* Left: logo + supplier */}
-          <div className="flex items-center gap-2 min-w-0 overflow-hidden">
+          <div className="flex items-center gap-3 min-w-0 overflow-hidden">
             <Link href="/dashboard" className="shrink-0">
               {navLogo ? (
-                <img src={navLogo} alt="Logo" className="h-8 max-w-[120px] object-contain" />
+                <img src={navLogo} alt="Logo" className="h-10 max-w-[120px] object-contain" />
               ) : (
-                <span className="text-xs font-bold leading-tight block">
-                  <span className="text-[10px]">KITCHENS</span><br />
-                  <span className="text-lg font-black">PORTAL</span>
+                <span className="font-bold leading-none block">
+                  <span className="text-[9px] tracking-wider block">KITCHENS</span>
+                  <span className="text-xl font-black block -mt-0.5">PORTAL</span>
                 </span>
               )}
             </Link>
-            <div className="flex flex-col shrink-0">
-              <span className="bg-white text-gray-800 text-[10px] px-2 py-0.5 rounded font-bold text-center">
+            <div className="flex flex-col items-center shrink-0">
+              <span className="bg-white text-gray-800 text-[11px] px-2 py-0.5 rounded font-bold leading-tight">
                 {supplierName}
               </span>
-              <Link href="/dashboard" className="text-yellow-400 text-[10px] hover:underline text-center">
+              <Link href="/dashboard" className="text-yellow-400 text-[10px] hover:underline leading-tight mt-0.5">
                 change &gt;
               </Link>
             </div>

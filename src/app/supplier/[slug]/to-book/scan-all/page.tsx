@@ -129,7 +129,7 @@ export default function ScanAllPage() {
     <div className="scan-page flex flex-col items-center pt-4 sm:pt-8 px-2 sm:px-4 relative pb-20">
       {showConfirmation && lastScan?.matched && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30" onClick={() => setShowConfirmation(false)}>
-          <div className={`${lastScan.orderNumber === "QUEUED" ? "bg-yellow-500" : "bg-scan-green"} rounded-2xl mx-2 sm:mx-4 w-full max-w-5xl h-[50vh] sm:h-[70vh] flex flex-col items-center justify-center scan-flash px-4`}>
+          <div className={`${lastScan.orderNumber === "QUEUED" ? "bg-yellow-500" : "bg-scan-green"} rounded-2xl mx-2 w-[calc(100%-1rem)] h-[50vh] sm:h-[60vh] flex flex-col items-center justify-center scan-flash px-6`}>
             {lastScan.orderNumber === "QUEUED" ? (
               <>
                 <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">QUEUED OFFLINE</h2>
@@ -138,8 +138,8 @@ export default function ScanAllPage() {
               </>
             ) : (
               <>
-                <h2 className="text-2xl sm:text-5xl font-black text-white mb-2 sm:mb-4">ORDER</h2>
-                <p className="text-[8vw] sm:text-[12vw] font-black text-white leading-tight break-all text-center">{lastScan.orderNumber}</p>
+                <h2 className="text-2xl sm:text-4xl font-black text-white mb-2 sm:mb-4">ORDER</h2>
+                <p className="text-[8vw] sm:text-7xl font-black text-white leading-tight text-center">{lastScan.orderNumber}</p>
               </>
             )}
           </div>
