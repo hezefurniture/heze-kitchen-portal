@@ -63,10 +63,22 @@ export default function DeliveryUploadPage() {
         }
         try {
           const rawRows = await parseFileToRawRows(file);
-          const rows = applyMappingsToRows(rawRows, mappings);
-          if (rows.length > 0) {
-            newFiles.push({ name: file.name, rows });
+          if (rawRows.length === 0) {
+            setError(`${file.name}: File is empty or has no data rows.`);
+            continue;
           }
+          const rows = applyMappingsToRows(rawRows, mappings);
+          if (rows.length === 0) {
+            // Show detected headers to help user configure mappings
+            const headers = Object.keys(rawRows[0] || {}).join(", ");
+            setError(
+              `${file.name}: Could not map any rows. ` +
+              `Detected columns: ${headers}. ` +
+              `Please check column mappings in Admin → Import Mappings, or ensure your file has columns named like "Order Number", "Item Name", "Barcode", "Quantity".`
+            );
+            continue;
+          }
+          newFiles.push({ name: file.name, rows });
         } catch (err: any) {
           setError(`Error parsing ${file.name}: ${err.message}`);
         }
