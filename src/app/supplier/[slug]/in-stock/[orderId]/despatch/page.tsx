@@ -135,18 +135,18 @@ export default function DespatchPage() {
     <div className="scan-page flex flex-col items-center pt-4 sm:pt-8 px-2 sm:px-4 relative pb-20">
       {showConfirmation && lastScan?.matched && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/30" onClick={() => setShowConfirmation(false)}>
-          <div className={`${lastScan.orderNumber === "QUEUED" ? "bg-yellow-500" : "bg-scan-green"} rounded-2xl mx-4 w-full max-w-3xl py-16 flex flex-col items-center justify-center scan-flash`}>
+          <div className={`${lastScan.orderNumber === "QUEUED" ? "bg-yellow-500" : "bg-scan-green"} rounded-2xl mx-2 sm:mx-4 w-full max-w-3xl py-8 sm:py-16 flex flex-col items-center justify-center scan-flash px-4`}>
             {lastScan.orderNumber === "QUEUED" ? (
               <>
-                <h2 className="text-3xl font-black text-white mb-2">QUEUED OFFLINE</h2>
-                <p className="text-xl text-white">{lastScan.itemName}</p>
-                <p className="text-lg text-white/80 mt-2">Will sync when back online</p>
+                <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">QUEUED OFFLINE</h2>
+                <p className="text-lg sm:text-xl text-white break-all text-center">{lastScan.itemName}</p>
+                <p className="text-base sm:text-lg text-white/80 mt-2">Will sync when back online</p>
               </>
             ) : (
               <>
-                <h2 className="text-3xl font-black text-white mb-2">DESPATCHED</h2>
-                <p className="text-xl text-white">{lastScan.itemName}</p>
-                <p className="text-lg text-white/80 mt-2">{lastScan.newScannedQty}/{lastScan.totalQty}</p>
+                <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">DESPATCHED</h2>
+                <p className="text-lg sm:text-xl text-white break-all text-center">{lastScan.itemName}</p>
+                <p className="text-base sm:text-lg text-white/80 mt-2">{lastScan.newScannedQty}/{lastScan.totalQty}</p>
               </>
             )}
           </div>
@@ -169,6 +169,7 @@ export default function DespatchPage() {
           <input
             data-scan-input="true"
             type="text"
+            inputMode="none"
             value={manualInput}
             onChange={(e) => setManualInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { handleManualSubmit(manualInput); setManualInput(""); } }}
