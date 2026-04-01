@@ -42,7 +42,7 @@ export function Header() {
     <>
       <header className="bg-header text-white sticky top-0 z-50">
         {/* Mobile: 3-column grid — logo left, supplier center, hamburger right */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center px-3 py-2 lg:hidden">
+        <div className="grid grid-cols-[auto_1fr_auto] items-center px-3 pt-4 pb-2 lg:hidden">
           <Link href="/dashboard" className="shrink-0">
             {navLogo ? (
               <img src={navLogo} alt="Logo" className="h-10 max-w-[120px] object-contain" />
