@@ -7,7 +7,7 @@ import { addToQueue } from "@/lib/offline-queue";
 import { useOnlineStatus } from "@/lib/use-online-status";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import { useBarcodeScanner } from "@/lib/use-barcode-scanner";
-import { ManualBarcodeInput } from "@/components/manual-barcode-input";
+import { ScanInput } from "@/components/scan-input";
 
 interface OrderItem {
   id: string;
@@ -88,7 +88,7 @@ export default function ScanExtraPage() {
   }, [order, soundOn, loadOrder, refreshQueueCount]);
 
   // Document-level barcode capture (DataWedge + USB scanners)
-  const { handleManualSubmit } = useBarcodeScanner(handleScan);
+  useBarcodeScanner(handleScan);
 
   const handleManualScan = async (itemId: string, action: "increment" | "decrement") => {
     try {
@@ -142,7 +142,7 @@ export default function ScanExtraPage() {
       </div>
       <p className="text-white/80 mb-3 text-base sm:text-lg text-center">Scanned {totalScanned}/{totalQty} items</p>
 
-      <ManualBarcodeInput onSubmit={handleManualSubmit} />
+      <ScanInput onSubmit={handleScan} />
 
       {lastScan && !lastScan.matched && (
         <div className="w-full max-w-4xl bg-red-500/80 text-white rounded-lg px-6 py-3 mb-4 fade-in">
