@@ -21,8 +21,10 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <link rel="manifest" href="/manifest.webmanifest" />
-        <link rel="icon" href="/api/icon-192" type="image/png" />
-        <link rel="apple-touch-icon" href="/api/icon-192" />
+        <link rel="icon" href="/api/icon-192" type="image/png" sizes="192x192" />
+        <link rel="icon" href="/api/icon-512" type="image/png" sizes="512x512" />
+        <link rel="apple-touch-icon" href="/api/icon-192" sizes="192x192" />
+        <link rel="apple-touch-icon" href="/api/icon-512" sizes="512x512" />
       </head>
       <body className="touch-manipulation">
         <AuthProvider>{children}</AuthProvider>

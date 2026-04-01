@@ -1,13 +1,20 @@
+import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const settings = await prisma.appSettings.findUnique({
     where: { id: "singleton" },
     select: { updatedAt: true },
   });
   const v = settings?.updatedAt ? new Date(settings.updatedAt).getTime() : 0;
+
+  // Use absolute URLs — some Android Chrome versions have issues with relative icon URLs
+  // Behind reverse proxy, nextUrl.origin may be localhost — use X-Forwarded headers
+  const proto = req.headers.get("x-forwarded-proto") || "https";
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || req.nextUrl.host;
+  const origin = `${proto}://${host}`;
 
   const manifest = {
     id: "/",
@@ -23,12 +30,14 @@ export async function GET() {
     categories: ["business", "utilities"],
     icons: [
       {
-        src: `/api/icon-192?v=${v}`,
+        src: `${origin}/api/icon-192?v=${v}`,
         sizes: "192x192",
+        type: "image/png",
       },
       {
-        src: `/api/icon-512?v=${v}`,
+        src: `${origin}/api/icon-512?v=${v}`,
         sizes: "512x512",
+        type: "image/png",
       },
     ],
   };
