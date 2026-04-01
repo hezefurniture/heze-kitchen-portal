@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  // Fetch settings to get a cache-busting timestamp
   const settings = await prisma.appSettings.findUnique({
     where: { id: "singleton" },
     select: { updatedAt: true },
@@ -24,25 +23,25 @@ export async function GET() {
     categories: ["business", "utilities"],
     icons: [
       {
-        src: `/api/icons/192?v=${v}`,
+        src: `/api/icon-192?v=${v}`,
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: `/api/icons/512?v=${v}`,
+        src: `/api/icon-512?v=${v}`,
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: `/api/icons/192?v=${v}`,
+        src: `/api/icon-192?v=${v}`,
         sizes: "192x192",
         type: "image/png",
         purpose: "maskable",
       },
       {
-        src: `/api/icons/512?v=${v}`,
+        src: `/api/icon-512?v=${v}`,
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",
