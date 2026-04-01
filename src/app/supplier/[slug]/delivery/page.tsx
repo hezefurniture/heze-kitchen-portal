@@ -1,14 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-
-interface ParsedRow {
-  itemName: string;
-  barcode: string;
-  quantity: number;
-  orderNumber: string;
-}
+import { parseFileToRawRows, applyMappingsToRows, type ParsedRow, type ColumnMappingConfig } from "@/lib/file-parser";
 
 interface ParsedFile {
   name: string;
@@ -31,61 +25,55 @@ export default function DeliveryUploadPage() {
   const [error, setError] = useState("");
   const [reviewStep, setReviewStep] = useState(false);
   const [orderGroups, setOrderGroups] = useState<OrderGroup[]>([]);
+  const [mappings, setMappings] = useState<ColumnMappingConfig[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const parseFile = useCallback((file: File): Promise<ParsedFile> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const text = e.target?.result as string;
-        import("papaparse").then((Papa) => {
-          const result = Papa.default.parse(text, {
-            header: true,
-            skipEmptyLines: true,
-            transformHeader: (h: string) => h.trim(),
-          });
-          const rows: ParsedRow[] = [];
-          for (const row of result.data as Record<string, string>[]) {
-            const itemName = (
-              row["Item Name"] || row["item name"] || row["ItemName"] || row["item_name"] || ""
-            ).trim();
-            const barcode = (
-              row["Barcode"] || row["barcode"] || row["BARCODE"] || row["bar_code"] || ""
-            ).trim();
-            const quantityStr = (
-              row["Quantity"] || row["quantity"] || row["Qty"] || row["qty"] || "0"
-            ).trim();
-            const orderNumber = (
-              row["Order Number"] || row["order number"] || row["OrderNumber"] || row["order_number"] || ""
-            ).trim();
-
-            if (!itemName || !barcode || !orderNumber) continue;
-            const quantity = parseInt(quantityStr, 10);
-            if (isNaN(quantity) || quantity <= 0) continue;
-            rows.push({ itemName, barcode, quantity, orderNumber });
-          }
-          resolve({ name: file.name, rows });
-        });
-      };
-      reader.onerror = reject;
-      reader.readAsText(file);
-    });
-  }, []);
+  // Load column mappings for this supplier
+  useEffect(() => {
+    fetch(`/api/suppliers?slug=${slug}`)
+      .then((r) => r.json())
+      .then((supplier) => {
+        if (!supplier.id) return;
+        return fetch(`/api/column-mappings?supplierId=${supplier.id}`);
+      })
+      .then((r) => r?.json())
+      .then((data) => {
+        if (!data || !Array.isArray(data)) return;
+        const configs: ColumnMappingConfig[] = data.map((m: any) => ({
+          targetField: m.targetField,
+          sourceColumns: JSON.parse(m.sourceColumns),
+          mergeStrategy: m.mergeStrategy,
+          separator: m.separator,
+          template: m.template,
+          prefix: m.prefix,
+          suffix: m.suffix,
+        }));
+        setMappings(configs);
+      })
+      .catch(() => {});
+  }, [slug]);
 
   const handleFiles = useCallback(
     async (fileList: FileList) => {
       const newFiles: ParsedFile[] = [];
       for (const file of Array.from(fileList)) {
-        if (file.name.endsWith(".csv") || file.type === "text/csv") {
-          const parsed = await parseFile(file);
-          if (parsed.rows.length > 0) {
-            newFiles.push(parsed);
+        const name = file.name.toLowerCase();
+        if (!name.endsWith(".csv") && !name.endsWith(".xlsx") && !name.endsWith(".xls") && file.type !== "text/csv") {
+          continue;
+        }
+        try {
+          const rawRows = await parseFileToRawRows(file);
+          const rows = applyMappingsToRows(rawRows, mappings);
+          if (rows.length > 0) {
+            newFiles.push({ name: file.name, rows });
           }
+        } catch (err: any) {
+          setError(`Error parsing ${file.name}: ${err.message}`);
         }
       }
       setFiles((prev) => [...prev, ...newFiles]);
     },
-    [parseFile]
+    [mappings]
   );
 
   const handleDrop = useCallback(
@@ -122,7 +110,6 @@ export default function DeliveryUploadPage() {
     setUploading(true);
     setError("");
 
-    // Build rows with edited order numbers
     const allRows: ParsedRow[] = [];
     for (const group of orderGroups) {
       for (const item of group.items) {
@@ -159,16 +146,16 @@ export default function DeliveryUploadPage() {
 
   if (reviewStep) {
     return (
-      <div className="flex flex-col items-center pt-12 px-4">
-        <h1 className="text-4xl font-black text-white mb-2">Review Orders</h1>
-        <p className="text-white/80 mb-8 text-lg">
+      <div className="flex flex-col items-center pt-4 sm:pt-12 px-2 sm:px-4">
+        <h1 className="text-2xl sm:text-4xl font-black text-white mb-2">Review Orders</h1>
+        <p className="text-white/80 mb-4 sm:mb-8 text-base sm:text-lg text-center">
           Review and edit order numbers before uploading
         </p>
 
         <div className="w-full max-w-3xl space-y-4">
           {orderGroups.map((group, idx) => (
-            <div key={idx} className="bg-card rounded-lg px-6 py-4">
-              <div className="flex items-center gap-4 mb-3">
+            <div key={idx} className="bg-card rounded-lg px-4 sm:px-6 py-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
                 <label className="text-white/70 text-sm font-bold whitespace-nowrap">Order Number:</label>
                 <input
                   type="text"
@@ -178,7 +165,7 @@ export default function DeliveryUploadPage() {
                     updated[idx].editedOrderNumber = e.target.value;
                     setOrderGroups(updated);
                   }}
-                  className="flex-1 px-3 py-2 rounded bg-white text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-accent"
+                  className="w-full sm:flex-1 px-3 py-2 rounded bg-white text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
               <div className="text-white/60 text-sm">
@@ -188,8 +175,8 @@ export default function DeliveryUploadPage() {
               <div className="mt-2 space-y-1">
                 {group.items.map((item, i) => (
                   <div key={i} className="text-white/50 text-xs flex justify-between px-2">
-                    <span>{item.itemName}</span>
-                    <span>x{item.quantity}</span>
+                    <span className="truncate mr-2">{item.itemName}</span>
+                    <span className="shrink-0">x{item.quantity}</span>
                   </div>
                 ))}
               </div>
@@ -219,15 +206,15 @@ export default function DeliveryUploadPage() {
   }
 
   return (
-    <div className="flex flex-col items-center pt-12 px-4">
-      <h1 className="text-4xl font-black text-white mb-2">New Delivery</h1>
-      <p className="text-white/80 mb-8 text-lg">
-        Upload your files to create new kitchen delivery in the warehouse
+    <div className="flex flex-col items-center pt-4 sm:pt-12 px-2 sm:px-4">
+      <h1 className="text-2xl sm:text-4xl font-black text-white mb-2">New Delivery</h1>
+      <p className="text-white/80 mb-4 sm:mb-8 text-base sm:text-lg text-center">
+        Upload CSV or Excel files to create new kitchen delivery
       </p>
 
       {/* Drop zone */}
       <div
-        className={`drop-zone w-full max-w-2xl h-64 rounded-lg bg-card flex flex-col items-center justify-center cursor-pointer ${
+        className={`drop-zone w-full max-w-2xl h-48 sm:h-64 rounded-lg bg-card flex flex-col items-center justify-center cursor-pointer ${
           dragging ? "dragging" : ""
         }`}
         onDragOver={(e) => {
@@ -240,11 +227,11 @@ export default function DeliveryUploadPage() {
       >
         <CloudUploadIcon />
         <p className="text-white text-lg mt-4 font-medium">Drag your files here</p>
-        <p className="text-white/50 text-sm mt-1">or click to browse</p>
+        <p className="text-white/50 text-sm mt-1">CSV or Excel (.xlsx) files</p>
         <input
           ref={fileRef}
           type="file"
-          accept=".csv"
+          accept=".csv,.xlsx,.xls"
           multiple
           className="hidden"
           onChange={(e) => e.target.files && handleFiles(e.target.files)}
@@ -259,8 +246,8 @@ export default function DeliveryUploadPage() {
               key={i}
               className="bg-card/60 rounded px-4 py-2 flex justify-between items-center"
             >
-              <span className="text-white font-medium">{f.name}</span>
-              <div className="flex items-center gap-4">
+              <span className="text-white font-medium truncate mr-2">{f.name}</span>
+              <div className="flex items-center gap-4 shrink-0">
                 <span className="text-white/60 text-sm">{f.rows.length} items</span>
                 <button
                   onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
@@ -288,6 +275,14 @@ export default function DeliveryUploadPage() {
             Review & Upload
           </button>
         </div>
+      )}
+
+      {files.length === 0 && mappings.length === 0 && (
+        <p className="text-white/40 text-sm mt-4 text-center">
+          No column mappings configured for this supplier. Using auto-detect.
+          <br />
+          Admin can set up mappings in Settings &rarr; Import Mappings.
+        </p>
       )}
     </div>
   );

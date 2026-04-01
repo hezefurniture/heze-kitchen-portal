@@ -43,8 +43,9 @@ model Supplier {
   slug      String   @unique
   createdAt DateTime @default(now())
 
-  orders     Order[]
-  deliveries Delivery[]
+  orders         Order[]
+  deliveries     Delivery[]
+  columnMappings ColumnMapping[]
 }
 
 model Delivery {
@@ -95,6 +96,29 @@ model AppSettings {
   navLogo   String? // base64 encoded image for header navigation
   mainLogo  String? // base64 encoded image for login/dashboard pages
   updatedAt DateTime @default(now()) @updatedAt
+}
+
+// Column mapping configuration per supplier for file imports
+// targetField: "orderNumber" | "itemName" | "barcode" | "quantity"
+// sourceColumns: JSON array of source column names e.g. ["Col A", "Col B"]
+// mergeStrategy: "first" (use first non-empty) | "concat" (join with separator) | "template" (use template string)
+// separator: string used to join columns when strategy is "concat" (default: " ")
+// template: template string like "{Col A} - {Col B}" when strategy is "template"
+// prefix: static text prepended to result
+// suffix: static text appended to result
+model ColumnMapping {
+  id             String   @id @default(cuid())
+  supplier       Supplier @relation(fields: [supplierId], references: [id])
+  supplierId     String
+  targetField    String   // orderNumber, itemName, barcode, quantity
+  sourceColumns  String   // JSON array: ["Column A", "Column B"]
+  mergeStrategy  String   @default("first") // first, concat, template
+  separator      String   @default(" ")
+  template       String   @default("")
+  prefix         String   @default("")
+  suffix         String   @default("")
+
+  @@unique([supplierId, targetField])
 }
 
 model ScanLog {

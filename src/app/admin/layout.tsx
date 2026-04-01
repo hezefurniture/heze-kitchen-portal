@@ -44,6 +44,9 @@ export default function AdminLayout({
           <Link href="/admin/settings" className="text-white/80 hover:text-white">
             Logos
           </Link>
+          <Link href="/admin/column-mappings" className="text-white/80 hover:text-white">
+            Import Mappings
+          </Link>
           <span className="text-white/30">|</span>
           <Link href="/dashboard" className="text-white/80 hover:text-white">
             Back to Dashboard
