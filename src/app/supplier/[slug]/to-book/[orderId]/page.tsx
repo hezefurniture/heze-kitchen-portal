@@ -13,11 +13,10 @@ interface OrderDetail {
     itemName: string;
     quantity: number;
     scannedQty: number;
-    despatchedQty: number;
   }[];
 }
 
-export default function OrderDetailPage() {
+export default function ToBookOrderDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const orderId = params.orderId as string;
@@ -38,19 +37,18 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <div className="flex flex-col items-center pt-8 px-4">
-      <h1 className="text-3xl font-black text-white mb-6">
+    <div className="flex flex-col items-center pt-4 sm:pt-8 px-2 sm:px-4 pb-20">
+      <h1 className="text-2xl sm:text-3xl font-black text-white mb-4 sm:mb-6 text-center break-all px-2">
         ORDER: {order.orderNumber}
       </h1>
 
       <div className="w-full max-w-4xl bg-white rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
-              <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">NAME</th>
-              <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">QTY</th>
-              <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">SCANNED</th>
-              <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">DESPATCHED</th>
+            <tr className="bg-gray-100 text-gray-700">
+              <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold text-xs sm:text-sm">NAME</th>
+              <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold text-xs sm:text-sm w-16 sm:w-24">QTY</th>
+              <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold text-xs sm:text-sm w-20 sm:w-24">SCANNED</th>
             </tr>
           </thead>
           <tbody>
@@ -60,14 +58,11 @@ export default function OrderDetailPage() {
               return (
                 <tr
                   key={item.id}
-                  className={
-                    isScanned ? "bg-green-200" : isPartial ? "bg-yellow-200" : "bg-yellow-100"
-                  }
+                  className={isScanned ? "bg-green-200" : isPartial ? "bg-yellow-200" : "bg-yellow-100"}
                 >
                   <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.itemName}</td>
                   <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
                   <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
-                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.despatchedQty}</td>
                 </tr>
               );
             })}
@@ -77,10 +72,10 @@ export default function OrderDetailPage() {
 
       <div className="mt-6">
         <Link
-          href={`/supplier/${slug}/in-stock`}
+          href={`/supplier/${slug}/to-book`}
           className="px-8 py-3 rounded border-2 border-white text-white font-bold hover:bg-white/10 transition"
         >
-          Back to Kitchens In Stock
+          Back to Kitchens to Book
         </Link>
       </div>
     </div>

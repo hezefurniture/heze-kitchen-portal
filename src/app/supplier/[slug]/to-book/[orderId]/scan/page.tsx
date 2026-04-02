@@ -159,12 +159,12 @@ export default function BookScanPage() {
       )}
 
       <div className="w-full max-w-4xl bg-white rounded-lg overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full text-sm">
           <thead><tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
             <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">NAME</th>
-            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold w-16 sm:w-24">QTY</th>
-            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold w-16 sm:w-24">DONE</th>
-            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold w-24 sm:w-32">+/-</th>
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">QTY</th>
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">DONE</th>
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">+/-</th>
           </tr></thead>
           <tbody>
             {order.items.map((item) => {
@@ -172,9 +172,9 @@ export default function BookScanPage() {
               const partial = item.scannedQty > 0 && !done;
               return (
                 <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
-                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-sm sm:text-base">{item.itemName}</td>
-                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800">{item.quantity}</td>
-                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800">{item.scannedQty}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.itemName}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
                   <td className="py-2 sm:py-3 px-2 sm:px-4 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.scannedQty <= 0}

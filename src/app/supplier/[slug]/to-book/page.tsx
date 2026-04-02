@@ -129,7 +129,7 @@ export default function ToBookPage() {
                 <Link href={`/supplier/${slug}/to-book/${order.id}/scan`} className="bg-accent hover:bg-accent-light text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded transition text-sm sm:text-base">
                   Scan
                 </Link>
-                <Link href={`/supplier/${slug}/in-stock/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded transition text-sm sm:text-base">
+                <Link href={`/supplier/${slug}/to-book/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded transition text-sm sm:text-base">
                   View
                 </Link>
                 <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white p-2 sm:p-3 rounded transition" title="Edit order number">

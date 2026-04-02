@@ -172,13 +172,13 @@ export default function DespatchPage() {
         </div>
       )}
 
-      <div className="w-full max-w-4xl bg-white rounded-lg overflow-hidden">
-        <table className="w-full">
-          <thead><tr className="bg-gray-100 text-gray-700 text-sm">
-            <th className="py-3 px-4 text-center font-bold">NAME</th>
-            <th className="py-3 px-4 text-center font-bold w-24">QTY</th>
-            <th className="py-3 px-4 text-center font-bold w-28">DESPATCHED</th>
-            <th className="py-3 px-4 text-center font-bold w-32">MANUAL</th>
+      <div className="w-full max-w-4xl bg-white rounded-lg overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead><tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">NAME</th>
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">QTY</th>
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">DESPATCHED</th>
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">MANUAL</th>
           </tr></thead>
           <tbody>
             {order.items.map((item) => {
@@ -186,10 +186,10 @@ export default function DespatchPage() {
               const partial = item.despatchedQty > 0 && !done;
               return (
                 <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
-                  <td className="py-3 px-4 text-center text-gray-800">{item.itemName}</td>
-                  <td className="py-3 px-4 text-center text-gray-800">{item.quantity}</td>
-                  <td className="py-3 px-4 text-center text-gray-800">{item.despatchedQty}</td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.itemName}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.despatchedQty}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.despatchedQty <= 0}
                         className="w-10 h-10 sm:w-8 sm:h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
