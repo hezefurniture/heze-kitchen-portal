@@ -55,7 +55,7 @@ export function Header() {
 
   const LogoBlock = () =>
     navLogo ? (
-      <img src={navLogo} alt="Logo" className="h-10 max-w-[120px] object-contain" />
+      <img src={navLogo} alt="Logo" className="h-10 max-w-[120px] object-contain block" />
     ) : (
       <span className="font-bold leading-none block">
         <span className="text-[9px] tracking-wider block">KITCHENS</span>
@@ -68,7 +68,7 @@ export function Header() {
       <header ref={headerRef} className="bg-header text-white sticky top-0 z-50">
         {/* Mobile: 3-column grid — logo left, supplier center, hamburger right */}
         <div className="grid grid-cols-[auto_1fr_auto] items-center px-3 py-3 lg:hidden">
-          <Link href="/dashboard" className="shrink-0 self-center">
+          <Link href="/dashboard" className="shrink-0 self-center flex items-center">
             <LogoBlock />
           </Link>
           <div className="flex flex-col items-center justify-self-center self-center">
