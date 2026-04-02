@@ -44,13 +44,13 @@ export default function OrderDetailPage() {
       </h1>
 
       <div className="w-full max-w-4xl bg-white rounded-lg overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
           <thead>
             <tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
-              <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">NAME</th>
-              <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">QTY</th>
-              <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">SCANNED</th>
-              <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">DESPATCHED</th>
+              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
+              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
+              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">SCANNED</th>
+              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">DESPATCHED</th>
             </tr>
           </thead>
           <tbody>
@@ -64,10 +64,10 @@ export default function OrderDetailPage() {
                     isScanned ? "bg-green-200" : isPartial ? "bg-yellow-200" : "bg-yellow-100"
                   }
                 >
-                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.itemName}</td>
-                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
-                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
-                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.despatchedQty}</td>
+                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">{item.itemName}</td>
+                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
+                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
+                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.despatchedQty}</td>
                 </tr>
               );
             })}

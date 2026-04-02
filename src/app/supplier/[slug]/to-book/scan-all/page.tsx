@@ -187,12 +187,12 @@ export default function ScanAllPage() {
               </button>
               {isExpanded && (
                 <div className="bg-white rounded-b-lg overflow-x-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm table-fixed">
                     <thead><tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
-                      <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">NAME</th>
-                      <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">QTY</th>
-                      <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">DONE</th>
-                      <th className="py-2 sm:py-3 px-2 sm:px-4 text-center font-bold">+/-</th>
+                      <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
+                      <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
+                      <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-16">DONE</th>
+                      <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[72px] sm:w-24">+/-</th>
                     </tr></thead>
                     <tbody>
                       {order.items.map((item) => {
@@ -200,15 +200,15 @@ export default function ScanAllPage() {
                         const partial = item.scannedQty > 0 && !done;
                         return (
                           <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
-                            <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.itemName}</td>
-                            <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
-                            <td className="py-2 sm:py-3 px-2 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
-                            <td className="py-2 sm:py-3 px-2 sm:px-4 text-center">
+                            <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">{item.itemName}</td>
+                            <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
+                            <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
+                            <td className="py-2 sm:py-3 px-1 sm:px-4 text-center">
                               <div className="flex items-center justify-center gap-1">
                                 <button onClick={() => handleManualScan(order.id, item.id, "decrement")} disabled={item.scannedQty <= 0}
-                                  className="w-10 h-10 sm:w-8 sm:h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
+                                  className="w-8 h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-sm flex items-center justify-center transition">-</button>
                                 <button onClick={() => handleManualScan(order.id, item.id, "increment")} disabled={item.scannedQty >= item.quantity}
-                                  className="w-10 h-10 sm:w-8 sm:h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
+                                  className="w-8 h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-sm flex items-center justify-center transition">+</button>
                               </div>
                             </td>
                           </tr>
