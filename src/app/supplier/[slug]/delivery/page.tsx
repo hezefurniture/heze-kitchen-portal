@@ -116,17 +116,32 @@ export default function DeliveryUploadPage() {
   };
 
   const handleReview = () => {
-    const allRows = files.flatMap((f) => f.rows);
+    // For BRW Kitchens, multiple element types can share the same barcode
+    // (one physical box = several rows), so we keep them as separate rows
+    // instead of merging by barcode.
+    const isBrw = slug === "brw";
+
+    // First divide rows by order, then process items inside each order.
     const groupMap = new Map<string, { itemName: string; barcode: string; quantity: number }[]>();
-    for (const row of allRows) {
-      const items = groupMap.get(row.orderNumber) || [];
-      const existing = items.find((i) => i.barcode === row.barcode);
-      if (existing) {
-        existing.quantity += row.quantity;
-      } else {
-        items.push({ itemName: row.itemName, barcode: row.barcode, quantity: row.quantity });
+    for (const file of files) {
+      for (const row of file.rows) {
+        if (!groupMap.has(row.orderNumber)) {
+          groupMap.set(row.orderNumber, []);
+        }
       }
-      groupMap.set(row.orderNumber, items);
+    }
+    for (const file of files) {
+      for (const row of file.rows) {
+        const items = groupMap.get(row.orderNumber)!;
+        const existing = isBrw
+          ? items.find((i) => i.barcode === row.barcode && i.itemName === row.itemName)
+          : items.find((i) => i.barcode === row.barcode);
+        if (existing) {
+          existing.quantity += row.quantity;
+        } else {
+          items.push({ itemName: row.itemName, barcode: row.barcode, quantity: row.quantity });
+        }
+      }
     }
     const groups: OrderGroup[] = [];
     for (const [orderNumber, items] of groupMap) {
