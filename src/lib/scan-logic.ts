@@ -38,21 +38,37 @@ export async function assignDeliveryScan(
       return { matched: false, error: "No matching item found or all quantities fulfilled" };
     }
 
-    // Increment scanned quantity
-    const updated = await tx.orderItem.update({
-      where: { id: item.id },
-      data: { scannedQty: { increment: 1 } },
-    });
+    // BRW Kitchens special-case: a single barcode represents one physical box
+    // that contains multiple element types. Scanning it should increment all
+    // open rows in the same order that share this barcode.
+    const supplier = await tx.supplier.findUnique({ where: { id: supplierId } });
+    const isBrw = supplier?.slug === "brw";
 
-    // Create scan log
-    await tx.scanLog.create({
-      data: {
-        orderItemId: item.id,
-        scannedById: userId,
-        scanType: "DELIVERY",
-        barcode,
-      },
-    });
+    // Items in the same order with this barcode that still have open qty.
+    const sameOrderOpenItems = isBrw
+      ? items.filter((i) => i.orderId === item.orderId && i.scannedQty < i.quantity)
+      : [item];
+
+    // Increment scanned quantity for the targeted item(s)
+    const updatedMap = new Map<string, number>();
+    for (const target of sameOrderOpenItems) {
+      const u = await tx.orderItem.update({
+        where: { id: target.id },
+        data: { scannedQty: { increment: 1 } },
+      });
+      updatedMap.set(target.id, u.scannedQty);
+
+      await tx.scanLog.create({
+        data: {
+          orderItemId: target.id,
+          scannedById: userId,
+          scanType: "DELIVERY",
+          barcode,
+        },
+      });
+    }
+
+    const updatedScannedQty = updatedMap.get(item.id) ?? item.scannedQty + 1;
 
     // Check if all items in this order are fully scanned
     const orderItems = await tx.orderItem.findMany({
@@ -60,7 +76,7 @@ export async function assignDeliveryScan(
     });
 
     const allScanned = orderItems.every((oi) => {
-      const qty = oi.id === item.id ? updated.scannedQty : oi.scannedQty;
+      const qty = updatedMap.has(oi.id) ? updatedMap.get(oi.id)! : oi.scannedQty;
       return qty >= oi.quantity;
     });
 
@@ -75,7 +91,7 @@ export async function assignDeliveryScan(
       matched: true,
       orderNumber: item.order.orderNumber,
       itemName: item.itemName,
-      newScannedQty: updated.scannedQty,
+      newScannedQty: updatedScannedQty,
       totalQty: item.quantity,
       orderId: item.orderId,
     };
@@ -102,19 +118,37 @@ export async function assignDespatchScan(
       return { matched: false, error: "No matching item found or all quantities despatched" };
     }
 
-    const updated = await tx.orderItem.update({
-      where: { id: item.id },
-      data: { despatchedQty: { increment: 1 } },
+    // BRW Kitchens special-case: one barcode = one box containing multiple
+    // element types, so despatch-scanning it advances every open row in this
+    // order that shares the barcode.
+    const supplier = await tx.supplier.findUnique({
+      where: { id: item.order.supplierId },
     });
+    const isBrw = supplier?.slug === "brw";
 
-    await tx.scanLog.create({
-      data: {
-        orderItemId: item.id,
-        scannedById: userId,
-        scanType: "DESPATCH",
-        barcode,
-      },
-    });
+    const targets = isBrw
+      ? items.filter((i) => i.despatchedQty < i.quantity)
+      : [item];
+
+    const updatedMap = new Map<string, number>();
+    for (const target of targets) {
+      const u = await tx.orderItem.update({
+        where: { id: target.id },
+        data: { despatchedQty: { increment: 1 } },
+      });
+      updatedMap.set(target.id, u.despatchedQty);
+
+      await tx.scanLog.create({
+        data: {
+          orderItemId: target.id,
+          scannedById: userId,
+          scanType: "DESPATCH",
+          barcode,
+        },
+      });
+    }
+
+    const updatedDespatchedQty = updatedMap.get(item.id) ?? item.despatchedQty + 1;
 
     // Check if all items in this order are fully despatched
     const orderItems = await tx.orderItem.findMany({
@@ -122,7 +156,7 @@ export async function assignDespatchScan(
     });
 
     const allDespatched = orderItems.every((oi) => {
-      const qty = oi.id === item.id ? updated.despatchedQty : oi.despatchedQty;
+      const qty = updatedMap.has(oi.id) ? updatedMap.get(oi.id)! : oi.despatchedQty;
       return qty >= oi.quantity;
     });
 
@@ -142,7 +176,7 @@ export async function assignDespatchScan(
       matched: true,
       orderNumber: item.order.orderNumber,
       itemName: item.itemName,
-      newScannedQty: updated.despatchedQty,
+      newScannedQty: updatedDespatchedQty,
       totalQty: item.quantity,
       orderId: item.orderId,
     };
