@@ -8,6 +8,8 @@ import { useOnlineStatus } from "@/lib/use-online-status";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import { useBarcodeScanner } from "@/lib/use-barcode-scanner";
 import { ManualBarcodeInput } from "@/components/manual-barcode-input";
+import { EditableQty } from "@/components/editable-qty";
+import { LastScannedPanel, type LastScannedItem } from "@/components/last-scanned-panel";
 
 interface OrderItem {
   id: string;
@@ -33,6 +35,9 @@ export default function BookScanPage() {
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [lastScan, setLastScan] = useState<any>(null);
+  const [lastScannedItems, setLastScannedItems] = useState<LastScannedItem[]>([]);
+  const [lastScannedOrder, setLastScannedOrder] = useState<string | undefined>();
+  const [lastScannedBarcode, setLastScannedBarcode] = useState<string | undefined>();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const { isOnline, queueCount, refreshQueueCount } = useOnlineStatus();
@@ -73,6 +78,11 @@ export default function BookScanPage() {
       const result = await res.json();
       setLastScan(result);
       if (result.matched) {
+        if (result.scannedItems?.length) {
+          setLastScannedItems(result.scannedItems);
+          setLastScannedOrder(result.orderNumber);
+          setLastScannedBarcode(result.barcode || barcode.trim());
+        }
         if (soundOn) playSuccessSound();
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 1500);
@@ -102,6 +112,25 @@ export default function BookScanPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ itemId, action, type: "delivery" }),
       });
+      await loadOrder();
+    } catch {}
+  };
+
+  const handleSetQty = async (
+    itemId: string,
+    value: number,
+    type: "delivery" | "despatch" = "delivery"
+  ) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/manual-scan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId, action: "set", value, type }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setLastScannedItems((prev) =>
+        prev.map((it) => (it.itemId === itemId ? { ...it, newQty: value } : it))
+      );
       await loadOrder();
     } catch {}
   };
@@ -151,6 +180,14 @@ export default function BookScanPage() {
 
       <ManualBarcodeInput onSubmit={handleManualSubmit} />
 
+      <LastScannedPanel
+        orderNumber={lastScannedOrder}
+        barcode={lastScannedBarcode}
+        items={lastScannedItems}
+        type="delivery"
+        onUpdate={handleSetQty}
+      />
+
       {lastScan && !lastScan.matched && (
         <div className="w-full max-w-4xl bg-red-500/80 text-white rounded-lg px-4 sm:px-6 py-3 mb-4 fade-in">
           <p className="font-bold">Item not found</p>
@@ -174,7 +211,13 @@ export default function BookScanPage() {
                 <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">{item.itemName}</td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
-                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
+                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">
+                    <EditableQty
+                      value={item.scannedQty}
+                      max={item.quantity}
+                      onChange={(v) => handleSetQty(item.id, v, "delivery")}
+                    />
+                  </td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.scannedQty <= 0}

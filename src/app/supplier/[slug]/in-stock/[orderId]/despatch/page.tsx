@@ -8,6 +8,8 @@ import { useOnlineStatus } from "@/lib/use-online-status";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import { useBarcodeScanner } from "@/lib/use-barcode-scanner";
 import { ManualBarcodeInput } from "@/components/manual-barcode-input";
+import { EditableQty } from "@/components/editable-qty";
+import { LastScannedPanel, type LastScannedItem } from "@/components/last-scanned-panel";
 
 interface OrderItem {
   id: string;
@@ -32,6 +34,9 @@ export default function DespatchPage() {
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [lastScan, setLastScan] = useState<any>(null);
+  const [lastScannedItems, setLastScannedItems] = useState<LastScannedItem[]>([]);
+  const [lastScannedOrder, setLastScannedOrder] = useState<string | undefined>();
+  const [lastScannedBarcode, setLastScannedBarcode] = useState<string | undefined>();
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
@@ -73,6 +78,11 @@ export default function DespatchPage() {
       const result = await res.json();
       setLastScan(result);
       if (result.matched) {
+        if (result.scannedItems?.length) {
+          setLastScannedItems(result.scannedItems);
+          setLastScannedOrder(result.orderNumber);
+          setLastScannedBarcode(result.barcode || barcode.trim());
+        }
         if (soundOn) playSuccessSound();
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 1500);
@@ -102,6 +112,26 @@ export default function DespatchPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ itemId, action, type: "despatch" }),
       });
+      await loadOrder();
+    } catch {}
+  };
+
+  const handleSetQty = async (
+    itemId: string,
+    value: number,
+    type: "delivery" | "despatch" = "despatch"
+  ) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/manual-scan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId, action: "set", value, type }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      // Reflect new value in the Last Scanned panel as well
+      setLastScannedItems((prev) =>
+        prev.map((it) => (it.itemId === itemId ? { ...it, newQty: value } : it))
+      );
       await loadOrder();
     } catch {}
   };
@@ -165,6 +195,14 @@ export default function DespatchPage() {
 
       <ManualBarcodeInput onSubmit={handleManualSubmit} />
 
+      <LastScannedPanel
+        orderNumber={lastScannedOrder}
+        barcode={lastScannedBarcode}
+        items={lastScannedItems}
+        type="despatch"
+        onUpdate={handleSetQty}
+      />
+
       {lastScan && !lastScan.matched && (
         <div className="w-full max-w-4xl bg-red-500/80 text-white rounded-lg px-6 py-3 mb-4 fade-in">
           <p className="font-bold">Item not found or already despatched</p>
@@ -177,7 +215,7 @@ export default function DespatchPage() {
           <thead><tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
             <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
             <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">DESPATCHED</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">DONE</th>
             <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[72px] sm:w-24">MANUAL</th>
           </tr></thead>
           <tbody>
@@ -188,7 +226,13 @@ export default function DespatchPage() {
                 <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">{item.itemName}</td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
-                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.despatchedQty}</td>
+                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">
+                    <EditableQty
+                      value={item.despatchedQty}
+                      max={item.quantity}
+                      onChange={(v) => handleSetQty(item.id, v, "despatch")}
+                    />
+                  </td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.despatchedQty <= 0}

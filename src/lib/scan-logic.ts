@@ -1,5 +1,13 @@
 import { prisma } from "./db";
 
+export interface ScannedItemDetail {
+  itemId: string;
+  itemName: string;
+  barcode: string;
+  newQty: number;
+  totalQty: number;
+}
+
 export interface ScanResult {
   matched: boolean;
   orderNumber?: string;
@@ -7,6 +15,8 @@ export interface ScanResult {
   newScannedQty?: number;
   totalQty?: number;
   orderId?: string;
+  barcode?: string;
+  scannedItems?: ScannedItemDetail[];
   error?: string;
 }
 
@@ -87,6 +97,14 @@ export async function assignDeliveryScan(
       });
     }
 
+    const scannedItems: ScannedItemDetail[] = sameOrderOpenItems.map((t) => ({
+      itemId: t.id,
+      itemName: t.itemName,
+      barcode: t.barcode,
+      newQty: updatedMap.get(t.id) ?? t.scannedQty + 1,
+      totalQty: t.quantity,
+    }));
+
     return {
       matched: true,
       orderNumber: item.order.orderNumber,
@@ -94,6 +112,8 @@ export async function assignDeliveryScan(
       newScannedQty: updatedScannedQty,
       totalQty: item.quantity,
       orderId: item.orderId,
+      barcode: item.barcode,
+      scannedItems,
     };
   });
 }
@@ -172,6 +192,14 @@ export async function assignDespatchScan(
       });
     }
 
+    const scannedItems: ScannedItemDetail[] = targets.map((t) => ({
+      itemId: t.id,
+      itemName: t.itemName,
+      barcode: t.barcode,
+      newQty: updatedMap.get(t.id) ?? t.despatchedQty + 1,
+      totalQty: t.quantity,
+    }));
+
     return {
       matched: true,
       orderNumber: item.order.orderNumber,
@@ -179,6 +207,8 @@ export async function assignDespatchScan(
       newScannedQty: updatedDespatchedQty,
       totalQty: item.quantity,
       orderId: item.orderId,
+      barcode: item.barcode,
+      scannedItems,
     };
   });
 }

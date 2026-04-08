@@ -12,9 +12,10 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { itemId, action, type } = await req.json();
-  // action: "increment" | "decrement"
+  const { itemId, action, type, value } = await req.json();
+  // action: "increment" | "decrement" | "set"
   // type: "delivery" | "despatch"
+  // value: number (only for "set")
 
   if (!itemId || !action || !type) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -38,17 +39,36 @@ export async function POST(
   if (action === "decrement" && currentVal <= 0) {
     return NextResponse.json({ error: "Already at zero" }, { status: 400 });
   }
+  if (action === "set") {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      return NextResponse.json({ error: "Invalid value" }, { status: 400 });
+    }
+    if (value < 0 || value > item.quantity) {
+      return NextResponse.json(
+        { error: `Value must be between 0 and ${item.quantity}` },
+        { status: 400 }
+      );
+    }
+  }
+
+  let updateData: any;
+  if (action === "increment") {
+    updateData = { [field]: { increment: 1 } };
+  } else if (action === "decrement") {
+    updateData = { [field]: { decrement: 1 } };
+  } else {
+    updateData = { [field]: Math.floor(value) };
+  }
 
   const updated = await prisma.orderItem.update({
     where: { id: itemId },
-    data: {
-      [field]: action === "increment" ? { increment: 1 } : { decrement: 1 },
-    },
+    data: updateData,
   });
 
   // Log the manual scan
   const userId = (session.user as any).id;
-  if (action === "increment") {
+  const newVal = type === "despatch" ? updated.despatchedQty : updated.scannedQty;
+  if (action === "increment" || (action === "set" && newVal > currentVal)) {
     await prisma.scanLog.create({
       data: {
         orderItemId: itemId,

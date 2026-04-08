@@ -8,6 +8,8 @@ import { addToQueue } from "@/lib/offline-queue";
 import { useOnlineStatus } from "@/lib/use-online-status";
 import { useWakeLock } from "@/lib/use-wake-lock";
 import { useBarcodeScanner } from "@/lib/use-barcode-scanner";
+import { EditableQty } from "@/components/editable-qty";
+import { LastScannedPanel, type LastScannedItem } from "@/components/last-scanned-panel";
 
 interface OrderItem {
   id: string;
@@ -29,6 +31,9 @@ interface ScanResult {
   itemName?: string;
   newScannedQty?: number;
   totalQty?: number;
+  orderId?: string;
+  barcode?: string;
+  scannedItems?: LastScannedItem[];
   error?: string;
 }
 
@@ -41,6 +46,10 @@ export default function ScanAllPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [lastScan, setLastScan] = useState<ScanResult | null>(null);
+  const [lastScannedItems, setLastScannedItems] = useState<LastScannedItem[]>([]);
+  const [lastScannedOrder, setLastScannedOrder] = useState<string | undefined>();
+  const [lastScannedBarcode, setLastScannedBarcode] = useState<string | undefined>();
+  const [lastScannedOrderId, setLastScannedOrderId] = useState<string | undefined>();
   const [supplierId, setSupplierId] = useState<string>("");
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
@@ -90,6 +99,12 @@ export default function ScanAllPage() {
       const result: ScanResult = await res.json();
       setLastScan(result);
       if (result.matched) {
+        if (result.scannedItems?.length) {
+          setLastScannedItems(result.scannedItems);
+          setLastScannedOrder(result.orderNumber);
+          setLastScannedBarcode(result.barcode || barcode.trim());
+          setLastScannedOrderId(result.orderId);
+        }
         if (isSoundEnabled()) playSuccessSound();
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 1500);
@@ -119,6 +134,25 @@ export default function ScanAllPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ itemId, action, type: "delivery" }),
       });
+      await loadOrders();
+    } catch {}
+  };
+
+  const handleSetQty = async (
+    orderId: string,
+    itemId: string,
+    value: number
+  ) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/manual-scan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId, action: "set", value, type: "delivery" }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      setLastScannedItems((prev) =>
+        prev.map((it) => (it.itemId === itemId ? { ...it, newQty: value } : it))
+      );
       await loadOrders();
     } catch {}
   };
@@ -159,6 +193,18 @@ export default function ScanAllPage() {
       <p className="text-white/80 mb-3 text-base sm:text-lg text-center">Scan items across all pending orders</p>
 
       <ManualBarcodeInput onSubmit={handleManualSubmit} />
+
+      <LastScannedPanel
+        orderNumber={lastScannedOrder}
+        barcode={lastScannedBarcode}
+        items={lastScannedItems}
+        type="delivery"
+        onUpdate={(itemId, value) =>
+          lastScannedOrderId
+            ? handleSetQty(lastScannedOrderId, itemId, value)
+            : Promise.resolve()
+        }
+      />
 
       {lastScan && !lastScan.matched && (
         <div className="w-full max-w-4xl bg-red-500/80 text-white rounded-lg px-4 sm:px-6 py-3 mb-4 fade-in">
@@ -202,7 +248,13 @@ export default function ScanAllPage() {
                           <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
                             <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">{item.itemName}</td>
                             <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
-                            <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
+                            <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">
+                              <EditableQty
+                                value={item.scannedQty}
+                                max={item.quantity}
+                                onChange={(v) => handleSetQty(order.id, item.id, v)}
+                              />
+                            </td>
                             <td className="py-2 sm:py-3 px-1 sm:px-4 text-center">
                               <div className="flex items-center justify-center gap-1">
                                 <button onClick={() => handleManualScan(order.id, item.id, "decrement")} disabled={item.scannedQty <= 0}
