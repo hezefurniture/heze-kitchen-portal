@@ -84,20 +84,22 @@ export async function assignDeliveryScan(
     const isBrw = supplier?.slug === "brw";
     const isExtom = supplier?.slug === "extom";
 
-    // Extom disambiguation: if this barcode is in the ambiguous list and there
-    // are multiple distinct item names with open qty in the same order, pause
-    // and ask the operator to pick which item was actually scanned.
+    // Extom disambiguation: if this barcode is in the ambiguous list, ALWAYS
+    // ask the operator to pick which item was scanned — even if only one name
+    // has open qty. This prevents the system from silently assigning scans to
+    // the wrong item when the supplier ships the wrong box mix.
     if (isExtom) {
       const ambiguousSet = await getExtomAmbiguousBarcodes(tx);
       if (ambiguousSet.has(barcode)) {
-        const sameOrderOpen = openItems.filter((i) => i.orderId === item.orderId);
-        const distinctNames = new Set(sameOrderOpen.map((i) => i.itemName));
-        if (distinctNames.size > 1) {
+        // Show ALL items in the earliest order with this barcode (open + complete)
+        // so the operator can see the full picture.
+        const sameOrderAll = items.filter((i) => i.orderId === item.orderId);
+        if (sameOrderAll.length > 1) {
           return {
             matched: false,
             ambiguous: true,
             barcode,
-            candidates: sameOrderOpen.map((i) => ({
+            candidates: sameOrderAll.map((i) => ({
               itemId: i.id,
               orderId: i.orderId,
               orderNumber: i.order.orderNumber,
@@ -203,26 +205,23 @@ export async function assignDespatchScan(
     const isBrw = supplier?.slug === "brw";
     const isExtom = supplier?.slug === "extom";
 
-    // Extom disambiguation for despatch
+    // Extom disambiguation for despatch — always ask when barcode is ambiguous
     if (isExtom) {
       const ambiguousSet = await getExtomAmbiguousBarcodes(tx);
-      if (ambiguousSet.has(barcode)) {
-        const distinctNames = new Set(openItems.map((i) => i.itemName));
-        if (distinctNames.size > 1) {
-          return {
-            matched: false,
-            ambiguous: true,
-            barcode,
-            candidates: openItems.map((i) => ({
-              itemId: i.id,
-              orderId: i.orderId,
-              orderNumber: i.order.orderNumber,
-              itemName: i.itemName,
-              scannedQty: i.despatchedQty,
-              quantity: i.quantity,
-            })),
-          };
-        }
+      if (ambiguousSet.has(barcode) && items.length > 1) {
+        return {
+          matched: false,
+          ambiguous: true,
+          barcode,
+          candidates: items.map((i) => ({
+            itemId: i.id,
+            orderId: i.orderId,
+            orderNumber: i.order.orderNumber,
+            itemName: i.itemName,
+            scannedQty: i.despatchedQty,
+            quantity: i.quantity,
+          })),
+        };
       }
     }
 
