@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { assignDeliveryScan } from "@/lib/scan-logic";
+import { OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
@@ -10,14 +11,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { barcode, supplierId, deliveryId } = await req.json();
+  const { barcode, supplierId, deliveryId, preferredOrderId, allowedStatuses } = await req.json();
 
   if (!barcode || !supplierId) {
     return NextResponse.json({ error: "Missing barcode or supplierId" }, { status: 400 });
   }
 
   const userId = (session.user as any).id;
-  const result = await assignDeliveryScan(barcode, supplierId, userId, deliveryId);
+  const result = await assignDeliveryScan(barcode, supplierId, userId, deliveryId, preferredOrderId, allowedStatuses as OrderStatus[] | undefined);
 
   return NextResponse.json(result);
 }

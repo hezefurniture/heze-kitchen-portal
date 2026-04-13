@@ -270,11 +270,25 @@ export default function BookScanPage() {
         </table>
       </div>
 
-      {allDone && (
-        <div className="mt-6">
+      <div className="mt-6 flex flex-col items-center gap-3">
+        {allDone && (
           <button onClick={() => router.push(`/supplier/${slug}/to-book`)} className="px-8 sm:px-12 py-4 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition min-h-[56px]">Done - Back to Kitchens to Book</button>
-        </div>
-      )}
+        )}
+        {!allDone && totalScanned > 0 && (
+          <button
+            onClick={async () => {
+              if (!window.confirm(`Move order ${order.orderNumber} to In Stock?\n\nOnly ${totalScanned} of ${totalQty} items scanned.`)) return;
+              try {
+                await fetch(`/api/orders/${orderId}/move-to-stock`, { method: "POST" });
+                router.push(`/supplier/${slug}/to-book`);
+              } catch {}
+            }}
+            className="px-8 sm:px-12 py-3 rounded border-2 border-yellow-400 text-yellow-300 font-bold text-base hover:bg-yellow-400/10 transition"
+          >
+            Move to In Stock ({totalScanned}/{totalQty} scanned)
+          </button>
+        )}
+      </div>
     </div>
   );
 }

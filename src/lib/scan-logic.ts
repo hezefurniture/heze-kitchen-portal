@@ -1,3 +1,4 @@
+import { OrderStatus } from "@prisma/client";
 import { prisma } from "./db";
 
 export interface ScannedItemDetail {
@@ -55,7 +56,9 @@ export async function assignDeliveryScan(
   barcode: string,
   supplierId: string,
   userId: string,
-  deliveryId?: string
+  deliveryId?: string,
+  preferredOrderId?: string,
+  allowedStatuses: OrderStatus[] = ["PENDING"]
 ): Promise<ScanResult> {
   return prisma.$transaction(async (tx) => {
     // Find the first order item matching this barcode with open quantity
@@ -64,7 +67,7 @@ export async function assignDeliveryScan(
         barcode,
         order: {
           supplierId,
-          status: { in: ["PENDING"] },
+          status: { in: allowedStatuses },
         },
         ...(deliveryId ? { deliveryId } : {}),
       },
@@ -74,7 +77,12 @@ export async function assignDeliveryScan(
 
     // Filter to items where scannedQty < quantity
     const openItems = items.filter((i) => i.scannedQty < i.quantity);
-    const item = openItems[0];
+
+    // Prioritise the preferred order (the order the previous scan landed in)
+    // so consecutive items from the same delivery stay grouped.
+    let item = preferredOrderId
+      ? openItems.find((i) => i.orderId === preferredOrderId) ?? openItems[0]
+      : openItems[0];
 
     if (!item) {
       return { matched: false, error: "No matching item found or all quantities fulfilled" };
@@ -151,9 +159,14 @@ export async function assignDeliveryScan(
     });
 
     if (allScanned) {
+      const scanUser = await tx.user.findUnique({ where: { id: userId } });
       await tx.order.update({
         where: { id: item.orderId },
-        data: { status: "IN_STOCK" },
+        data: {
+          status: "IN_STOCK",
+          movedToStockAt: new Date(),
+          movedToStockBy: scanUser?.name || scanUser?.username || userId,
+        },
       });
     }
 

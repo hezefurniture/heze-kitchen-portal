@@ -93,7 +93,7 @@ export default function ScanAllPage() {
     scanningRef.current = true;
 
     const scanUrl = "/api/scan";
-    const scanBody = { barcode: barcode.trim(), supplierId };
+    const scanBody = { barcode: barcode.trim(), supplierId, preferredOrderId: lastScannedOrderId };
 
     try {
       const res = await fetch(scanUrl, {
@@ -308,6 +308,22 @@ export default function ScanAllPage() {
                       })}
                     </tbody>
                   </table>
+                  {orderScanned > 0 && orderScanned < orderTotal && (
+                    <div className="px-3 py-2 bg-gray-50 border-t border-gray-200 flex justify-end">
+                      <button
+                        onClick={async () => {
+                          if (!window.confirm(`Move order ${order.orderNumber} to In Stock?\n\nOnly ${orderScanned} of ${orderTotal} items scanned.`)) return;
+                          try {
+                            await fetch(`/api/orders/${order.id}/move-to-stock`, { method: "POST" });
+                            await loadOrders();
+                          } catch {}
+                        }}
+                        className="text-sm font-bold text-yellow-600 hover:text-yellow-800 transition px-3 py-1 rounded border border-yellow-400 hover:bg-yellow-50"
+                      >
+                        Move to In Stock ({orderScanned}/{orderTotal})
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

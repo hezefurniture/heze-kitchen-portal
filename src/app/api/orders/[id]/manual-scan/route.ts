@@ -95,9 +95,20 @@ export async function POST(
       return val >= oi.quantity;
     });
     if (allDone) {
-      await prisma.order.update({ where: { id: params.id }, data: { status: "IN_STOCK" } });
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      await prisma.order.update({
+        where: { id: params.id },
+        data: {
+          status: "IN_STOCK",
+          movedToStockAt: new Date(),
+          movedToStockBy: user?.name || user?.username || userId,
+        },
+      });
     } else {
-      await prisma.order.update({ where: { id: params.id }, data: { status: "PENDING" } });
+      await prisma.order.update({
+        where: { id: params.id },
+        data: { status: "PENDING", movedToStockAt: null, movedToStockBy: null },
+      });
     }
   }
 

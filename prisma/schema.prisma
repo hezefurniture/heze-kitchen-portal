@@ -60,14 +60,16 @@ model Delivery {
 }
 
 model Order {
-  id            String      @id @default(cuid())
-  supplier      Supplier    @relation(fields: [supplierId], references: [id])
-  supplierId    String
-  orderNumber   String
-  status        OrderStatus @default(PENDING)
-  createdAt     DateTime    @default(now())
-  despatchedAt  DateTime?
-  despatchedBy  String?
+  id              String      @id @default(cuid())
+  supplier        Supplier    @relation(fields: [supplierId], references: [id])
+  supplierId      String
+  orderNumber     String
+  status          OrderStatus @default(PENDING)
+  createdAt       DateTime    @default(now())
+  movedToStockAt  DateTime?
+  movedToStockBy  String?
+  despatchedAt    DateTime?
+  despatchedBy    String?
 
   items OrderItem[]
 

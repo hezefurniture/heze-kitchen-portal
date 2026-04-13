@@ -8,6 +8,8 @@ interface OrderDetail {
   id: string;
   orderNumber: string;
   status: string;
+  movedToStockAt: string | null;
+  movedToStockBy: string | null;
   items: {
     id: string;
     itemName: string;
@@ -37,11 +39,21 @@ export default function OrderDetailPage() {
     );
   }
 
+  const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
+  const totalScanned = order.items.reduce((s, i) => s + i.scannedQty, 0);
+  const hasUnscanned = totalScanned < totalQty;
+
   return (
     <div className="flex flex-col items-center pt-8 px-4">
-      <h1 className="text-3xl font-black text-white mb-6">
+      <h1 className="text-3xl font-black text-white mb-2">
         ORDER: {order.orderNumber}
       </h1>
+      <p className="text-white/60 mb-6 text-center">
+        {order.movedToStockAt
+          ? `In stock since: ${new Date(order.movedToStockAt).toLocaleDateString("en-GB")}`
+          : ""}
+        {order.movedToStockBy && ` | Scanned by: ${order.movedToStockBy}`}
+      </p>
 
       <div className="w-full max-w-4xl bg-white rounded-lg overflow-x-auto">
         <table className="w-full text-sm table-fixed">
@@ -75,7 +87,15 @@ export default function OrderDetailPage() {
         </table>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap gap-3 justify-center">
+        {hasUnscanned && (
+          <Link
+            href={`/supplier/${slug}/in-stock/${orderId}/scan-extra`}
+            className="px-6 py-3 rounded bg-accent text-white font-bold hover:bg-accent-light transition"
+          >
+            Scan More Items ({totalScanned}/{totalQty})
+          </Link>
+        )}
         <Link
           href={`/supplier/${slug}/in-stock`}
           className="px-8 py-3 rounded border-2 border-white text-white font-bold hover:bg-white/10 transition"

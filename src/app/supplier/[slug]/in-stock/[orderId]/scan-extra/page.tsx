@@ -60,7 +60,7 @@ export default function ScanExtraPage() {
   const handleScan = useCallback(async (barcode: string) => {
     if (!barcode.trim() || !order) return;
     const scanUrl = "/api/scan";
-    const scanBody = { barcode: barcode.trim(), supplierId: order.supplier.id };
+    const scanBody = { barcode: barcode.trim(), supplierId: order.supplier.id, allowedStatuses: ["PENDING", "IN_STOCK"] };
     try {
       const res = await fetch(scanUrl, {
         method: "POST",

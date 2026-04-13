@@ -40,6 +40,8 @@ export async function GET(req: NextRequest) {
     orderNumber: o.orderNumber,
     status: o.status,
     createdAt: o.createdAt,
+    movedToStockAt: o.movedToStockAt,
+    movedToStockBy: o.movedToStockBy,
     despatchedAt: o.despatchedAt,
     despatchedBy: o.despatchedBy,
     totalQty: o.items.reduce((s, i) => s + i.quantity, 0),
