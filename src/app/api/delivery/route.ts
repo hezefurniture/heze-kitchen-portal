@@ -31,14 +31,14 @@ export async function POST(req: NextRequest) {
   });
 
   // Group rows by order number.
-  // For BRW Kitchens, multiple element types can share the same barcode (one
-  // physical box = several rows). We must keep them as distinct rows so each
-  // element type is visible on the list, instead of merging by barcode.
-  const isBrw = supplier.slug === "brw";
+  // For BRW and Extom, multiple element types can share the same barcode
+  // (one physical box = several rows, or multi-box cabinets with same barcode).
+  // We keep them as distinct rows so each is visible, instead of merging by barcode.
+  const keepDistinctTitles = supplier.slug === "brw" || supplier.slug === "extom";
   const orderMap = new Map<string, { itemName: string; barcode: string; quantity: number }[]>();
   for (const row of rows) {
     const items = orderMap.get(row.orderNumber) || [];
-    const existing = isBrw
+    const existing = keepDistinctTitles
       ? items.find((i) => i.barcode === row.barcode && i.itemName === row.itemName)
       : items.find((i) => i.barcode === row.barcode);
     if (existing) {

@@ -97,6 +97,7 @@ model AppSettings {
   mainLogo   String? // base64 encoded image for login/dashboard pages
   appIcon192 String? // base64 encoded 192x192 PWA icon
   appIcon512 String? // base64 encoded 512x512 PWA icon
+  extomAmbiguousBarcodes String? // JSON array of barcode strings for Extom disambiguation
   updatedAt  DateTime @default(now()) @updatedAt
 }
 

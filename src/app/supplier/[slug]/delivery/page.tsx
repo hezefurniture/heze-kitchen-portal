@@ -116,10 +116,10 @@ export default function DeliveryUploadPage() {
   };
 
   const handleReview = () => {
-    // For BRW Kitchens, multiple element types can share the same barcode
-    // (one physical box = several rows), so we keep them as separate rows
-    // instead of merging by barcode.
-    const isBrw = slug === "brw";
+    // For BRW and Extom, multiple element types can share the same barcode
+    // (one physical box = several rows, or multi-box cabinets with same barcode).
+    // We keep them as separate rows instead of merging by barcode.
+    const keepDistinctTitles = slug === "brw" || slug === "extom";
 
     // First divide rows by order, then process items inside each order.
     const groupMap = new Map<string, { itemName: string; barcode: string; quantity: number }[]>();
@@ -133,7 +133,7 @@ export default function DeliveryUploadPage() {
     for (const file of files) {
       for (const row of file.rows) {
         const items = groupMap.get(row.orderNumber)!;
-        const existing = isBrw
+        const existing = keepDistinctTitles
           ? items.find((i) => i.barcode === row.barcode && i.itemName === row.itemName)
           : items.find((i) => i.barcode === row.barcode);
         if (existing) {

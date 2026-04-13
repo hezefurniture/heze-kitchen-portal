@@ -11,7 +11,7 @@ export async function GET() {
   });
 
   return NextResponse.json(
-    settings || { id: "singleton", navLogo: null, mainLogo: null, appIcon192: null, appIcon512: null }
+    settings || { id: "singleton", navLogo: null, mainLogo: null, appIcon192: null, appIcon512: null, extomAmbiguousBarcodes: null }
   );
 }
 
@@ -21,7 +21,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { navLogo, mainLogo, appIcon192, appIcon512 } = await req.json();
+  const { navLogo, mainLogo, appIcon192, appIcon512, extomAmbiguousBarcodes } = await req.json();
 
   // Validate size - base64 images can be large but cap at ~5MB each
   const MAX_SIZE = 7_000_000;
@@ -43,6 +43,7 @@ export async function PUT(req: NextRequest) {
   if (mainLogo !== undefined) update.mainLogo = mainLogo || null;
   if (appIcon192 !== undefined) update.appIcon192 = appIcon192 || null;
   if (appIcon512 !== undefined) update.appIcon512 = appIcon512 || null;
+  if (extomAmbiguousBarcodes !== undefined) update.extomAmbiguousBarcodes = extomAmbiguousBarcodes || null;
 
   const settings = await prisma.appSettings.upsert({
     where: { id: "singleton" },

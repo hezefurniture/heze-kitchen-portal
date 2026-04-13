@@ -8,6 +8,15 @@ export interface ScannedItemDetail {
   totalQty: number;
 }
 
+export interface AmbiguousCandidate {
+  itemId: string;
+  orderId: string;
+  orderNumber: string;
+  itemName: string;
+  scannedQty: number;
+  quantity: number;
+}
+
 export interface ScanResult {
   matched: boolean;
   orderNumber?: string;
@@ -17,7 +26,29 @@ export interface ScanResult {
   orderId?: string;
   barcode?: string;
   scannedItems?: ScannedItemDetail[];
+  ambiguous?: boolean;
+  candidates?: AmbiguousCandidate[];
   error?: string;
+}
+
+/**
+ * Load the Extom ambiguous-barcode list from AppSettings.
+ * Returns a Set of barcode strings.
+ */
+async function getExtomAmbiguousBarcodes(
+  tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+): Promise<Set<string>> {
+  const settings = await tx.appSettings.findUnique({
+    where: { id: "singleton" },
+    select: { extomAmbiguousBarcodes: true },
+  });
+  if (!settings?.extomAmbiguousBarcodes) return new Set();
+  try {
+    const arr = JSON.parse(settings.extomAmbiguousBarcodes);
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch {
+    return new Set();
+  }
 }
 
 export async function assignDeliveryScan(
@@ -42,19 +73,46 @@ export async function assignDeliveryScan(
     });
 
     // Filter to items where scannedQty < quantity
-    const item = items.find((i) => i.scannedQty < i.quantity);
+    const openItems = items.filter((i) => i.scannedQty < i.quantity);
+    const item = openItems[0];
 
     if (!item) {
       return { matched: false, error: "No matching item found or all quantities fulfilled" };
     }
 
+    const supplier = await tx.supplier.findUnique({ where: { id: supplierId } });
+    const isBrw = supplier?.slug === "brw";
+    const isExtom = supplier?.slug === "extom";
+
+    // Extom disambiguation: if this barcode is in the ambiguous list and there
+    // are multiple distinct item names with open qty in the same order, pause
+    // and ask the operator to pick which item was actually scanned.
+    if (isExtom) {
+      const ambiguousSet = await getExtomAmbiguousBarcodes(tx);
+      if (ambiguousSet.has(barcode)) {
+        const sameOrderOpen = openItems.filter((i) => i.orderId === item.orderId);
+        const distinctNames = new Set(sameOrderOpen.map((i) => i.itemName));
+        if (distinctNames.size > 1) {
+          return {
+            matched: false,
+            ambiguous: true,
+            barcode,
+            candidates: sameOrderOpen.map((i) => ({
+              itemId: i.id,
+              orderId: i.orderId,
+              orderNumber: i.order.orderNumber,
+              itemName: i.itemName,
+              scannedQty: i.scannedQty,
+              quantity: i.quantity,
+            })),
+          };
+        }
+      }
+    }
+
     // BRW Kitchens special-case: a single barcode represents one physical box
     // that contains multiple element types. Scanning it should increment all
     // open rows in the same order that share this barcode.
-    const supplier = await tx.supplier.findUnique({ where: { id: supplierId } });
-    const isBrw = supplier?.slug === "brw";
-
-    // Items in the same order with this barcode that still have open qty.
     const sameOrderOpenItems = isBrw
       ? items.filter((i) => i.orderId === item.orderId && i.scannedQty < i.quantity)
       : [item];
@@ -132,20 +190,43 @@ export async function assignDespatchScan(
       include: { order: true },
     });
 
-    const item = items.find((i) => i.despatchedQty < i.quantity);
+    const openItems = items.filter((i) => i.despatchedQty < i.quantity);
+    const item = openItems[0];
 
     if (!item) {
       return { matched: false, error: "No matching item found or all quantities despatched" };
     }
 
-    // BRW Kitchens special-case: one barcode = one box containing multiple
-    // element types, so despatch-scanning it advances every open row in this
-    // order that shares the barcode.
     const supplier = await tx.supplier.findUnique({
       where: { id: item.order.supplierId },
     });
     const isBrw = supplier?.slug === "brw";
+    const isExtom = supplier?.slug === "extom";
 
+    // Extom disambiguation for despatch
+    if (isExtom) {
+      const ambiguousSet = await getExtomAmbiguousBarcodes(tx);
+      if (ambiguousSet.has(barcode)) {
+        const distinctNames = new Set(openItems.map((i) => i.itemName));
+        if (distinctNames.size > 1) {
+          return {
+            matched: false,
+            ambiguous: true,
+            barcode,
+            candidates: openItems.map((i) => ({
+              itemId: i.id,
+              orderId: i.orderId,
+              orderNumber: i.order.orderNumber,
+              itemName: i.itemName,
+              scannedQty: i.despatchedQty,
+              quantity: i.quantity,
+            })),
+          };
+        }
+      }
+    }
+
+    // BRW Kitchens special-case
     const targets = isBrw
       ? items.filter((i) => i.despatchedQty < i.quantity)
       : [item];

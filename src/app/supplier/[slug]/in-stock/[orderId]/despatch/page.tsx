@@ -10,6 +10,7 @@ import { useBarcodeScanner } from "@/lib/use-barcode-scanner";
 import { ManualBarcodeInput } from "@/components/manual-barcode-input";
 import { EditableQty } from "@/components/editable-qty";
 import { LastScannedPanel, type LastScannedItem } from "@/components/last-scanned-panel";
+import { DisambiguateModal, type AmbiguousCandidate } from "@/components/disambiguate-modal";
 
 interface OrderItem {
   id: string;
@@ -38,6 +39,8 @@ export default function DespatchPage() {
   const [lastScannedOrder, setLastScannedOrder] = useState<string | undefined>();
   const [lastScannedBarcode, setLastScannedBarcode] = useState<string | undefined>();
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [ambiguousCandidates, setAmbiguousCandidates] = useState<AmbiguousCandidate[] | null>(null);
+  const [ambiguousBarcode, setAmbiguousBarcode] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const { isOnline, queueCount, refreshQueueCount } = useOnlineStatus();
@@ -86,6 +89,9 @@ export default function DespatchPage() {
         if (soundOn) playSuccessSound();
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 1500);
+      } else if (result.ambiguous && result.candidates?.length) {
+        setAmbiguousBarcode(result.barcode || barcode.trim());
+        setAmbiguousCandidates(result.candidates);
       } else {
         if (soundOn) playErrorSound();
       }
@@ -132,6 +138,28 @@ export default function DespatchPage() {
       setLastScannedItems((prev) =>
         prev.map((it) => (it.itemId === itemId ? { ...it, newQty: value } : it))
       );
+      await loadOrder();
+    } catch {}
+  };
+
+  const handleDisambiguatePick = async (candidate: AmbiguousCandidate) => {
+    setAmbiguousCandidates(null);
+    try {
+      await fetch(`/api/orders/${orderId}/manual-scan`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ itemId: candidate.itemId, action: "increment", type: "despatch" }),
+      });
+      if (soundOn) playSuccessSound();
+      setLastScannedItems([{
+        itemId: candidate.itemId,
+        itemName: candidate.itemName,
+        barcode: ambiguousBarcode,
+        newQty: candidate.scannedQty + 1,
+        totalQty: candidate.quantity,
+      }]);
+      setLastScannedOrder(candidate.orderNumber);
+      setLastScannedBarcode(ambiguousBarcode);
       await loadOrder();
     } catch {}
   };
@@ -203,7 +231,16 @@ export default function DespatchPage() {
         onUpdate={handleSetQty}
       />
 
-      {lastScan && !lastScan.matched && (
+      {ambiguousCandidates && (
+        <DisambiguateModal
+          barcode={ambiguousBarcode}
+          candidates={ambiguousCandidates}
+          onPick={handleDisambiguatePick}
+          onCancel={() => setAmbiguousCandidates(null)}
+        />
+      )}
+
+      {lastScan && !lastScan.matched && !lastScan.ambiguous && (
         <div className="w-full max-w-4xl bg-red-500/80 text-white rounded-lg px-6 py-3 mb-4 fade-in">
           <p className="font-bold">Item not found or already despatched</p>
           <p className="text-sm text-white/80">{lastScan.error}</p>

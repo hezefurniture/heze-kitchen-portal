@@ -7,6 +7,8 @@ export default function SettingsPage() {
   const [mainLogo, setMainLogo] = useState<string | null>(null);
   const [appIcon192, setAppIcon192] = useState<string | null>(null);
   const [appIcon512, setAppIcon512] = useState<string | null>(null);
+  const [ambiguousBarcodes, setAmbiguousBarcodes] = useState<string[]>([]);
+  const [newBarcode, setNewBarcode] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const navInputRef = useRef<HTMLInputElement>(null);
@@ -22,6 +24,12 @@ export default function SettingsPage() {
         setMainLogo(data.mainLogo || null);
         setAppIcon192(data.appIcon192 || null);
         setAppIcon512(data.appIcon512 || null);
+        try {
+          const parsed = JSON.parse(data.extomAmbiguousBarcodes || "[]");
+          if (Array.isArray(parsed)) setAmbiguousBarcodes(parsed);
+        } catch {
+          setAmbiguousBarcodes([]);
+        }
       })
       .catch(() => {});
   }, []);
@@ -52,7 +60,13 @@ export default function SettingsPage() {
       const res = await fetch("/api/settings", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ navLogo, mainLogo, appIcon192, appIcon512 }),
+        body: JSON.stringify({
+          navLogo,
+          mainLogo,
+          appIcon192,
+          appIcon512,
+          extomAmbiguousBarcodes: JSON.stringify(ambiguousBarcodes),
+        }),
       });
       if (res.ok) {
         setMessage("Settings saved successfully");
@@ -204,6 +218,69 @@ export default function SettingsPage() {
             />
           </div>
         </div>
+      </div>
+
+      {/* Extom Ambiguous Barcodes */}
+      <div className="bg-white rounded-lg p-6 mb-6">
+        <h2 className="text-lg font-bold text-gray-800 mb-2">Extom - Ambiguous Barcodes</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Barcodes shared by multiple boxes of the same cabinet. When one of these is scanned,
+          the operator will be asked to pick which item was actually received.
+        </p>
+
+        <div className="flex gap-2 mb-4">
+          <input
+            type="text"
+            value={newBarcode}
+            onChange={(e) => setNewBarcode(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const trimmed = newBarcode.trim();
+                if (trimmed && !ambiguousBarcodes.includes(trimmed)) {
+                  setAmbiguousBarcodes((prev) => [...prev, trimmed]);
+                  setNewBarcode("");
+                }
+              }
+            }}
+            placeholder="Enter barcode..."
+            className="flex-1 px-3 py-2 border border-gray-300 rounded text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+          />
+          <button
+            type="button"
+            onClick={() => {
+              const trimmed = newBarcode.trim();
+              if (trimmed && !ambiguousBarcodes.includes(trimmed)) {
+                setAmbiguousBarcodes((prev) => [...prev, trimmed]);
+                setNewBarcode("");
+              }
+            }}
+            className="px-4 py-2 bg-accent text-white font-bold text-sm rounded hover:bg-accent-light transition"
+          >
+            Add
+          </button>
+        </div>
+
+        {ambiguousBarcodes.length > 0 ? (
+          <div className="space-y-1">
+            {ambiguousBarcodes.map((bc) => (
+              <div
+                key={bc}
+                className="flex items-center justify-between bg-gray-50 rounded px-3 py-2 border border-gray-200"
+              >
+                <span className="text-gray-800 font-mono text-sm">{bc}</span>
+                <button
+                  onClick={() => setAmbiguousBarcodes((prev) => prev.filter((b) => b !== bc))}
+                  className="text-red-500 text-sm font-bold hover:text-red-700 ml-3"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-gray-400 text-sm">No ambiguous barcodes configured.</p>
+        )}
       </div>
 
       <button
