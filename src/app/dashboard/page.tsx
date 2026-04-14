@@ -28,7 +28,7 @@ export default function DashboardPage() {
         <span className="truncate mr-2">User: {(session?.user as any)?.username || session?.user?.name || "..."}</span>
         <div className="flex items-center gap-4 shrink-0">
           <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
+            onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}
             className="hover:text-gray-900 min-h-[44px] flex items-center justify-center"
             title="Logout"
           >

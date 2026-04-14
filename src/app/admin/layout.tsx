@@ -72,7 +72,7 @@ export default function AdminLayout({
                 Back to Dashboard
               </Link>
               <button
-                onClick={() => signOut({ callbackUrl: "/login" })}
+                onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}
                 className="text-lg font-bold px-6 py-4 text-white/90 active:bg-white/10 text-left"
               >
                 Logout
@@ -103,7 +103,7 @@ export default function AdminLayout({
               Dashboard
             </Link>
             <button
-              onClick={() => signOut({ callbackUrl: "/login" })}
+              onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}
               className="text-white/80 hover:text-white"
             >
               Logout
