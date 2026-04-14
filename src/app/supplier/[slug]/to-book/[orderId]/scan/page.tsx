@@ -271,9 +271,12 @@ export default function BookScanPage() {
       </div>
 
       <div className="mt-6 flex flex-col items-center gap-3">
-        {allDone && (
-          <button onClick={() => router.push(`/supplier/${slug}/to-book`)} className="px-8 sm:px-12 py-4 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition min-h-[56px]">Done - Back to Kitchens to Book</button>
-        )}
+        <button
+          onClick={() => router.push(`/supplier/${slug}/to-book`)}
+          className="px-8 sm:px-12 py-4 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition min-h-[56px]"
+        >
+          {allDone ? "Done - Back to Kitchens to Book" : "Save & Back to Kitchens to Book"}
+        </button>
         {!allDone && totalScanned > 0 && (
           <button
             onClick={async () => {

@@ -10,8 +10,23 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
+        token: { label: "QR Token", type: "text" },
       },
       async authorize(credentials) {
+        // QR-based login: lookup by unique login token
+        if (credentials?.token) {
+          const user = await prisma.user.findUnique({
+            where: { loginToken: credentials.token },
+          });
+          if (!user) return null;
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.username,
+            role: user.role,
+          };
+        }
+
         if (!credentials?.username || !credentials?.password) return null;
 
         const user = await prisma.user.findUnique({

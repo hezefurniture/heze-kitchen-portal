@@ -26,12 +26,13 @@ enum ScanType {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  password  String
-  name      String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  username   String   @unique
+  password   String
+  name       String
+  role       Role     @default(USER)
+  createdAt  DateTime @default(now())
+  loginToken String?  @unique
 
   deliveries Delivery[]
   scanLogs   ScanLog[]

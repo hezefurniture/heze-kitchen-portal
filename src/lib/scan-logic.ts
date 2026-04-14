@@ -205,7 +205,10 @@ export async function assignDespatchScan(
       include: { order: true },
     });
 
-    const openItems = items.filter((i) => i.despatchedQty < i.quantity);
+    // Despatch is capped at what was actually booked in (scannedQty), not the
+    // originally-ordered quantity. If 3 of 4 boxes were missing at booking, only
+    // 1 can be despatched.
+    const openItems = items.filter((i) => i.despatchedQty < i.scannedQty);
     const item = openItems[0];
 
     if (!item) {
@@ -232,7 +235,7 @@ export async function assignDespatchScan(
             orderNumber: i.order.orderNumber,
             itemName: i.itemName,
             scannedQty: i.despatchedQty,
-            quantity: i.quantity,
+            quantity: i.scannedQty,
           })),
         };
       }
@@ -240,7 +243,7 @@ export async function assignDespatchScan(
 
     // BRW Kitchens special-case
     const targets = isBrw
-      ? items.filter((i) => i.despatchedQty < i.quantity)
+      ? items.filter((i) => i.despatchedQty < i.scannedQty)
       : [item];
 
     const updatedMap = new Map<string, number>();
@@ -263,14 +266,14 @@ export async function assignDespatchScan(
 
     const updatedDespatchedQty = updatedMap.get(item.id) ?? item.despatchedQty + 1;
 
-    // Check if all items in this order are fully despatched
+    // Check if all items in this order are fully despatched (against scannedQty)
     const orderItems = await tx.orderItem.findMany({
       where: { orderId },
     });
 
     const allDespatched = orderItems.every((oi) => {
       const qty = updatedMap.has(oi.id) ? updatedMap.get(oi.id)! : oi.despatchedQty;
-      return qty >= oi.quantity;
+      return qty >= oi.scannedQty;
     });
 
     if (allDespatched) {
@@ -290,7 +293,7 @@ export async function assignDespatchScan(
       itemName: t.itemName,
       barcode: t.barcode,
       newQty: updatedMap.get(t.id) ?? t.despatchedQty + 1,
-      totalQty: t.quantity,
+      totalQty: t.scannedQty,
     }));
 
     return {
@@ -298,7 +301,7 @@ export async function assignDespatchScan(
       orderNumber: item.order.orderNumber,
       itemName: item.itemName,
       newScannedQty: updatedDespatchedQty,
-      totalQty: item.quantity,
+      totalQty: item.scannedQty,
       orderId: item.orderId,
       barcode: item.barcode,
       scannedItems,

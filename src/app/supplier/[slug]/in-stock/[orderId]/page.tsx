@@ -61,8 +61,8 @@ export default function OrderDetailPage() {
             <tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
               <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
               <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
-              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">SCANNED</th>
-              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">DESPATCHED</th>
+              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-20">SCN</th>
+              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-24">DSP</th>
             </tr>
           </thead>
           <tbody>

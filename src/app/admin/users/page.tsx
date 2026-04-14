@@ -10,6 +10,13 @@ interface User {
   createdAt: string;
 }
 
+interface QrData {
+  username: string;
+  name: string;
+  token: string;
+  svg: string;
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [showForm, setShowForm] = useState(false);
@@ -21,6 +28,8 @@ export default function UsersPage() {
     role: "USER",
   });
   const [error, setError] = useState("");
+  const [qrUser, setQrUser] = useState<QrData | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
 
   const loadUsers = useCallback(async () => {
     const res = await fetch("/api/admin/users");
@@ -78,6 +87,36 @@ export default function UsersPage() {
       body: JSON.stringify({ id }),
     });
     loadUsers();
+  };
+
+  const handleShowQr = async (id: string) => {
+    setQrLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${id}/login-qr`);
+      if (!res.ok) return;
+      const data: QrData = await res.json();
+      setQrUser(data);
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  const handleRegenerateQr = async () => {
+    if (!qrUser) return;
+    if (!confirm("Regenerate login QR code? The previous QR code will stop working.")) return;
+    const user = users.find((u) => u.username === qrUser.username);
+    if (!user) return;
+    setQrLoading(true);
+    try {
+      const res = await fetch(`/api/admin/users/${user.id}/login-qr`, {
+        method: "POST",
+      });
+      if (!res.ok) return;
+      const data: QrData = await res.json();
+      setQrUser(data);
+    } finally {
+      setQrLoading(false);
+    }
   };
 
   return (
@@ -157,6 +196,48 @@ export default function UsersPage() {
         </form>
       )}
 
+      {qrUser && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          onClick={() => setQrUser(null)}
+        >
+          <div
+            className="bg-white rounded-lg max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-bold text-gray-800 mb-1">Login QR Code</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              {qrUser.name} ({qrUser.username})
+            </p>
+            <div
+              className="flex justify-center bg-white p-2 rounded border"
+              dangerouslySetInnerHTML={{ __html: qrUser.svg }}
+            />
+            <p className="text-xs text-gray-500 mt-3 break-all text-center">
+              Token: {qrUser.token}
+            </p>
+            <p className="text-xs text-gray-600 mt-2 text-center">
+              Scan this code on the login page to sign in.
+            </p>
+            <div className="flex gap-3 mt-4 justify-end">
+              <button
+                onClick={handleRegenerateQr}
+                disabled={qrLoading}
+                className="px-4 py-2 text-sm border border-red-400 text-red-600 font-bold rounded hover:bg-red-50 transition disabled:opacity-50"
+              >
+                Regenerate
+              </button>
+              <button
+                onClick={() => setQrUser(null)}
+                className="px-4 py-2 text-sm bg-accent text-white font-bold rounded hover:bg-accent-light transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg overflow-hidden">
         <table className="w-full">
           <thead>
@@ -184,6 +265,12 @@ export default function UsersPage() {
                   </span>
                 </td>
                 <td className="py-3 px-4 text-right">
+                  <button
+                    onClick={() => handleShowQr(user.id)}
+                    className="text-green-600 hover:text-green-800 text-sm mr-4"
+                  >
+                    QR
+                  </button>
                   <button
                     onClick={() => handleEdit(user)}
                     className="text-blue-600 hover:text-blue-800 text-sm mr-4"

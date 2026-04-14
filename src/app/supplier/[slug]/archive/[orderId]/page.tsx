@@ -65,19 +65,22 @@ export default function ArchiveDetailPage() {
             <tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
               <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
               <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
-              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">SCANNED</th>
-              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">DESPATCHED</th>
+              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-20">SCN</th>
+              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-24">DSP</th>
             </tr>
           </thead>
           <tbody>
-            {order.items.map((item) => (
-              <tr key={item.id} className="bg-green-200">
-                <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">{item.itemName}</td>
-                <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
-                <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
-                <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.despatchedQty}</td>
-              </tr>
-            ))}
+            {order.items.map((item) => {
+              const missing = item.scannedQty < item.quantity;
+              return (
+                <tr key={item.id} className={missing ? "bg-red-200" : "bg-green-200"}>
+                  <td className={`py-2 sm:py-3 px-1 sm:px-4 text-center text-xs sm:text-sm break-all ${missing ? "text-red-900 font-bold" : "text-gray-800"}`}>{item.itemName}</td>
+                  <td className={`py-2 sm:py-3 px-1 sm:px-4 text-center text-xs sm:text-sm ${missing ? "text-red-900 font-bold" : "text-gray-800"}`}>{missing ? 0 : item.quantity}</td>
+                  <td className={`py-2 sm:py-3 px-1 sm:px-4 text-center text-xs sm:text-sm ${missing ? "text-red-900 font-bold" : "text-gray-800"}`}>{item.scannedQty}</td>
+                  <td className={`py-2 sm:py-3 px-1 sm:px-4 text-center text-xs sm:text-sm ${missing ? "text-red-900 font-bold" : "text-gray-800"}`}>{item.despatchedQty}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

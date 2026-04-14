@@ -16,6 +16,7 @@ interface OrderItem {
   id: string;
   itemName: string;
   quantity: number;
+  scannedQty: number;
   despatchedQty: number;
 }
 
@@ -186,8 +187,11 @@ export default function DespatchPage() {
     return <div className="flex items-center justify-center min-h-[60vh]"><p className="text-white text-xl">Loading...</p></div>;
   }
 
-  const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
-  const totalDespatched = order.items.reduce((s, i) => s + i.despatchedQty, 0);
+  // Despatch is based on what was actually booked in, not originally ordered
+  const scannableItems = order.items.filter((i) => i.scannedQty > 0);
+  const missingItems = order.items.filter((i) => i.scannedQty < i.quantity);
+  const totalQty = scannableItems.reduce((s, i) => s + i.scannedQty, 0);
+  const totalDespatched = scannableItems.reduce((s, i) => s + i.despatchedQty, 0);
 
   return (
     <div className="scan-page flex flex-col items-center pt-4 sm:pt-8 px-2 sm:px-4 relative pb-20">
@@ -253,20 +257,20 @@ export default function DespatchPage() {
             <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
             <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
             <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">DONE</th>
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[72px] sm:w-24">MANUAL</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[72px] sm:w-24">MNL</th>
           </tr></thead>
           <tbody>
-            {order.items.map((item) => {
-              const done = item.despatchedQty >= item.quantity;
+            {scannableItems.map((item) => {
+              const done = item.despatchedQty >= item.scannedQty;
               const partial = item.despatchedQty > 0 && !done;
               return (
                 <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">{item.itemName}</td>
-                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
+                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">
                     <EditableQty
                       value={item.despatchedQty}
-                      max={item.quantity}
+                      max={item.scannedQty}
                       onChange={(v) => handleSetQty(item.id, v, "despatch")}
                     />
                   </td>
@@ -274,7 +278,7 @@ export default function DespatchPage() {
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.despatchedQty <= 0}
                         className="w-8 h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-sm flex items-center justify-center transition">-</button>
-                      <button onClick={() => handleManualScan(item.id, "increment")} disabled={item.despatchedQty >= item.quantity}
+                      <button onClick={() => handleManualScan(item.id, "increment")} disabled={item.despatchedQty >= item.scannedQty}
                         className="w-8 h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-sm flex items-center justify-center transition">+</button>
                     </div>
                   </td>
@@ -284,6 +288,36 @@ export default function DespatchPage() {
           </tbody>
         </table>
       </div>
+
+      {missingItems.length > 0 && (
+        <div className="w-full max-w-4xl mt-6">
+          <h2 className="text-lg sm:text-xl font-bold text-white mb-2 text-center">
+            Items not scanned in during booking
+          </h2>
+          <div className="bg-white rounded-lg overflow-x-auto">
+            <table className="w-full text-sm table-fixed">
+              <thead>
+                <tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
+                  <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
+                  <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">ORDERED</th>
+                  <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-20">SCN</th>
+                  <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-16 sm:w-24">MISSING</th>
+                </tr>
+              </thead>
+              <tbody>
+                {missingItems.map((item) => (
+                  <tr key={item.id} className="bg-red-100">
+                    <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-red-900 text-xs sm:text-sm break-all font-bold">{item.itemName}</td>
+                    <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-red-900 text-xs sm:text-sm font-bold">{item.quantity}</td>
+                    <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-red-900 text-xs sm:text-sm font-bold">{item.scannedQty}</td>
+                    <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-red-900 text-xs sm:text-sm font-bold">{item.quantity - item.scannedQty}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -153,11 +153,11 @@ export default function ScanExtraPage() {
 
       <div className="w-full max-w-4xl bg-white rounded-lg overflow-hidden">
         <table className="w-full">
-          <thead><tr className="bg-gray-100 text-gray-700 text-sm">
-            <th className="py-3 px-4 text-center font-bold">NAME</th>
-            <th className="py-3 px-4 text-center font-bold w-24">QTY</th>
-            <th className="py-3 px-4 text-center font-bold w-24">SCANNED</th>
-            <th className="py-3 px-4 text-center font-bold w-32">MANUAL</th>
+          <thead><tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-16">SCN</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[72px] sm:w-24">MNL</th>
           </tr></thead>
           <tbody>
             {order.items.map((item) => {
@@ -183,11 +183,14 @@ export default function ScanExtraPage() {
         </table>
       </div>
 
-      {allDone && (
-        <div className="mt-6">
-          <button onClick={() => router.push(`/supplier/${slug}/in-stock`)} className="px-12 py-3 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition">Done - Back to In Stock</button>
-        </div>
-      )}
+      <div className="mt-6 flex flex-wrap gap-3 justify-center">
+        <button
+          onClick={() => router.push(`/supplier/${slug}/in-stock`)}
+          className="px-10 py-3 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition"
+        >
+          {allDone ? "Done - Back to In Stock" : "Save & Back to In Stock"}
+        </button>
+      </div>
     </div>
   );
 }
