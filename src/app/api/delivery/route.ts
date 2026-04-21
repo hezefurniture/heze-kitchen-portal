@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   // For BRW and Extom, multiple element types can share the same barcode
   // (one physical box = several rows, or multi-box cabinets with same barcode).
   // We keep them as distinct rows so each is visible, instead of merging by barcode.
-  const keepDistinctTitles = supplier.slug === "brw" || supplier.slug === "extom";
+  const keepDistinctTitles = supplier.slug === "brw" || supplier.slug === "extom" || supplier.slug === "akrylik";
   const orderMap = new Map<string, { itemName: string; barcode: string; quantity: number }[]>();
   for (const row of rows) {
     const items = orderMap.get(row.orderNumber) || [];

@@ -8,6 +8,7 @@ interface OrderSummary {
   id: string;
   orderNumber: string;
   status: string;
+  createdAt: string;
   totalQty: number;
   scannedQty: number;
 }
@@ -120,7 +121,10 @@ export default function ToBookPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-base sm:text-xl font-black text-white truncate">ORDER: {order.orderNumber}</h3>
-                  <p className="text-white/70 text-xs sm:text-sm">SCANNED {order.scannedQty}/{order.totalQty}</p>
+                  <p className="text-white/70 text-xs sm:text-sm">
+                    SCANNED {order.scannedQty}/{order.totalQty}
+                    <span className="ml-2 text-white/50">· {new Date(order.createdAt).toLocaleDateString("en-GB")}</span>
+                  </p>
                 </div>
               </div>
 

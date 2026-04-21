@@ -91,6 +91,7 @@ export async function assignDeliveryScan(
     const supplier = await tx.supplier.findUnique({ where: { id: supplierId } });
     const isBrw = supplier?.slug === "brw";
     const isExtom = supplier?.slug === "extom";
+    const isAkrylik = supplier?.slug === "akrylik";
 
     // Extom disambiguation: if this barcode is in the ambiguous list, ALWAYS
     // ask the operator to pick which item was scanned — even if only one name
@@ -120,10 +121,10 @@ export async function assignDeliveryScan(
       }
     }
 
-    // BRW Kitchens special-case: a single barcode represents one physical box
-    // that contains multiple element types. Scanning it should increment all
-    // open rows in the same order that share this barcode.
-    const sameOrderOpenItems = isBrw
+    // BRW and Akrylik: one barcode = one physical box containing multiple element
+    // types. Scanning it increments all open rows in the same order that share
+    // this barcode, so every element gets marked in a single scan.
+    const sameOrderOpenItems = (isBrw || isAkrylik)
       ? items.filter((i) => i.orderId === item.orderId && i.scannedQty < i.quantity)
       : [item];
 

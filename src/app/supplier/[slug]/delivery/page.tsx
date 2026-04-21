@@ -119,7 +119,7 @@ export default function DeliveryUploadPage() {
     // For BRW and Extom, multiple element types can share the same barcode
     // (one physical box = several rows, or multi-box cabinets with same barcode).
     // We keep them as separate rows instead of merging by barcode.
-    const keepDistinctTitles = slug === "brw" || slug === "extom";
+    const keepDistinctTitles = slug === "brw" || slug === "extom" || slug === "akrylik";
 
     // First divide rows by order, then process items inside each order.
     const groupMap = new Map<string, { itemName: string; barcode: string; quantity: number }[]>();
