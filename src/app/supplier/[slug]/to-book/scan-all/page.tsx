@@ -288,10 +288,10 @@ export default function ScanAllPage() {
                         return next;
                       });
                     }}
-                    className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${isExcluded ? "bg-red-400" : "bg-green-500"}`}
+                    className={`relative w-14 h-8 rounded-full transition-colors duration-200 shrink-0 focus:outline-none ${isExcluded ? "bg-red-500" : "bg-green-500"}`}
                     title={isExcluded ? "Excluded from scanning — tap to include" : "Included in scanning — tap to exclude"}
                   >
-                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow ${isExcluded ? "" : "translate-x-5"}`} />
+                    <span className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-200 ${isExcluded ? "translate-x-0" : "translate-x-6"}`} />
                   </button>
                   <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="p-1">
                     <ChevronIcon expanded={isExpanded} />
