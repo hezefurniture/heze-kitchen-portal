@@ -58,7 +58,8 @@ export async function assignDeliveryScan(
   userId: string,
   deliveryId?: string,
   preferredOrderId?: string,
-  allowedStatuses: OrderStatus[] = ["PENDING"]
+  allowedStatuses: OrderStatus[] = ["PENDING"],
+  excludeOrderIds?: string[]
 ): Promise<ScanResult> {
   return prisma.$transaction(async (tx) => {
     // Find the first order item matching this barcode with open quantity
@@ -68,6 +69,7 @@ export async function assignDeliveryScan(
         order: {
           supplierId,
           status: { in: allowedStatuses },
+          ...(excludeOrderIds?.length ? { id: { notIn: excludeOrderIds } } : {}),
         },
         ...(deliveryId ? { deliveryId } : {}),
       },

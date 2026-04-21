@@ -11,14 +11,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { barcode, supplierId, deliveryId, preferredOrderId, allowedStatuses } = await req.json();
+  const { barcode, supplierId, deliveryId, preferredOrderId, allowedStatuses, excludeOrderIds } = await req.json();
 
   if (!barcode || !supplierId) {
     return NextResponse.json({ error: "Missing barcode or supplierId" }, { status: 400 });
   }
 
   const userId = (session.user as any).id;
-  const result = await assignDeliveryScan(barcode, supplierId, userId, deliveryId, preferredOrderId, allowedStatuses as OrderStatus[] | undefined);
+  const result = await assignDeliveryScan(barcode, supplierId, userId, deliveryId, preferredOrderId, allowedStatuses as OrderStatus[] | undefined, excludeOrderIds);
 
   return NextResponse.json(result);
 }

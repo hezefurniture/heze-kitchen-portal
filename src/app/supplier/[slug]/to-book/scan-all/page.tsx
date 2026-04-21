@@ -47,6 +47,7 @@ export default function ScanAllPage() {
   const scanningRef = useRef(false);
 
   const [orders, setOrders] = useState<Order[]>([]);
+  const [excludedOrderIds, setExcludedOrderIds] = useState<Set<string>>(new Set());
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
   const [lastScan, setLastScan] = useState<ScanResult | null>(null);
   const [lastScannedItems, setLastScannedItems] = useState<LastScannedItem[]>([]);
@@ -93,7 +94,13 @@ export default function ScanAllPage() {
     scanningRef.current = true;
 
     const scanUrl = "/api/scan";
-    const scanBody = { barcode: barcode.trim(), supplierId, preferredOrderId: lastScannedOrderId };
+    const excluded = Array.from(excludedOrderIds);
+    const scanBody = {
+      barcode: barcode.trim(),
+      supplierId,
+      preferredOrderId: lastScannedOrderId,
+      ...(excluded.length > 0 ? { excludeOrderIds: excluded } : {}),
+    };
 
     try {
       const res = await fetch(scanUrl, {
@@ -130,7 +137,7 @@ export default function ScanAllPage() {
     } finally {
       scanningRef.current = false;
     }
-  }, [supplierId, loadOrders, refreshQueueCount]);
+  }, [supplierId, excludedOrderIds, loadOrders, refreshQueueCount]);
 
   // Document-level barcode capture (DataWedge + USB scanners)
   const { handleManualSubmit } = useBarcodeScanner(handleScan);
@@ -262,15 +269,35 @@ export default function ScanAllPage() {
           const orderTotal = order.items.reduce((s, i) => s + i.quantity, 0);
           const orderScanned = order.items.reduce((s, i) => s + i.scannedQty, 0);
           const isExpanded = expandedOrder === order.id;
+          const isExcluded = excludedOrderIds.has(order.id);
           return (
-            <div key={order.id} className="fade-in">
-              <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="w-full bg-card rounded-lg px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between hover:bg-card-light transition min-h-[56px]">
-                <h3 className="text-base sm:text-xl font-black text-white truncate mr-2">ORDER: {order.orderNumber}</h3>
-                <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+            <div key={order.id} className={`fade-in ${isExcluded ? "opacity-50" : ""}`}>
+              <div className={`w-full ${isExcluded ? "bg-card/60" : "bg-card"} rounded-lg px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between min-h-[56px]`}>
+                <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="flex items-center min-w-0 flex-1 mr-2">
+                  <h3 className={`text-base sm:text-xl font-black truncate mr-2 ${isExcluded ? "text-white/50 line-through" : "text-white"}`}>ORDER: {order.orderNumber}</h3>
+                </button>
+                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                   <span className="text-white text-sm sm:text-lg">{orderScanned}/{orderTotal}</span>
-                  <ChevronIcon expanded={isExpanded} />
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExcludedOrderIds((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(order.id)) next.delete(order.id);
+                        else next.add(order.id);
+                        return next;
+                      });
+                    }}
+                    className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${isExcluded ? "bg-red-400" : "bg-green-500"}`}
+                    title={isExcluded ? "Excluded from scanning — tap to include" : "Included in scanning — tap to exclude"}
+                  >
+                    <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow ${isExcluded ? "" : "translate-x-5"}`} />
+                  </button>
+                  <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="p-1">
+                    <ChevronIcon expanded={isExpanded} />
+                  </button>
                 </div>
-              </button>
+              </div>
               {isExpanded && (
                 <div className="bg-white rounded-b-lg overflow-x-auto">
                   <table className="w-full text-sm table-fixed">
