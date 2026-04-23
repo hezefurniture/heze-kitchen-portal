@@ -291,7 +291,7 @@ export default function ScanAllPage() {
                           return next;
                         });
                       }}
-                      style={{ width: "44px", height: "22px" }}
+                      style={{ width: "52px", height: "22px", minWidth: "52px" }}
                       className={`relative rounded-full transition-colors duration-200 shrink-0 focus:outline-none ${isExcluded ? "bg-red-500" : "bg-green-500"}`}
                       title={isExcluded ? "Excluded from scanning — tap to include" : "Included in scanning — tap to exclude"}
                     >
@@ -301,7 +301,7 @@ export default function ScanAllPage() {
                           height: "18px",
                           top: "2px",
                           left: "2px",
-                          transform: isExcluded ? "translateX(0)" : "translateX(22px)",
+                          transform: isExcluded ? "translateX(0)" : "translateX(30px)",
                         }}
                         className="absolute bg-white rounded-full shadow transition-transform duration-200"
                       />
