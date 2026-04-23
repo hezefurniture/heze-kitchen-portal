@@ -23,6 +23,7 @@ interface Order {
   id: string;
   orderNumber: string;
   status: string;
+  createdAt: string;
   items: OrderItem[];
 }
 
@@ -272,30 +273,43 @@ export default function ScanAllPage() {
           const isExcluded = excludedOrderIds.has(order.id);
           return (
             <div key={order.id} className={`fade-in ${isExcluded ? "opacity-50" : ""}`}>
-              <div className={`w-full ${isExcluded ? "bg-card/60" : "bg-card"} rounded-lg px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between min-h-[56px]`}>
-                <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="flex items-center min-w-0 flex-1 mr-2">
-                  <h3 className={`text-base sm:text-xl font-black truncate mr-2 ${isExcluded ? "text-white/50 line-through" : "text-white"}`}>ORDER: {order.orderNumber}</h3>
+              <div className={`w-full ${isExcluded ? "bg-card/60" : "bg-card"} rounded-lg px-3 sm:px-6 py-3 sm:py-4`}>
+                <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="block text-left w-full mb-2">
+                  <h3 className={`text-base sm:text-xl font-black truncate ${isExcluded ? "text-white/50 line-through" : "text-white"}`}>ORDER: {order.orderNumber}</h3>
+                  <p className="text-white/60 text-xs sm:text-sm">Uploaded: {new Date(order.createdAt).toLocaleDateString("en-GB")}</p>
                 </button>
-                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                  <span className="text-white text-sm sm:text-lg">{orderScanned}/{orderTotal}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setExcludedOrderIds((prev) => {
-                        const next = new Set(prev);
-                        if (next.has(order.id)) next.delete(order.id);
-                        else next.add(order.id);
-                        return next;
-                      });
-                    }}
-                    className={`relative w-16 h-6 rounded-full transition-colors duration-200 shrink-0 focus:outline-none ${isExcluded ? "bg-red-500" : "bg-green-500"}`}
-                    title={isExcluded ? "Excluded from scanning — tap to include" : "Included in scanning — tap to exclude"}
-                  >
-                    <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${isExcluded ? "translate-x-0" : "translate-x-10"}`} />
-                  </button>
-                  <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="p-1">
-                    <ChevronIcon expanded={isExpanded} />
-                  </button>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-white text-sm sm:text-lg font-semibold">{orderScanned}/{orderTotal}</span>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExcludedOrderIds((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(order.id)) next.delete(order.id);
+                          else next.add(order.id);
+                          return next;
+                        });
+                      }}
+                      style={{ width: "44px", height: "22px" }}
+                      className={`relative rounded-full transition-colors duration-200 shrink-0 focus:outline-none ${isExcluded ? "bg-red-500" : "bg-green-500"}`}
+                      title={isExcluded ? "Excluded from scanning — tap to include" : "Included in scanning — tap to exclude"}
+                    >
+                      <span
+                        style={{
+                          width: "18px",
+                          height: "18px",
+                          top: "2px",
+                          left: "2px",
+                          transform: isExcluded ? "translateX(0)" : "translateX(22px)",
+                        }}
+                        className="absolute bg-white rounded-full shadow transition-transform duration-200"
+                      />
+                    </button>
+                    <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="p-1">
+                      <ChevronIcon expanded={isExpanded} />
+                    </button>
+                  </div>
                 </div>
               </div>
               {isExpanded && (
