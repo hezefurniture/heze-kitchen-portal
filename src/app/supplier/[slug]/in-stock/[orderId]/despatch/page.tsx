@@ -44,6 +44,8 @@ export default function DespatchPage() {
   const [ambiguousBarcode, setAmbiguousBarcode] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  const [showForceConfirm, setShowForceConfirm] = useState(false);
+  const [forcingDespatch, setForcingDespatch] = useState(false);
   const { isOnline, queueCount, refreshQueueCount } = useOnlineStatus();
 
   useWakeLock();
@@ -109,7 +111,6 @@ export default function DespatchPage() {
     }
   }, [orderId, soundOn, loadOrder, refreshQueueCount]);
 
-  // Document-level barcode capture (DataWedge + USB scanners)
   const { handleManualSubmit } = useBarcodeScanner(handleScan);
 
   const handleManualScan = async (itemId: string, action: "increment" | "decrement") => {
@@ -135,7 +136,6 @@ export default function DespatchPage() {
         body: JSON.stringify({ itemId, action: "set", value, type }),
       });
       if (!res.ok) throw new Error("Failed");
-      // Reflect new value in the Last Scanned panel as well
       setLastScannedItems((prev) =>
         prev.map((it) => (it.itemId === itemId ? { ...it, newQty: value } : it))
       );
@@ -165,6 +165,17 @@ export default function DespatchPage() {
     } catch {}
   };
 
+  const handleForceDespatch = async () => {
+    setForcingDespatch(true);
+    try {
+      await fetch(`/api/orders/${orderId}/force-despatch`, { method: "POST" });
+      setShowForceConfirm(false);
+      setIsComplete(true);
+    } catch {} finally {
+      setForcingDespatch(false);
+    }
+  };
+
   const toggleSound = () => { const next = !soundOn; setSoundOn(next); setSoundEnabled(next); };
 
   if (isComplete) {
@@ -187,11 +198,9 @@ export default function DespatchPage() {
     return <div className="flex items-center justify-center min-h-[60vh]"><p className="text-white text-xl">Loading...</p></div>;
   }
 
-  // Despatch is based on what was actually booked in, not originally ordered
-  const scannableItems = order.items.filter((i) => i.scannedQty > 0);
-  const missingItems = order.items.filter((i) => i.scannedQty < i.quantity);
-  const totalQty = scannableItems.reduce((s, i) => s + i.scannedQty, 0);
-  const totalDespatched = scannableItems.reduce((s, i) => s + i.despatchedQty, 0);
+  const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
+  const totalDespatched = order.items.reduce((s, i) => s + i.despatchedQty, 0);
+  const remainingItems = order.items.filter((i) => i.despatchedQty < i.quantity);
 
   return (
     <div className="scan-page flex flex-col items-center pt-4 sm:pt-8 px-2 sm:px-4 relative pb-20">
@@ -211,6 +220,50 @@ export default function DespatchPage() {
                 <p className="text-base sm:text-lg text-white/80 mt-2">{lastScan.newScannedQty}/{lastScan.totalQty}</p>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {showForceConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-white rounded-2xl w-full max-w-lg p-6">
+            <h2 className="text-xl font-black text-gray-900 mb-1">Confirm Despatch</h2>
+            <p className="text-gray-600 text-sm mb-4">The following items have not been fully despatched. Are you sure you want to mark this order as despatched anyway?</p>
+            <div className="bg-red-50 rounded-lg overflow-hidden mb-5">
+              <table className="w-full text-sm">
+                <thead><tr className="bg-red-100 text-red-800 text-xs font-bold">
+                  <th className="py-2 px-3 text-left">ITEM</th>
+                  <th className="py-2 px-3 text-center">ORDERED</th>
+                  <th className="py-2 px-3 text-center">DESPATCHED</th>
+                  <th className="py-2 px-3 text-center">MISSING</th>
+                </tr></thead>
+                <tbody>
+                  {remainingItems.map((item) => (
+                    <tr key={item.id} className="border-t border-red-100">
+                      <td className="py-2 px-3 text-red-900 text-xs break-all">{item.itemName}</td>
+                      <td className="py-2 px-3 text-center text-red-900 text-xs">{item.quantity}</td>
+                      <td className="py-2 px-3 text-center text-red-900 text-xs">{item.despatchedQty}</td>
+                      <td className="py-2 px-3 text-center text-red-900 font-bold text-xs">{item.quantity - item.despatchedQty}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowForceConfirm(false)}
+                className="flex-1 py-3 border-2 border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleForceDespatch}
+                disabled={forcingDespatch}
+                className="flex-1 py-3 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {forcingDespatch ? "Processing..." : "Despatch Anyway"}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -256,21 +309,32 @@ export default function DespatchPage() {
           <thead><tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
             <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
             <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">DONE</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">DSP</th>
             <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[72px] sm:w-24">MNL</th>
           </tr></thead>
           <tbody>
-            {scannableItems.map((item) => {
-              const done = item.despatchedQty >= item.scannedQty;
+            {order.items.map((item) => {
+              const done = item.despatchedQty >= item.quantity;
               const partial = item.despatchedQty > 0 && !done;
+              const neverReceived = item.scannedQty === 0 && !done;
+              const rowClass = done
+                ? "bg-green-200"
+                : neverReceived
+                ? "bg-red-100"
+                : partial
+                ? "bg-yellow-200"
+                : "bg-yellow-100";
               return (
-                <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
-                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">{item.itemName}</td>
-                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
+                <tr key={item.id} className={rowClass}>
+                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">
+                    {item.itemName}
+                    {neverReceived && <span className="block text-red-600 text-[10px] font-bold">NOT RECEIVED AT BOOKING</span>}
+                  </td>
+                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">
                     <EditableQty
                       value={item.despatchedQty}
-                      max={item.scannedQty}
+                      max={item.quantity}
                       onChange={(v) => handleSetQty(item.id, v, "despatch")}
                     />
                   </td>
@@ -278,7 +342,7 @@ export default function DespatchPage() {
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.despatchedQty <= 0}
                         className="w-8 h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-sm flex items-center justify-center transition">-</button>
-                      <button onClick={() => handleManualScan(item.id, "increment")} disabled={item.despatchedQty >= item.scannedQty}
+                      <button onClick={() => handleManualScan(item.id, "increment")} disabled={item.despatchedQty >= item.quantity}
                         className="w-8 h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-sm flex items-center justify-center transition">+</button>
                     </div>
                   </td>
@@ -289,33 +353,14 @@ export default function DespatchPage() {
         </table>
       </div>
 
-      {missingItems.length > 0 && (
-        <div className="w-full max-w-4xl mt-6">
-          <h2 className="text-lg sm:text-xl font-bold text-white mb-2 text-center">
-            Items not scanned in during booking
-          </h2>
-          <div className="bg-white rounded-lg overflow-x-auto">
-            <table className="w-full text-sm table-fixed">
-              <thead>
-                <tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
-                  <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
-                  <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">ORDERED</th>
-                  <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-20">SCN</th>
-                  <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-16 sm:w-24">MISSING</th>
-                </tr>
-              </thead>
-              <tbody>
-                {missingItems.map((item) => (
-                  <tr key={item.id} className="bg-red-100">
-                    <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-red-900 text-xs sm:text-sm break-all font-bold">{item.itemName}</td>
-                    <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-red-900 text-xs sm:text-sm font-bold">{item.quantity}</td>
-                    <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-red-900 text-xs sm:text-sm font-bold">{item.scannedQty}</td>
-                    <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-red-900 text-xs sm:text-sm font-bold">{item.quantity - item.scannedQty}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+      {remainingItems.length > 0 && (
+        <div className="w-full max-w-4xl mt-6 flex justify-center">
+          <button
+            onClick={() => setShowForceConfirm(true)}
+            className="px-8 py-3 bg-red-600/80 hover:bg-red-600 text-white font-bold rounded-lg transition"
+          >
+            Despatch Despite Missing Items ({remainingItems.length} item{remainingItems.length !== 1 ? "s" : ""} remaining)
+          </button>
         </div>
       )}
     </div>

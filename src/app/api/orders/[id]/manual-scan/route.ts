@@ -32,8 +32,7 @@ export async function POST(
 
   const field = type === "despatch" ? "despatchedQty" : "scannedQty";
   const currentVal = type === "despatch" ? item.despatchedQty : item.scannedQty;
-  // Despatch is capped at what was booked in, not the original order quantity
-  const maxVal = type === "despatch" ? item.scannedQty : item.quantity;
+  const maxVal = item.quantity;
 
   if (action === "increment" && currentVal >= maxVal) {
     return NextResponse.json({ error: "Already at max quantity" }, { status: 400 });
@@ -117,7 +116,7 @@ export async function POST(
   if (type === "despatch") {
     const allDespatched = orderItems.every((oi) => {
       const val = oi.id === itemId ? updated.despatchedQty : oi.despatchedQty;
-      return val >= oi.scannedQty;
+      return val >= oi.quantity;
     });
     if (allDespatched) {
       const user = await prisma.user.findUnique({ where: { id: userId } });

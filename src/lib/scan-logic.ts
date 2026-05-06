@@ -123,19 +123,20 @@ export async function assignDeliveryScan(
       }
     }
 
-    // BRW and Akrylik: one barcode = one physical box containing multiple element
-    // types. Scanning it increments all open rows in the same order that share
-    // this barcode, so every element gets marked in a single scan.
+    // BRW: one barcode = one physical box, increment by 1 per scan (multi-box).
+    // Akrylik: one barcode = one box type whose contents are all listed as separate
+    // rows; one scan marks ALL items in the box fully received in a single pass.
     const sameOrderOpenItems = (isBrw || isAkrylik)
       ? items.filter((i) => i.orderId === item.orderId && i.scannedQty < i.quantity)
       : [item];
 
-    // Increment scanned quantity for the targeted item(s)
     const updatedMap = new Map<string, number>();
     for (const target of sameOrderOpenItems) {
       const u = await tx.orderItem.update({
         where: { id: target.id },
-        data: { scannedQty: { increment: 1 } },
+        data: isAkrylik
+          ? { scannedQty: target.quantity }
+          : { scannedQty: { increment: 1 } },
       });
       updatedMap.set(target.id, u.scannedQty);
 
@@ -177,7 +178,7 @@ export async function assignDeliveryScan(
       itemId: t.id,
       itemName: t.itemName,
       barcode: t.barcode,
-      newQty: updatedMap.get(t.id) ?? t.scannedQty + 1,
+      newQty: updatedMap.get(t.id) ?? (isAkrylik ? t.quantity : t.scannedQty + 1),
       totalQty: t.quantity,
     }));
 
@@ -208,10 +209,9 @@ export async function assignDespatchScan(
       include: { order: true },
     });
 
-    // Despatch is capped at what was actually booked in (scannedQty), not the
-    // originally-ordered quantity. If 3 of 4 boxes were missing at booking, only
-    // 1 can be despatched.
-    const openItems = items.filter((i) => i.despatchedQty < i.scannedQty);
+    // Despatch is now capped at the originally-ordered quantity so that items
+    // missing at booking can still be scanned during despatch.
+    const openItems = items.filter((i) => i.despatchedQty < i.quantity);
     const item = openItems[0];
 
     if (!item) {
@@ -238,15 +238,15 @@ export async function assignDespatchScan(
             orderNumber: i.order.orderNumber,
             itemName: i.itemName,
             scannedQty: i.despatchedQty,
-            quantity: i.scannedQty,
+            quantity: i.quantity,
           })),
         };
       }
     }
 
-    // BRW Kitchens special-case
+    // BRW Kitchens special-case: bulk-despatch all same-barcode items
     const targets = isBrw
-      ? items.filter((i) => i.despatchedQty < i.scannedQty)
+      ? items.filter((i) => i.despatchedQty < i.quantity)
       : [item];
 
     const updatedMap = new Map<string, number>();
@@ -269,14 +269,15 @@ export async function assignDespatchScan(
 
     const updatedDespatchedQty = updatedMap.get(item.id) ?? item.despatchedQty + 1;
 
-    // Check if all items in this order are fully despatched (against scannedQty)
+    // Auto-complete only when every item (including those missing at booking)
+    // has been fully despatched against its originally-ordered quantity.
     const orderItems = await tx.orderItem.findMany({
       where: { orderId },
     });
 
     const allDespatched = orderItems.every((oi) => {
       const qty = updatedMap.has(oi.id) ? updatedMap.get(oi.id)! : oi.despatchedQty;
-      return qty >= oi.scannedQty;
+      return qty >= oi.quantity;
     });
 
     if (allDespatched) {
@@ -296,7 +297,7 @@ export async function assignDespatchScan(
       itemName: t.itemName,
       barcode: t.barcode,
       newQty: updatedMap.get(t.id) ?? t.despatchedQty + 1,
-      totalQty: t.scannedQty,
+      totalQty: t.quantity,
     }));
 
     return {
@@ -304,7 +305,7 @@ export async function assignDespatchScan(
       orderNumber: item.order.orderNumber,
       itemName: item.itemName,
       newScannedQty: updatedDespatchedQty,
-      totalQty: item.scannedQty,
+      totalQty: item.quantity,
       orderId: item.orderId,
       barcode: item.barcode,
       scannedItems,
