@@ -316,19 +316,24 @@ export default function DespatchPage() {
             {order.items.map((item) => {
               const done = item.despatchedQty >= item.quantity;
               const partial = item.despatchedQty > 0 && !done;
+              const partiallyMissing = item.scannedQty < item.quantity && item.scannedQty > 0 && !done;
               const neverReceived = item.scannedQty === 0 && !done;
               const rowClass = done
                 ? "bg-green-200"
                 : neverReceived
                 ? "bg-red-100"
+                : partiallyMissing
+                ? "bg-orange-100"
                 : partial
                 ? "bg-yellow-200"
                 : "bg-yellow-100";
+              const missingCount = item.quantity - item.scannedQty;
               return (
                 <tr key={item.id} className={rowClass}>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">
                     {item.itemName}
                     {neverReceived && <span className="block text-red-600 text-[10px] font-bold">NOT RECEIVED AT BOOKING</span>}
+                    {partiallyMissing && <span className="block text-orange-700 text-[10px] font-bold">{missingCount} OF {item.quantity} NOT RECEIVED AT BOOKING</span>}
                   </td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">
