@@ -12,7 +12,7 @@ interface OrderSummary {
   scannedQty: number;
 }
 
-export default function InStockPage() {
+export default function AdditionsPage() {
   const params = useParams();
   const slug = params.slug as string;
   const [orders, setOrders] = useState<OrderSummary[]>([]);
@@ -22,7 +22,7 @@ export default function InStockPage() {
   const [editError, setEditError] = useState("");
 
   const loadOrders = useCallback(async () => {
-    const res = await fetch(`/api/orders?slug=${slug}&status=IN_STOCK&isAddition=false`);
+    const res = await fetch(`/api/orders?slug=${slug}&status=IN_STOCK&isAddition=true`);
     const data = await res.json();
     if (data.orders) setOrders(data.orders);
     setLoading(false);
@@ -65,12 +65,12 @@ export default function InStockPage() {
 
   return (
     <div className="flex flex-col items-center pt-6 px-3 pb-20">
-      <h1 className="text-2xl sm:text-4xl font-black text-white mb-1 text-center">Kitchens In Stock</h1>
-      <p className="text-white/80 mb-6 text-sm sm:text-lg text-center">Fully scanned kitchens ready for despatch</p>
+      <h1 className="text-2xl sm:text-4xl font-black text-white mb-1 text-center">Additions</h1>
+      <p className="text-white/80 mb-6 text-sm sm:text-lg text-center">Additional items booked in separately</p>
 
       <div className="w-full max-w-4xl space-y-3">
         {orders.length === 0 && (
-          <p className="text-white/60 text-center text-lg mt-12">No kitchens in stock.</p>
+          <p className="text-white/60 text-center text-lg mt-12">No additions in stock.</p>
         )}
 
         {orders.map((order) => {
@@ -97,10 +97,9 @@ export default function InStockPage() {
                 </div>
               )}
 
-              {/* Order info */}
               <div className="flex items-center gap-3 mb-2 sm:mb-0">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-scan-green rounded flex items-center justify-center shrink-0">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500 rounded flex items-center justify-center shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-base sm:text-xl font-black text-white truncate">ORDER: {order.orderNumber}</h3>
@@ -108,10 +107,9 @@ export default function InStockPage() {
                 </div>
               </div>
 
-              {/* Buttons - wrap on mobile */}
               <div className="flex flex-wrap gap-2 sm:justify-end">
-                <Link href={`/supplier/${slug}/in-stock/${order.id}/despatch`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded transition text-sm sm:text-base">Despatch</Link>
-                <Link href={`/supplier/${slug}/in-stock/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded transition text-sm sm:text-base">View</Link>
+                <Link href={`/supplier/${slug}/additions/${order.id}/despatch`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded transition text-sm sm:text-base">Despatch</Link>
+                <Link href={`/supplier/${slug}/additions/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded transition text-sm sm:text-base">View</Link>
                 <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white p-2 sm:p-3 rounded transition" title="Edit order number">
                   <EditIcon />
                 </button>

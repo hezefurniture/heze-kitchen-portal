@@ -23,6 +23,7 @@ interface Order {
   id: string;
   orderNumber: string;
   status: string;
+  isAddition: boolean;
   createdAt: string;
   items: OrderItem[];
 }
@@ -274,9 +275,35 @@ export default function ScanAllPage() {
           return (
             <div key={order.id} className={`fade-in ${isExcluded ? "opacity-50" : ""}`}>
               <div className={`w-full ${isExcluded ? "bg-card/60" : "bg-card"} rounded-lg px-3 sm:px-6 py-3 sm:py-4`}>
-                <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="block text-left w-full mb-2">
+                <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="block text-left w-full mb-1">
                   <h3 className={`text-base sm:text-xl font-black truncate ${isExcluded ? "text-white/50 line-through" : "text-white"}`}>ORDER: {order.orderNumber}</h3>
                   <p className="text-white/60 text-xs sm:text-sm">Uploaded: {new Date(order.createdAt).toLocaleDateString("en-GB")}</p>
+                </button>
+                <button
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    const next = !order.isAddition;
+                    await fetch(`/api/orders/${order.id}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ isAddition: next }),
+                    });
+                    setOrders((prev) => prev.map((o) => o.id === order.id ? { ...o, isAddition: next } : o));
+                  }}
+                  className={`mb-2 flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-bold transition ${
+                    order.isAddition
+                      ? "border-blue-400 bg-blue-500/20 text-blue-300"
+                      : "border-white/20 text-white/50 hover:border-white/40"
+                  }`}
+                >
+                  <span className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center ${
+                    order.isAddition ? "border-blue-400 bg-blue-500" : "border-white/40"
+                  }`}>
+                    {order.isAddition && (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
+                    )}
+                  </span>
+                  Addition
                 </button>
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-white text-sm sm:text-lg font-semibold">{orderScanned}/{orderTotal}</span>

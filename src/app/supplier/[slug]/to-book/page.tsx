@@ -8,6 +8,7 @@ interface OrderSummary {
   id: string;
   orderNumber: string;
   status: string;
+  isAddition: boolean;
   createdAt: string;
   totalQty: number;
   scannedQty: number;
@@ -127,6 +128,33 @@ export default function ToBookPage() {
                   </p>
                 </div>
               </div>
+
+              {/* Addition toggle */}
+              <button
+                onClick={async () => {
+                  const next = !order.isAddition;
+                  await fetch(`/api/orders/${order.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ isAddition: next }),
+                  });
+                  setOrders((prev) => prev.map((o) => o.id === order.id ? { ...o, isAddition: next } : o));
+                }}
+                className={`mb-2 flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-bold transition ${
+                  order.isAddition
+                    ? "border-blue-400 bg-blue-500/20 text-blue-300"
+                    : "border-white/20 text-white/50 hover:border-white/40"
+                }`}
+              >
+                <span className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center ${
+                  order.isAddition ? "border-blue-400 bg-blue-500" : "border-white/40"
+                }`}>
+                  {order.isAddition && (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
+                  )}
+                </span>
+                Addition
+              </button>
 
               {/* Action buttons - wrap on mobile */}
               <div className="flex flex-wrap gap-2 sm:justify-end">

@@ -12,6 +12,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const slug = searchParams.get("slug");
   const status = searchParams.get("status");
+  const isAddition = searchParams.get("isAddition");
 
   if (!slug) {
     return NextResponse.json({ error: "Missing slug" }, { status: 400 });
@@ -30,6 +31,7 @@ export async function GET(req: NextRequest) {
     where: {
       supplierId: supplier.id,
       ...(statusFilter ? { status: statusFilter } : {}),
+      ...(isAddition !== null ? { isAddition: isAddition === "true" } : {}),
     },
     include: { items: true },
     orderBy: { createdAt: "desc" },
@@ -39,6 +41,7 @@ export async function GET(req: NextRequest) {
     id: o.id,
     orderNumber: o.orderNumber,
     status: o.status,
+    isAddition: o.isAddition,
     createdAt: o.createdAt,
     movedToStockAt: o.movedToStockAt,
     movedToStockBy: o.movedToStockBy,

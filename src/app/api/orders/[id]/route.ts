@@ -36,31 +36,44 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { orderNumber } = await req.json();
-  if (!orderNumber || !orderNumber.trim()) {
-    return NextResponse.json({ error: "Order number is required" }, { status: 400 });
-  }
+  const body = await req.json();
+  const { orderNumber, isAddition } = body;
 
   const order = await prisma.order.findUnique({ where: { id: params.id } });
   if (!order) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  // Check for duplicate order number within same supplier
-  const duplicate = await prisma.order.findFirst({
-    where: {
-      supplierId: order.supplierId,
-      orderNumber: orderNumber.trim(),
-      id: { not: params.id },
-    },
-  });
-  if (duplicate) {
-    return NextResponse.json({ error: "Order number already exists for this supplier" }, { status: 400 });
+  const data: any = {};
+
+  if (orderNumber !== undefined) {
+    if (!orderNumber || !orderNumber.trim()) {
+      return NextResponse.json({ error: "Order number is required" }, { status: 400 });
+    }
+    const duplicate = await prisma.order.findFirst({
+      where: {
+        supplierId: order.supplierId,
+        orderNumber: orderNumber.trim(),
+        id: { not: params.id },
+      },
+    });
+    if (duplicate) {
+      return NextResponse.json({ error: "Order number already exists for this supplier" }, { status: 400 });
+    }
+    data.orderNumber = orderNumber.trim();
+  }
+
+  if (typeof isAddition === "boolean") {
+    data.isAddition = isAddition;
+  }
+
+  if (Object.keys(data).length === 0) {
+    return NextResponse.json({ error: "No fields to update" }, { status: 400 });
   }
 
   const updated = await prisma.order.update({
     where: { id: params.id },
-    data: { orderNumber: orderNumber.trim() },
+    data,
   });
 
   return NextResponse.json(updated);

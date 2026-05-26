@@ -66,6 +66,7 @@ model Order {
   supplierId      String
   orderNumber     String
   status          OrderStatus @default(PENDING)
+  isAddition      Boolean     @default(false)
   createdAt       DateTime    @default(now())
   movedToStockAt  DateTime?
   movedToStockBy  String?

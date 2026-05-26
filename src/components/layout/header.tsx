@@ -50,6 +50,7 @@ export function Header() {
     { href: `/supplier/${slug}/delivery`, label: "New Delivery", key: "/delivery" },
     { href: `/supplier/${slug}/to-book`, label: "To Book", key: "/to-book" },
     { href: `/supplier/${slug}/in-stock`, label: "In Stock", key: "/in-stock" },
+    { href: `/supplier/${slug}/additions`, label: "Additions", key: "/additions" },
     { href: `/supplier/${slug}/archive`, label: "Archive", key: "/archive" },
   ];
 
