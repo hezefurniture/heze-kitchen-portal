@@ -68,7 +68,7 @@ export default function DeliveryUploadPage() {
       setError(`${file.name}: File is empty or has no data rows.`);
       return null;
     }
-    const rows = applyMappingsToRows(rawRows, mappings);
+    const rows = applyMappingsToRows(rawRows, mappings, { allowEmptyBarcode: slug === "extom" });
     if (rows.length === 0) {
       const headers = Object.keys(rawRows[0] || {}).join(", ");
       setError(

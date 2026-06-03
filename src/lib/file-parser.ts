@@ -59,7 +59,8 @@ function autoDetectValue(row: Record<string, string>, targetField: string): stri
 
 export function applyMappingsToRows(
   rawRows: Record<string, string>[],
-  mappings: ColumnMappingConfig[]
+  mappings: ColumnMappingConfig[],
+  options?: { allowEmptyBarcode?: boolean }
 ): ParsedRow[] {
   const mappingMap = new Map<string, ColumnMappingConfig>();
   for (const m of mappings) {
@@ -83,10 +84,11 @@ export function applyMappingsToRows(
       ? applyMapping(raw, mappingMap.get("orderNumber")!)
       : autoDetectValue(raw, "orderNumber");
 
-    if (!itemName || !barcode || !orderNumber) continue;
+    if (!itemName || !orderNumber) continue;
+    if (!barcode && !options?.allowEmptyBarcode) continue;
     const quantity = parseInt(quantityStr, 10);
     if (isNaN(quantity) || quantity <= 0) continue;
-    rows.push({ itemName, barcode, quantity, orderNumber });
+    rows.push({ itemName, barcode: barcode || "", quantity, orderNumber });
   }
 
   return rows;
