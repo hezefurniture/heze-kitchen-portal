@@ -16,6 +16,7 @@ export interface AmbiguousCandidate {
   itemName: string;
   scannedQty: number;
   quantity: number;
+  parentName?: string;
 }
 
 export interface ScanResult {
@@ -117,6 +118,7 @@ export async function assignDeliveryScan(
               itemName: i.itemName,
               scannedQty: i.scannedQty,
               quantity: i.quantity,
+              ...(i.parentName ? { parentName: i.parentName } : {}),
             })),
           };
         }
@@ -239,6 +241,7 @@ export async function assignDespatchScan(
             itemName: i.itemName,
             scannedQty: i.despatchedQty,
             quantity: i.quantity,
+            ...(i.parentName ? { parentName: i.parentName } : {}),
           })),
         };
       }

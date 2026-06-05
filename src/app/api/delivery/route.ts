@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   // (one physical box = several rows, or multi-box cabinets with same barcode).
   // We keep them as distinct rows so each is visible, instead of merging by barcode.
   const keepDistinctTitles = supplier.slug === "brw" || supplier.slug === "extom" || supplier.slug === "akrylik";
-  const orderMap = new Map<string, { itemName: string; barcode: string; quantity: number }[]>();
+  const orderMap = new Map<string, { itemName: string; barcode: string; quantity: number; parentBarcode?: string; parentName?: string }[]>();
   for (const row of rows) {
     const items = orderMap.get(row.orderNumber) || [];
     const existing = keepDistinctTitles
@@ -44,7 +44,13 @@ export async function POST(req: NextRequest) {
     if (existing) {
       existing.quantity += row.quantity;
     } else {
-      items.push({ itemName: row.itemName, barcode: row.barcode, quantity: row.quantity });
+      items.push({
+        itemName: row.itemName,
+        barcode: row.barcode,
+        quantity: row.quantity,
+        ...(row.parentBarcode ? { parentBarcode: row.parentBarcode } : {}),
+        ...(row.parentName ? { parentName: row.parentName } : {}),
+      });
     }
     orderMap.set(row.orderNumber, items);
   }
@@ -76,6 +82,8 @@ export async function POST(req: NextRequest) {
           itemName: item.itemName,
           barcode: item.barcode,
           quantity: item.quantity,
+          ...(item.parentBarcode ? { parentBarcode: item.parentBarcode } : {}),
+          ...(item.parentName ? { parentName: item.parentName } : {}),
         },
       });
     }

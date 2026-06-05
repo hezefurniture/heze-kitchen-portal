@@ -23,6 +23,8 @@ const TARGET_FIELDS = [
   { key: "itemName", label: "Item Name" },
   { key: "barcode", label: "Barcode" },
   { key: "quantity", label: "Quantity" },
+  { key: "parentBarcode", label: "Parent Barcode" },
+  { key: "parentName", label: "Parent Name" },
 ];
 
 function emptyMapping(targetField: string): MappingConfig {

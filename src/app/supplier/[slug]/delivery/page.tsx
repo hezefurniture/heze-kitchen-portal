@@ -9,6 +9,8 @@ interface ParsedRow {
   barcode: string;
   quantity: number;
   orderNumber: string;
+  parentBarcode?: string;
+  parentName?: string;
 }
 
 interface ParsedFile {
@@ -19,7 +21,7 @@ interface ParsedFile {
 interface OrderGroup {
   orderNumber: string;
   editedOrderNumber: string;
-  items: { itemName: string; barcode: string; quantity: number }[];
+  items: { itemName: string; barcode: string; quantity: number; parentBarcode?: string; parentName?: string }[];
 }
 
 export default function DeliveryUploadPage() {
@@ -122,7 +124,7 @@ export default function DeliveryUploadPage() {
     const keepDistinctTitles = slug === "brw" || slug === "extom" || slug === "akrylik";
 
     // First divide rows by order, then process items inside each order.
-    const groupMap = new Map<string, { itemName: string; barcode: string; quantity: number }[]>();
+    const groupMap = new Map<string, { itemName: string; barcode: string; quantity: number; parentBarcode?: string; parentName?: string }[]>();
     for (const file of files) {
       for (const row of file.rows) {
         if (!groupMap.has(row.orderNumber)) {
@@ -139,7 +141,13 @@ export default function DeliveryUploadPage() {
         if (existing) {
           existing.quantity += row.quantity;
         } else {
-          items.push({ itemName: row.itemName, barcode: row.barcode, quantity: row.quantity });
+          items.push({
+            itemName: row.itemName,
+            barcode: row.barcode,
+            quantity: row.quantity,
+            ...(row.parentBarcode ? { parentBarcode: row.parentBarcode } : {}),
+            ...(row.parentName ? { parentName: row.parentName } : {}),
+          });
         }
       }
     }
@@ -163,6 +171,8 @@ export default function DeliveryUploadPage() {
           barcode: item.barcode,
           quantity: item.quantity,
           orderNumber: group.editedOrderNumber.trim() || group.orderNumber,
+          ...(item.parentBarcode ? { parentBarcode: item.parentBarcode } : {}),
+          ...(item.parentName ? { parentName: item.parentName } : {}),
         });
       }
     }

@@ -89,6 +89,8 @@ model OrderItem {
   quantity      Int
   scannedQty    Int      @default(0)
   despatchedQty Int      @default(0)
+  parentBarcode String?
+  parentName    String?
 
   scanLogs ScanLog[]
 

@@ -3,6 +3,8 @@ export interface ParsedRow {
   barcode: string;
   quantity: number;
   orderNumber: string;
+  parentBarcode?: string;
+  parentName?: string;
 }
 
 export interface ColumnMappingConfig {
@@ -45,6 +47,8 @@ const FALLBACK_NAMES: Record<string, string[]> = {
   barcode: ["Barcode", "barcode", "BARCODE", "bar_code", "Bar Code", "EAN", "ean", "UPC", "upc", "SKU", "sku"],
   quantity: ["Quantity", "quantity", "Qty", "qty", "QTY", "Amount", "amount", "Count", "count"],
   orderNumber: ["Order Number", "order number", "OrderNumber", "order_number", "Order", "order", "Order No", "order_no", "OrderNo"],
+  parentBarcode: ["Parent Barcode", "parent barcode", "ParentBarcode", "parent_barcode", "Parent EAN", "parent_ean"],
+  parentName: ["Parent Name", "parent name", "ParentName", "parent_name", "Parent", "parent", "Parent Product", "parent_product"],
 };
 
 function autoDetectValue(row: Record<string, string>, targetField: string): string {
@@ -84,11 +88,25 @@ export function applyMappingsToRows(
       ? applyMapping(raw, mappingMap.get("orderNumber")!)
       : autoDetectValue(raw, "orderNumber");
 
+    const parentBarcode = mappingMap.has("parentBarcode")
+      ? applyMapping(raw, mappingMap.get("parentBarcode")!)
+      : autoDetectValue(raw, "parentBarcode");
+    const parentName = mappingMap.has("parentName")
+      ? applyMapping(raw, mappingMap.get("parentName")!)
+      : autoDetectValue(raw, "parentName");
+
     if (!itemName || !orderNumber) continue;
     if (!barcode && !options?.allowEmptyBarcode) continue;
     const quantity = parseInt(quantityStr, 10);
     if (isNaN(quantity) || quantity <= 0) continue;
-    rows.push({ itemName, barcode: barcode || "", quantity, orderNumber });
+    rows.push({
+      itemName,
+      barcode: barcode || "",
+      quantity,
+      orderNumber,
+      ...(parentBarcode ? { parentBarcode } : {}),
+      ...(parentName ? { parentName } : {}),
+    });
   }
 
   return rows;
