@@ -290,7 +290,7 @@ export default function ScanAllPage() {
                     });
                     setOrders((prev) => prev.map((o) => o.id === order.id ? { ...o, isAddition: next } : o));
                   }}
-                  className={`mb-2 flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-bold transition ${
+                  className={`mb-2 hidden sm:flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-bold transition ${
                     order.isAddition
                       ? "border-blue-400 bg-blue-500/20 text-blue-300"
                       : "border-white/20 text-white/50 hover:border-white/40"

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 interface OrderSummary {
@@ -16,6 +17,8 @@ interface OrderSummary {
 export default function ArchivePage() {
   const params = useParams();
   const slug = params.slug as string;
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as any)?.role === "ADMIN";
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterOrderId, setFilterOrderId] = useState("");
@@ -61,6 +64,12 @@ export default function ArchivePage() {
     }
     setEditingId(null);
     loadOrders();
+  };
+
+  const handleRestore = async (id: string, orderNumber: string) => {
+    if (!confirm(`Restore order ${orderNumber} back to In Stock? This will reset all despatch quantities.`)) return;
+    const res = await fetch(`/api/orders/${id}/restore-to-stock`, { method: "POST" });
+    if (res.ok) loadOrders();
   };
 
   const filteredOrders = orders.filter((o) => {
@@ -137,6 +146,15 @@ export default function ArchivePage() {
 
             {/* Buttons */}
             <div className="flex flex-wrap gap-2 sm:justify-end">
+              {isAdmin && (
+                <button
+                  onClick={() => handleRestore(order.id, order.orderNumber)}
+                  className="hidden sm:inline-flex bg-blue-600/80 hover:bg-blue-600 text-white font-bold px-4 sm:px-6 py-2 rounded transition text-sm items-center gap-1"
+                  title="Restore to In Stock"
+                >
+                  <RestoreIcon /> Restore
+                </button>
+              )}
               <Link href={`/supplier/${slug}/archive/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-4 sm:px-6 py-2 rounded transition text-sm">View</Link>
               <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white p-2 rounded transition" title="Edit order number">
                 <EditIcon />
@@ -158,4 +176,8 @@ function EditIcon() {
 
 function TrashIcon() {
   return <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,6 5,6 21,6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>;
+}
+
+function RestoreIcon() {
+  return <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1,4 1,10 7,10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>;
 }

@@ -217,7 +217,7 @@ export default function BookScanPage() {
           });
           setOrder((prev) => prev ? { ...prev, isAddition: next } : prev);
         }}
-        className={`mb-4 flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition font-bold text-sm ${
+        className={`mb-4 hidden sm:flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition font-bold text-sm ${
           order.isAddition
             ? "border-blue-400 bg-blue-500/20 text-blue-300"
             : "border-white/30 text-white/60 hover:border-white/50"
