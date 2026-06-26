@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -30,49 +30,12 @@ export default function OrderDetailPage() {
   const slug = params.slug as string;
   const orderId = params.orderId as string;
   const [order, setOrder] = useState<OrderDetail | null>(null);
-  const [meta, setMeta] = useState({
-    hezeOrderNumber: "",
-    customerName: "",
-    postcode: "",
-    plinthQty: "",
-    weight: "",
-    notes: "",
-  });
-  const [saving, setSaving] = useState(false);
 
-  const loadOrder = useCallback(async () => {
-    const res = await fetch(`/api/orders/${orderId}`);
-    const data = await res.json();
-    setOrder(data);
-    setMeta({
-      hezeOrderNumber: data.hezeOrderNumber || "",
-      customerName: data.customerName || "",
-      postcode: data.postcode || "",
-      plinthQty: data.plinthQty != null ? String(data.plinthQty) : "",
-      weight: data.weight || "",
-      notes: data.notes || "",
-    });
+  useEffect(() => {
+    fetch(`/api/orders/${orderId}`)
+      .then((r) => r.json())
+      .then(setOrder);
   }, [orderId]);
-
-  useEffect(() => { loadOrder(); }, [loadOrder]);
-
-  const saveMeta = async () => {
-    setSaving(true);
-    await fetch(`/api/orders/${orderId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        hezeOrderNumber: meta.hezeOrderNumber,
-        customerName: meta.customerName,
-        postcode: meta.postcode,
-        plinthQty: meta.plinthQty,
-        weight: meta.weight,
-        notes: meta.notes,
-      }),
-    });
-    setSaving(false);
-    await loadOrder();
-  };
 
   if (!order) {
     return (
@@ -85,14 +48,7 @@ export default function OrderDetailPage() {
   const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
   const totalScanned = order.items.reduce((s, i) => s + i.scannedQty, 0);
   const hasUnscanned = totalScanned < totalQty;
-
-  const metaChanged =
-    meta.hezeOrderNumber !== (order.hezeOrderNumber || "") ||
-    meta.customerName !== (order.customerName || "") ||
-    meta.postcode !== (order.postcode || "") ||
-    meta.plinthQty !== (order.plinthQty != null ? String(order.plinthQty) : "") ||
-    meta.weight !== (order.weight || "") ||
-    meta.notes !== (order.notes || "");
+  const hasMeta = order.hezeOrderNumber || order.customerName || order.postcode || order.plinthQty || order.weight || order.notes;
 
   return (
     <div className="flex flex-col items-center pt-8 px-4">
@@ -106,74 +62,32 @@ export default function OrderDetailPage() {
         {order.movedToStockBy && ` | Scanned by: ${order.movedToStockBy}`}
       </p>
 
-      <div className="w-full max-w-4xl bg-card rounded-lg px-4 sm:px-6 py-4 mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="text-white/60 text-xs font-bold">Heze Order Number</label>
-            <input
-              type="text"
-              value={meta.hezeOrderNumber}
-              onChange={(e) => setMeta({ ...meta, hezeOrderNumber: e.target.value })}
-              className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-              placeholder="e.g. HZ-1234"
-            />
+      {hasMeta && (
+        <div className="w-full max-w-4xl bg-card rounded-lg px-4 sm:px-6 py-3 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
+            {order.hezeOrderNumber && (
+              <div><span className="text-white/50">Heze Order:</span> <span className="text-white font-medium">{order.hezeOrderNumber}</span></div>
+            )}
+            {order.customerName && (
+              <div><span className="text-white/50">Customer:</span> <span className="text-white font-medium">{order.customerName}</span></div>
+            )}
+            {order.postcode && (
+              <div><span className="text-white/50">Postcode:</span> <span className="text-white font-medium">{order.postcode}</span></div>
+            )}
+            {order.plinthQty && (
+              <div><span className="text-white/50">Plinth Qty:</span> <span className="text-white font-medium">{order.plinthQty}</span></div>
+            )}
+            {order.weight && (
+              <div><span className="text-white/50">Weight:</span> <span className="text-white font-medium">{order.weight}</span></div>
+            )}
           </div>
-          <div>
-            <label className="text-white/60 text-xs font-bold">Customer Name</label>
-            <input
-              type="text"
-              value={meta.customerName}
-              onChange={(e) => setMeta({ ...meta, customerName: e.target.value })}
-              className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
-          <div>
-            <label className="text-white/60 text-xs font-bold">Postcode</label>
-            <input
-              type="text"
-              value={meta.postcode}
-              onChange={(e) => setMeta({ ...meta, postcode: e.target.value })}
-              className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
-          <div>
-            <label className="text-white/60 text-xs font-bold">Plinth Quantity</label>
-            <input
-              type="number"
-              value={meta.plinthQty}
-              onChange={(e) => setMeta({ ...meta, plinthQty: e.target.value })}
-              className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
-          <div>
-            <label className="text-white/60 text-xs font-bold">Weight</label>
-            <input
-              type="text"
-              value={meta.weight}
-              onChange={(e) => setMeta({ ...meta, weight: e.target.value })}
-              className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <label className="text-white/60 text-xs font-bold">Notes</label>
-            <textarea
-              value={meta.notes}
-              onChange={(e) => setMeta({ ...meta, notes: e.target.value })}
-              rows={2}
-              className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none"
-            />
-          </div>
+          {order.notes && (
+            <div className="mt-2 text-sm">
+              <span className="text-white/50">Notes:</span> <span className="text-white/80">{order.notes}</span>
+            </div>
+          )}
         </div>
-        {metaChanged && (
-          <button
-            onClick={saveMeta}
-            disabled={saving}
-            className="mt-3 px-6 py-2 rounded bg-accent text-white font-bold text-sm hover:bg-accent-light transition disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save Changes"}
-          </button>
-        )}
-      </div>
+      )}
 
       <div className="w-full max-w-4xl bg-white rounded-lg overflow-x-auto">
         <table className="w-full text-sm table-fixed">
