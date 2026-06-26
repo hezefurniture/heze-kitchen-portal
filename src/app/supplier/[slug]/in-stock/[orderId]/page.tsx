@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { generateOrderPdf } from "@/lib/generate-order-pdf";
 
 interface OrderDetail {
   id: string;
@@ -16,6 +17,7 @@ interface OrderDetail {
   plinthQty: number | null;
   weight: string | null;
   notes: string | null;
+  supplier: { name: string };
   items: {
     id: string;
     itemName: string;
@@ -122,6 +124,22 @@ export default function OrderDetailPage() {
       </div>
 
       <div className="mt-6 flex flex-wrap gap-3 justify-center">
+        <button
+          onClick={() => generateOrderPdf({
+            orderNumber: order.orderNumber,
+            hezeOrderNumber: order.hezeOrderNumber,
+            customerName: order.customerName,
+            postcode: order.postcode,
+            plinthQty: order.plinthQty,
+            weight: order.weight,
+            notes: order.notes,
+            supplierName: order.supplier.name,
+          })}
+          className="px-6 py-3 rounded bg-blue-600 text-white font-bold hover:bg-blue-500 transition flex items-center gap-2"
+        >
+          <PrintIcon />
+          Print Label
+        </button>
         {hasUnscanned && (
           <Link
             href={`/supplier/${slug}/in-stock/${orderId}/scan-extra`}
@@ -139,4 +157,8 @@ export default function OrderDetailPage() {
       </div>
     </div>
   );
+}
+
+function PrintIcon() {
+  return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9V2h12v7" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></svg>;
 }
