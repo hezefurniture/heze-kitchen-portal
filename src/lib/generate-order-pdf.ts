@@ -18,22 +18,23 @@ export function generateOrderPdf(data: OrderPdfData) {
   const margin = 20;
   const contentW = pageW - margin * 2;
 
-  // Top dark bar
+  // Top dark bar (20mm down from top edge)
+  const topMargin = 20;
   const barH = 20;
   doc.setFillColor(40, 40, 40);
-  doc.rect(0, 0, pageW, barH, "F");
+  doc.rect(0, topMargin, pageW, barH, "F");
 
   doc.setTextColor(255, 255, 255);
   const weightText = data.weight ? `${data.weight} kg` : "";
   if (weightText) {
     doc.setFontSize(13);
     doc.setFont("helvetica", "normal");
-    doc.text(weightText, margin + 2, barH / 2, { baseline: "middle" });
+    doc.text(weightText, margin + 2, topMargin + barH / 2, { baseline: "middle" });
   }
 
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text(data.supplierName.toUpperCase(), pageW / 2, barH / 2, {
+  doc.text(data.supplierName.toUpperCase(), pageW / 2, topMargin + barH / 2, {
     align: "center",
     baseline: "middle",
   });
@@ -42,13 +43,13 @@ export function generateOrderPdf(data: OrderPdfData) {
   if (plinthText) {
     doc.setFontSize(13);
     doc.setFont("helvetica", "normal");
-    doc.text(plinthText, pageW - margin - 2, barH / 2, {
+    doc.text(plinthText, pageW - margin - 2, topMargin + barH / 2, {
       align: "right",
       baseline: "middle",
     });
   }
 
-  const contentTop = barH;
+  const contentTop = topMargin + barH;
   const contentBottom = pageH;
   const totalH = contentBottom - contentTop;
 
