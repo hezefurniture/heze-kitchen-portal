@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { slug, rows } = await req.json();
+  const { slug, rows, orderMeta } = await req.json();
 
   if (!slug || !rows || !Array.isArray(rows) || rows.length === 0) {
     return NextResponse.json({ error: "Invalid data" }, { status: 400 });
@@ -55,9 +55,26 @@ export async function POST(req: NextRequest) {
     orderMap.set(row.orderNumber, items);
   }
 
+  const metaMap: Record<string, any> = {};
+  if (orderMeta && typeof orderMeta === "object") {
+    for (const [on, meta] of Object.entries(orderMeta)) {
+      metaMap[on] = meta;
+    }
+  }
+
   // Create orders and items
   for (const [orderNumber, items] of orderMap) {
-    // Upsert order
+    const meta = metaMap[orderNumber] || {};
+    const metaData: any = {};
+    if (meta.hezeOrderNumber) metaData.hezeOrderNumber = meta.hezeOrderNumber;
+    if (meta.customerName) metaData.customerName = meta.customerName;
+    if (meta.postcode) metaData.postcode = meta.postcode;
+    if (meta.plinthQty !== undefined && meta.plinthQty !== null && meta.plinthQty !== "") {
+      metaData.plinthQty = parseInt(meta.plinthQty, 10) || null;
+    }
+    if (meta.weight) metaData.weight = meta.weight;
+    if (meta.notes) metaData.notes = meta.notes;
+
     const order = await prisma.order.upsert({
       where: {
         supplierId_orderNumber: {
@@ -69,8 +86,9 @@ export async function POST(req: NextRequest) {
         supplierId: supplier.id,
         orderNumber,
         status: "PENDING",
+        ...metaData,
       },
-      update: {},
+      update: metaData,
     });
 
     // Create order items

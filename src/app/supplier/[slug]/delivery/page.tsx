@@ -22,6 +22,12 @@ interface OrderGroup {
   orderNumber: string;
   editedOrderNumber: string;
   items: { itemName: string; barcode: string; quantity: number; parentBarcode?: string; parentName?: string }[];
+  hezeOrderNumber: string;
+  customerName: string;
+  postcode: string;
+  plinthQty: string;
+  weight: string;
+  notes: string;
 }
 
 export default function DeliveryUploadPage() {
@@ -153,7 +159,17 @@ export default function DeliveryUploadPage() {
     }
     const groups: OrderGroup[] = [];
     for (const [orderNumber, items] of groupMap) {
-      groups.push({ orderNumber, editedOrderNumber: orderNumber, items });
+      groups.push({
+        orderNumber,
+        editedOrderNumber: orderNumber,
+        items,
+        hezeOrderNumber: "",
+        customerName: "",
+        postcode: "",
+        plinthQty: "",
+        weight: "",
+        notes: "",
+      });
     }
     setOrderGroups(groups);
     setReviewStep(true);
@@ -177,11 +193,24 @@ export default function DeliveryUploadPage() {
       }
     }
 
+    const orderMeta: Record<string, any> = {};
+    for (const group of orderGroups) {
+      const key = group.editedOrderNumber.trim() || group.orderNumber;
+      const meta: any = {};
+      if (group.hezeOrderNumber.trim()) meta.hezeOrderNumber = group.hezeOrderNumber.trim();
+      if (group.customerName.trim()) meta.customerName = group.customerName.trim();
+      if (group.postcode.trim()) meta.postcode = group.postcode.trim();
+      if (group.plinthQty.trim()) meta.plinthQty = group.plinthQty.trim();
+      if (group.weight.trim()) meta.weight = group.weight.trim();
+      if (group.notes.trim()) meta.notes = group.notes.trim();
+      if (Object.keys(meta).length > 0) orderMeta[key] = meta;
+    }
+
     try {
       const res = await fetch("/api/delivery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, rows: allRows }),
+        body: JSON.stringify({ slug, rows: allRows, orderMeta }),
       });
 
       if (!res.ok) {
@@ -223,6 +252,88 @@ export default function DeliveryUploadPage() {
                   className="w-full sm:flex-1 px-3 py-2 rounded bg-white text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                <div>
+                  <label className="text-white/50 text-xs">Heze Order Number</label>
+                  <input
+                    type="text"
+                    value={group.hezeOrderNumber}
+                    onChange={(e) => {
+                      const updated = [...orderGroups];
+                      updated[idx].hezeOrderNumber = e.target.value;
+                      setOrderGroups(updated);
+                    }}
+                    className="w-full px-3 py-1.5 rounded bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    placeholder="e.g. HZ-1234"
+                  />
+                </div>
+                <div>
+                  <label className="text-white/50 text-xs">Customer Name</label>
+                  <input
+                    type="text"
+                    value={group.customerName}
+                    onChange={(e) => {
+                      const updated = [...orderGroups];
+                      updated[idx].customerName = e.target.value;
+                      setOrderGroups(updated);
+                    }}
+                    className="w-full px-3 py-1.5 rounded bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="text-white/50 text-xs">Postcode</label>
+                  <input
+                    type="text"
+                    value={group.postcode}
+                    onChange={(e) => {
+                      const updated = [...orderGroups];
+                      updated[idx].postcode = e.target.value;
+                      setOrderGroups(updated);
+                    }}
+                    className="w-full px-3 py-1.5 rounded bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="text-white/50 text-xs">Plinth Quantity</label>
+                  <input
+                    type="number"
+                    value={group.plinthQty}
+                    onChange={(e) => {
+                      const updated = [...orderGroups];
+                      updated[idx].plinthQty = e.target.value;
+                      setOrderGroups(updated);
+                    }}
+                    className="w-full px-3 py-1.5 rounded bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="text-white/50 text-xs">Weight</label>
+                  <input
+                    type="text"
+                    value={group.weight}
+                    onChange={(e) => {
+                      const updated = [...orderGroups];
+                      updated[idx].weight = e.target.value;
+                      setOrderGroups(updated);
+                    }}
+                    className="w-full px-3 py-1.5 rounded bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+                <div className="sm:col-span-2">
+                  <label className="text-white/50 text-xs">Notes</label>
+                  <textarea
+                    value={group.notes}
+                    onChange={(e) => {
+                      const updated = [...orderGroups];
+                      updated[idx].notes = e.target.value;
+                      setOrderGroups(updated);
+                    }}
+                    rows={2}
+                    className="w-full px-3 py-1.5 rounded bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                  />
+                </div>
+              </div>
+
               <div className="text-white/60 text-sm">
                 {group.items.length} item{group.items.length !== 1 ? "s" : ""} &middot;{" "}
                 {group.items.reduce((s, i) => s + i.quantity, 0)} total qty

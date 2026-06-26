@@ -37,7 +37,7 @@ export async function PATCH(
   }
 
   const body = await req.json();
-  const { orderNumber, isAddition } = body;
+  const { orderNumber, isAddition, hezeOrderNumber, customerName, postcode, plinthQty, weight, notes } = body;
 
   const order = await prisma.order.findUnique({ where: { id: params.id } });
   if (!order) {
@@ -66,6 +66,13 @@ export async function PATCH(
   if (typeof isAddition === "boolean") {
     data.isAddition = isAddition;
   }
+
+  if (hezeOrderNumber !== undefined) data.hezeOrderNumber = hezeOrderNumber || null;
+  if (customerName !== undefined) data.customerName = customerName || null;
+  if (postcode !== undefined) data.postcode = postcode || null;
+  if (plinthQty !== undefined) data.plinthQty = plinthQty !== null && plinthQty !== "" ? parseInt(plinthQty, 10) || null : null;
+  if (weight !== undefined) data.weight = weight || null;
+  if (notes !== undefined) data.notes = notes || null;
 
   if (Object.keys(data).length === 0) {
     return NextResponse.json({ error: "No fields to update" }, { status: 400 });

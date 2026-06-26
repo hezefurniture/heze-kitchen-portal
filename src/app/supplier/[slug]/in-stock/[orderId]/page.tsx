@@ -10,6 +10,12 @@ interface OrderDetail {
   status: string;
   movedToStockAt: string | null;
   movedToStockBy: string | null;
+  hezeOrderNumber: string | null;
+  customerName: string | null;
+  postcode: string | null;
+  plinthQty: number | null;
+  weight: string | null;
+  notes: string | null;
   items: {
     id: string;
     itemName: string;
@@ -48,12 +54,39 @@ export default function OrderDetailPage() {
       <h1 className="text-3xl font-black text-white mb-2">
         ORDER: {order.orderNumber}
       </h1>
-      <p className="text-white/60 mb-6 text-center">
+      <p className="text-white/60 mb-2 text-center">
         {order.movedToStockAt
           ? `In stock since: ${new Date(order.movedToStockAt).toLocaleDateString("en-GB")}`
           : ""}
         {order.movedToStockBy && ` | Scanned by: ${order.movedToStockBy}`}
       </p>
+
+      {(order.hezeOrderNumber || order.customerName || order.postcode || order.plinthQty || order.weight || order.notes) && (
+        <div className="w-full max-w-4xl bg-card rounded-lg px-4 sm:px-6 py-3 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+            {order.hezeOrderNumber && (
+              <div><span className="text-white/50">Heze Order:</span> <span className="text-white font-medium">{order.hezeOrderNumber}</span></div>
+            )}
+            {order.customerName && (
+              <div><span className="text-white/50">Customer:</span> <span className="text-white font-medium">{order.customerName}</span></div>
+            )}
+            {order.postcode && (
+              <div><span className="text-white/50">Postcode:</span> <span className="text-white font-medium">{order.postcode}</span></div>
+            )}
+            {order.plinthQty && (
+              <div><span className="text-white/50">Plinth Qty:</span> <span className="text-white font-medium">{order.plinthQty}</span></div>
+            )}
+            {order.weight && (
+              <div><span className="text-white/50">Weight:</span> <span className="text-white font-medium">{order.weight}</span></div>
+            )}
+          </div>
+          {order.notes && (
+            <div className="mt-2 text-sm">
+              <span className="text-white/50">Notes:</span> <span className="text-white/80">{order.notes}</span>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="w-full max-w-4xl bg-white rounded-lg overflow-x-auto">
         <table className="w-full text-sm table-fixed">

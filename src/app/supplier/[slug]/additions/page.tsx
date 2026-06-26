@@ -10,6 +10,9 @@ interface OrderSummary {
   status: string;
   totalQty: number;
   scannedQty: number;
+  hezeOrderNumber: string | null;
+  customerName: string | null;
+  postcode: string | null;
 }
 
 export default function AdditionsPage() {
@@ -103,7 +106,12 @@ export default function AdditionsPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <h3 className="text-base sm:text-xl font-black text-white truncate">ORDER: {order.orderNumber}</h3>
-                  <p className="text-white/70 text-xs sm:text-sm">DELIVERED {order.scannedQty}/{order.totalQty}</p>
+                  <p className="text-white/70 text-xs sm:text-sm">
+                    DELIVERED {order.scannedQty}/{order.totalQty}
+                    {order.hezeOrderNumber && <span className="ml-2">| {order.hezeOrderNumber}</span>}
+                    {order.customerName && <span className="ml-2">| {order.customerName}</span>}
+                    {order.postcode && <span className="ml-1 hidden sm:inline">| {order.postcode}</span>}
+                  </p>
                 </div>
               </div>
 

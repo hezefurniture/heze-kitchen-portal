@@ -67,6 +67,12 @@ model Order {
   orderNumber     String
   status          OrderStatus @default(PENDING)
   isAddition      Boolean     @default(false)
+  hezeOrderNumber String?
+  customerName    String?
+  postcode        String?
+  plinthQty       Int?
+  weight          String?
+  notes           String?
   createdAt       DateTime    @default(now())
   movedToStockAt  DateTime?
   movedToStockBy  String?
