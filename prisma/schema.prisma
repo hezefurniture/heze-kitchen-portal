@@ -71,6 +71,9 @@ model Order {
   customerName    String?
   postcode        String?
   plinthQty       Int?
+  plinthColour    String?
+  sealQty         Int?
+  bracketQty      Int?
   weight          String?
   notes           String?
   createdAt       DateTime    @default(now())

@@ -6,6 +6,9 @@ interface OrderPdfData {
   customerName: string | null;
   postcode: string | null;
   plinthQty: number | null;
+  plinthColour: string | null;
+  sealQty: number | null;
+  bracketQty: number | null;
   weight: string | null;
   notes: string | null;
   supplierName: string;
@@ -39,11 +42,23 @@ export function generateOrderPdf(data: OrderPdfData) {
     baseline: "middle",
   });
 
-  const plinthText = data.plinthQty ? `${data.plinthQty} plinths` : "";
-  if (plinthText) {
-    doc.setFontSize(13);
+  // Right side info items
+  const rightItems: string[] = [];
+  if (data.plinthQty) {
+    let plinthStr = `${data.plinthQty} plinths`;
+    if (data.plinthColour) plinthStr += ` (${data.plinthColour})`;
+    rightItems.push(plinthStr);
+  } else if (data.plinthColour) {
+    rightItems.push(`Plinth: ${data.plinthColour}`);
+  }
+  if (data.sealQty) rightItems.push(`${data.sealQty} seals`);
+  if (data.bracketQty) rightItems.push(`${data.bracketQty} brackets`);
+
+  if (rightItems.length > 0) {
+    doc.setFontSize(11);
     doc.setFont("helvetica", "normal");
-    doc.text(plinthText, pageW - margin - 2, topMargin + barH / 2, {
+    const rightText = rightItems.join("  |  ");
+    doc.text(rightText, pageW - margin - 2, topMargin + barH / 2, {
       align: "right",
       baseline: "middle",
     });

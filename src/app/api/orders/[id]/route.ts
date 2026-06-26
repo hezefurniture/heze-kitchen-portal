@@ -37,7 +37,7 @@ export async function PATCH(
   }
 
   const body = await req.json();
-  const { orderNumber, isAddition, hezeOrderNumber, customerName, postcode, plinthQty, weight, notes } = body;
+  const { orderNumber, isAddition, hezeOrderNumber, customerName, postcode, plinthQty, plinthColour, sealQty, bracketQty, weight, notes } = body;
 
   const order = await prisma.order.findUnique({ where: { id: params.id } });
   if (!order) {
@@ -71,6 +71,9 @@ export async function PATCH(
   if (customerName !== undefined) data.customerName = customerName || null;
   if (postcode !== undefined) data.postcode = postcode || null;
   if (plinthQty !== undefined) data.plinthQty = plinthQty !== null && plinthQty !== "" ? parseInt(plinthQty, 10) || null : null;
+  if (plinthColour !== undefined) data.plinthColour = plinthColour || null;
+  if (sealQty !== undefined) data.sealQty = sealQty !== null && sealQty !== "" ? parseInt(sealQty, 10) || null : null;
+  if (bracketQty !== undefined) data.bracketQty = bracketQty !== null && bracketQty !== "" ? parseInt(bracketQty, 10) || null : null;
   if (weight !== undefined) data.weight = weight || null;
   if (notes !== undefined) data.notes = notes || null;
 

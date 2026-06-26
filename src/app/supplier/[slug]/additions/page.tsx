@@ -14,6 +14,9 @@ interface OrderSummary {
   customerName: string | null;
   postcode: string | null;
   plinthQty: number | null;
+  plinthColour: string | null;
+  sealQty: number | null;
+  bracketQty: number | null;
   weight: string | null;
   notes: string | null;
 }
@@ -25,7 +28,7 @@ export default function AdditionsPage() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
-  const [editMeta, setEditMeta] = useState({ hezeOrderNumber: "", customerName: "", postcode: "", plinthQty: "", weight: "", notes: "" });
+  const [editMeta, setEditMeta] = useState({ hezeOrderNumber: "", customerName: "", postcode: "", plinthQty: "", plinthColour: "", sealQty: "", bracketQty: "", weight: "", notes: "" });
   const [editError, setEditError] = useState("");
 
   const loadOrders = useCallback(async () => {
@@ -51,6 +54,9 @@ export default function AdditionsPage() {
       customerName: order.customerName || "",
       postcode: order.postcode || "",
       plinthQty: order.plinthQty != null ? String(order.plinthQty) : "",
+      plinthColour: order.plinthColour || "",
+      sealQty: order.sealQty != null ? String(order.sealQty) : "",
+      bracketQty: order.bracketQty != null ? String(order.bracketQty) : "",
       weight: order.weight || "",
       notes: order.notes || "",
     });
@@ -69,6 +75,9 @@ export default function AdditionsPage() {
         customerName: editMeta.customerName,
         postcode: editMeta.postcode,
         plinthQty: editMeta.plinthQty,
+        plinthColour: editMeta.plinthColour,
+        sealQty: editMeta.sealQty,
+        bracketQty: editMeta.bracketQty,
         weight: editMeta.weight,
         notes: editMeta.notes,
       }),
@@ -128,6 +137,18 @@ export default function AdditionsPage() {
                     <div>
                       <label className="text-white/60 text-xs font-bold">Plinth Quantity</label>
                       <input type="number" value={editMeta.plinthQty} onChange={(e) => setEditMeta({ ...editMeta, plinthQty: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    </div>
+                    <div>
+                      <label className="text-white/60 text-xs font-bold">Plinth Colour</label>
+                      <input type="text" value={editMeta.plinthColour} onChange={(e) => setEditMeta({ ...editMeta, plinthColour: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    </div>
+                    <div>
+                      <label className="text-white/60 text-xs font-bold">Seal Quantity</label>
+                      <input type="number" value={editMeta.sealQty} onChange={(e) => setEditMeta({ ...editMeta, sealQty: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    </div>
+                    <div>
+                      <label className="text-white/60 text-xs font-bold">Bracket Quantity</label>
+                      <input type="number" value={editMeta.bracketQty} onChange={(e) => setEditMeta({ ...editMeta, bracketQty: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                     </div>
                     <div>
                       <label className="text-white/60 text-xs font-bold">Weight</label>

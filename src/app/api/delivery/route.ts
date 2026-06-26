@@ -72,6 +72,13 @@ export async function POST(req: NextRequest) {
     if (meta.plinthQty !== undefined && meta.plinthQty !== null && meta.plinthQty !== "") {
       metaData.plinthQty = parseInt(meta.plinthQty, 10) || null;
     }
+    if (meta.plinthColour) metaData.plinthColour = meta.plinthColour;
+    if (meta.sealQty !== undefined && meta.sealQty !== null && meta.sealQty !== "") {
+      metaData.sealQty = parseInt(meta.sealQty, 10) || null;
+    }
+    if (meta.bracketQty !== undefined && meta.bracketQty !== null && meta.bracketQty !== "") {
+      metaData.bracketQty = parseInt(meta.bracketQty, 10) || null;
+    }
     if (meta.weight) metaData.weight = meta.weight;
     if (meta.notes) metaData.notes = meta.notes;
 

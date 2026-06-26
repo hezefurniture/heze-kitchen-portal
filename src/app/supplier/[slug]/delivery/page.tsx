@@ -26,6 +26,9 @@ interface OrderGroup {
   customerName: string;
   postcode: string;
   plinthQty: string;
+  plinthColour: string;
+  sealQty: string;
+  bracketQty: string;
   weight: string;
   notes: string;
 }
@@ -167,6 +170,9 @@ export default function DeliveryUploadPage() {
         customerName: "",
         postcode: "",
         plinthQty: "",
+        plinthColour: "",
+        sealQty: "",
+        bracketQty: "",
         weight: "",
         notes: "",
       });
@@ -201,6 +207,9 @@ export default function DeliveryUploadPage() {
       if (group.customerName.trim()) meta.customerName = group.customerName.trim();
       if (group.postcode.trim()) meta.postcode = group.postcode.trim();
       if (group.plinthQty.trim()) meta.plinthQty = group.plinthQty.trim();
+      if (group.plinthColour.trim()) meta.plinthColour = group.plinthColour.trim();
+      if (group.sealQty.trim()) meta.sealQty = group.sealQty.trim();
+      if (group.bracketQty.trim()) meta.bracketQty = group.bracketQty.trim();
       if (group.weight.trim()) meta.weight = group.weight.trim();
       if (group.notes.trim()) meta.notes = group.notes.trim();
       if (Object.keys(meta).length > 0) orderMeta[key] = meta;
@@ -301,6 +310,45 @@ export default function DeliveryUploadPage() {
                     onChange={(e) => {
                       const updated = [...orderGroups];
                       updated[idx].plinthQty = e.target.value;
+                      setOrderGroups(updated);
+                    }}
+                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="text-white/50 text-xs">Plinth Colour</label>
+                  <input
+                    type="text"
+                    value={group.plinthColour}
+                    onChange={(e) => {
+                      const updated = [...orderGroups];
+                      updated[idx].plinthColour = e.target.value;
+                      setOrderGroups(updated);
+                    }}
+                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="text-white/50 text-xs">Seal Quantity</label>
+                  <input
+                    type="number"
+                    value={group.sealQty}
+                    onChange={(e) => {
+                      const updated = [...orderGroups];
+                      updated[idx].sealQty = e.target.value;
+                      setOrderGroups(updated);
+                    }}
+                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                  />
+                </div>
+                <div>
+                  <label className="text-white/50 text-xs">Bracket Quantity</label>
+                  <input
+                    type="number"
+                    value={group.bracketQty}
+                    onChange={(e) => {
+                      const updated = [...orderGroups];
+                      updated[idx].bracketQty = e.target.value;
                       setOrderGroups(updated);
                     }}
                     className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"

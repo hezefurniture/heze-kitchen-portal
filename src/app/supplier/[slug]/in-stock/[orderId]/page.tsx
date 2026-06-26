@@ -15,6 +15,9 @@ interface OrderDetail {
   customerName: string | null;
   postcode: string | null;
   plinthQty: number | null;
+  plinthColour: string | null;
+  sealQty: number | null;
+  bracketQty: number | null;
   weight: string | null;
   notes: string | null;
   supplier: { name: string };
@@ -50,7 +53,7 @@ export default function OrderDetailPage() {
   const totalQty = order.items.reduce((s, i) => s + i.quantity, 0);
   const totalScanned = order.items.reduce((s, i) => s + i.scannedQty, 0);
   const hasUnscanned = totalScanned < totalQty;
-  const hasMeta = order.hezeOrderNumber || order.customerName || order.postcode || order.plinthQty || order.weight || order.notes;
+  const hasMeta = order.hezeOrderNumber || order.customerName || order.postcode || order.plinthQty || order.plinthColour || order.sealQty || order.bracketQty || order.weight || order.notes;
 
   return (
     <div className="flex flex-col items-center pt-8 px-4">
@@ -78,6 +81,15 @@ export default function OrderDetailPage() {
             )}
             {order.plinthQty && (
               <div><span className="text-white/50">Plinth Qty:</span> <span className="text-white font-medium">{order.plinthQty}</span></div>
+            )}
+            {order.plinthColour && (
+              <div><span className="text-white/50">Plinth Colour:</span> <span className="text-white font-medium">{order.plinthColour}</span></div>
+            )}
+            {order.sealQty && (
+              <div><span className="text-white/50">Seal Qty:</span> <span className="text-white font-medium">{order.sealQty}</span></div>
+            )}
+            {order.bracketQty && (
+              <div><span className="text-white/50">Bracket Qty:</span> <span className="text-white font-medium">{order.bracketQty}</span></div>
             )}
             {order.weight && (
               <div><span className="text-white/50">Weight:</span> <span className="text-white font-medium">{order.weight}</span></div>
@@ -131,6 +143,9 @@ export default function OrderDetailPage() {
             customerName: order.customerName,
             postcode: order.postcode,
             plinthQty: order.plinthQty,
+            plinthColour: order.plinthColour,
+            sealQty: order.sealQty,
+            bracketQty: order.bracketQty,
             weight: order.weight,
             notes: order.notes,
             supplierName: order.supplier.name,

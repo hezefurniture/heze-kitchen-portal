@@ -28,6 +28,9 @@ interface OrderDetail {
   customerName: string | null;
   postcode: string | null;
   plinthQty: number | null;
+  plinthColour: string | null;
+  sealQty: number | null;
+  bracketQty: number | null;
   weight: string | null;
   notes: string | null;
   items: OrderItem[];
@@ -241,7 +244,7 @@ export default function BookScanPage() {
         Mark as Addition
       </button>
 
-      {(order.hezeOrderNumber || order.customerName || order.postcode || order.plinthQty || order.weight || order.notes) && (
+      {(order.hezeOrderNumber || order.customerName || order.postcode || order.plinthQty || order.plinthColour || order.sealQty || order.bracketQty || order.weight || order.notes) && (
         <div className="w-full max-w-4xl bg-card rounded-lg px-4 sm:px-6 py-3 mb-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm">
             {order.hezeOrderNumber && (
@@ -255,6 +258,15 @@ export default function BookScanPage() {
             )}
             {order.plinthQty && (
               <div><span className="text-white/50">Plinth Qty:</span> <span className="text-white font-medium">{order.plinthQty}</span></div>
+            )}
+            {order.plinthColour && (
+              <div><span className="text-white/50">Plinth Colour:</span> <span className="text-white font-medium">{order.plinthColour}</span></div>
+            )}
+            {order.sealQty && (
+              <div><span className="text-white/50">Seal Qty:</span> <span className="text-white font-medium">{order.sealQty}</span></div>
+            )}
+            {order.bracketQty && (
+              <div><span className="text-white/50">Bracket Qty:</span> <span className="text-white font-medium">{order.bracketQty}</span></div>
             )}
             {order.weight && (
               <div><span className="text-white/50">Weight:</span> <span className="text-white font-medium">{order.weight}</span></div>
