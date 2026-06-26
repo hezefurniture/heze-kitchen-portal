@@ -12,6 +12,12 @@ interface OrderSummary {
   createdAt: string;
   totalQty: number;
   scannedQty: number;
+  hezeOrderNumber: string | null;
+  customerName: string | null;
+  postcode: string | null;
+  plinthQty: number | null;
+  weight: string | null;
+  notes: string | null;
 }
 
 export default function ToBookPage() {
@@ -21,6 +27,7 @@ export default function ToBookPage() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [editMeta, setEditMeta] = useState({ hezeOrderNumber: "", customerName: "", postcode: "", plinthQty: "", weight: "", notes: "" });
   const [editError, setEditError] = useState("");
 
   const loadOrders = useCallback(async () => {
@@ -41,6 +48,14 @@ export default function ToBookPage() {
   const handleEditStart = (order: OrderSummary) => {
     setEditingId(order.id);
     setEditValue(order.orderNumber);
+    setEditMeta({
+      hezeOrderNumber: order.hezeOrderNumber || "",
+      customerName: order.customerName || "",
+      postcode: order.postcode || "",
+      plinthQty: order.plinthQty != null ? String(order.plinthQty) : "",
+      weight: order.weight || "",
+      notes: order.notes || "",
+    });
     setEditError("");
   };
 
@@ -50,7 +65,15 @@ export default function ToBookPage() {
     const res = await fetch(`/api/orders/${editingId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderNumber: editValue }),
+      body: JSON.stringify({
+        orderNumber: editValue,
+        hezeOrderNumber: editMeta.hezeOrderNumber,
+        customerName: editMeta.customerName,
+        postcode: editMeta.postcode,
+        plinthQty: editMeta.plinthQty,
+        weight: editMeta.weight,
+        notes: editMeta.notes,
+      }),
     });
     if (!res.ok) {
       const data = await res.json();
@@ -98,15 +121,41 @@ export default function ToBookPage() {
               {/* Edit order number */}
               {isEditing && (
                 <div className="mb-3 bg-white/10 rounded-lg p-3">
-                  <label className="text-white text-sm font-bold block mb-2">Change Order Number</label>
+                  <label className="text-white text-sm font-bold block mb-2">Order Number</label>
                   <input
                     type="text"
                     value={editValue}
                     onChange={(e) => setEditValue(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleEditSave(); if (e.key === "Escape") setEditingId(null); }}
-                    className="w-full px-3 py-2 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-accent mb-2"
+                    onKeyDown={(e) => { if (e.key === "Escape") setEditingId(null); }}
+                    className="w-full px-3 py-2 rounded bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-accent mb-3"
                     autoFocus
                   />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                    <div>
+                      <label className="text-white/60 text-xs font-bold">Heze Order Number</label>
+                      <input type="text" value={editMeta.hezeOrderNumber} onChange={(e) => setEditMeta({ ...editMeta, hezeOrderNumber: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" placeholder="e.g. HZ-1234" />
+                    </div>
+                    <div>
+                      <label className="text-white/60 text-xs font-bold">Customer Name</label>
+                      <input type="text" value={editMeta.customerName} onChange={(e) => setEditMeta({ ...editMeta, customerName: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    </div>
+                    <div>
+                      <label className="text-white/60 text-xs font-bold">Postcode</label>
+                      <input type="text" value={editMeta.postcode} onChange={(e) => setEditMeta({ ...editMeta, postcode: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    </div>
+                    <div>
+                      <label className="text-white/60 text-xs font-bold">Plinth Quantity</label>
+                      <input type="number" value={editMeta.plinthQty} onChange={(e) => setEditMeta({ ...editMeta, plinthQty: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    </div>
+                    <div>
+                      <label className="text-white/60 text-xs font-bold">Weight</label>
+                      <input type="text" value={editMeta.weight} onChange={(e) => setEditMeta({ ...editMeta, weight: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="text-white/60 text-xs font-bold">Notes</label>
+                      <textarea value={editMeta.notes} onChange={(e) => setEditMeta({ ...editMeta, notes: e.target.value })} rows={2} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none" />
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <button onClick={handleEditSave} className="flex-1 py-2 bg-accent text-white font-bold rounded hover:bg-accent-light transition">Save</button>
                     <button onClick={() => setEditingId(null)} className="flex-1 py-2 border border-white text-white font-bold rounded hover:bg-white/10 transition">Cancel</button>
