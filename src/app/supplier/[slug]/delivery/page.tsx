@@ -263,7 +263,7 @@ export default function DeliveryUploadPage() {
                       updated[idx].hezeOrderNumber = e.target.value;
                       setOrderGroups(updated);
                     }}
-                    className="w-full px-3 py-1.5 rounded bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                     placeholder="e.g. HZ-1234"
                   />
                 </div>
@@ -277,7 +277,7 @@ export default function DeliveryUploadPage() {
                       updated[idx].customerName = e.target.value;
                       setOrderGroups(updated);
                     }}
-                    className="w-full px-3 py-1.5 rounded bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>
                 <div>
@@ -290,7 +290,7 @@ export default function DeliveryUploadPage() {
                       updated[idx].postcode = e.target.value;
                       setOrderGroups(updated);
                     }}
-                    className="w-full px-3 py-1.5 rounded bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>
                 <div>
@@ -303,7 +303,7 @@ export default function DeliveryUploadPage() {
                       updated[idx].plinthQty = e.target.value;
                       setOrderGroups(updated);
                     }}
-                    className="w-full px-3 py-1.5 rounded bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>
                 <div>
@@ -316,7 +316,7 @@ export default function DeliveryUploadPage() {
                       updated[idx].weight = e.target.value;
                       setOrderGroups(updated);
                     }}
-                    className="w-full px-3 py-1.5 rounded bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>
                 <div className="sm:col-span-2">
@@ -329,7 +329,7 @@ export default function DeliveryUploadPage() {
                       setOrderGroups(updated);
                     }}
                     rows={2}
-                    className="w-full px-3 py-1.5 rounded bg-white/10 text-white text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none"
                   />
                 </div>
               </div>

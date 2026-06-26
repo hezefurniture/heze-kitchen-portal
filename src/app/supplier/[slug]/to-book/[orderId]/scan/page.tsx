@@ -24,6 +24,12 @@ interface OrderDetail {
   orderNumber: string;
   status: string;
   isAddition: boolean;
+  hezeOrderNumber: string | null;
+  customerName: string | null;
+  postcode: string | null;
+  plinthQty: number | null;
+  weight: string | null;
+  notes: string | null;
   items: OrderItem[];
   supplier: { id: string };
 }
@@ -44,6 +50,9 @@ export default function BookScanPage() {
   const [ambiguousCandidates, setAmbiguousCandidates] = useState<AmbiguousCandidate[] | null>(null);
   const [ambiguousBarcode, setAmbiguousBarcode] = useState("");
   const [soundOn, setSoundOn] = useState(true);
+  const [showMeta, setShowMeta] = useState(false);
+  const [meta, setMeta] = useState({ hezeOrderNumber: "", customerName: "", postcode: "", plinthQty: "", weight: "", notes: "" });
+  const [savingMeta, setSavingMeta] = useState(false);
   const { isOnline, queueCount, refreshQueueCount } = useOnlineStatus();
 
   useWakeLock();
@@ -55,6 +64,14 @@ export default function BookScanPage() {
       const res = await fetch(`/api/orders/${orderId}`);
       const data = await res.json();
       setOrder(data);
+      setMeta({
+        hezeOrderNumber: data.hezeOrderNumber || "",
+        customerName: data.customerName || "",
+        postcode: data.postcode || "",
+        plinthQty: data.plinthQty != null ? String(data.plinthQty) : "",
+        weight: data.weight || "",
+        notes: data.notes || "",
+      });
     } catch {}
   }, [orderId]);
 
@@ -234,6 +251,59 @@ export default function BookScanPage() {
         </span>
         Mark as Addition
       </button>
+
+      <button
+        onClick={() => setShowMeta(!showMeta)}
+        className="mb-3 text-white/60 hover:text-white text-sm font-medium transition flex items-center gap-1"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`transition-transform ${showMeta ? "rotate-90" : ""}`}><polyline points="9,18 15,12 9,6" /></svg>
+        Order Details
+      </button>
+
+      {showMeta && (
+        <div className="w-full max-w-4xl bg-card rounded-lg px-4 sm:px-6 py-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-white/60 text-xs font-bold">Heze Order Number</label>
+              <input type="text" value={meta.hezeOrderNumber} onChange={(e) => setMeta({ ...meta, hezeOrderNumber: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" placeholder="e.g. HZ-1234" />
+            </div>
+            <div>
+              <label className="text-white/60 text-xs font-bold">Customer Name</label>
+              <input type="text" value={meta.customerName} onChange={(e) => setMeta({ ...meta, customerName: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+            <div>
+              <label className="text-white/60 text-xs font-bold">Postcode</label>
+              <input type="text" value={meta.postcode} onChange={(e) => setMeta({ ...meta, postcode: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+            <div>
+              <label className="text-white/60 text-xs font-bold">Plinth Quantity</label>
+              <input type="number" value={meta.plinthQty} onChange={(e) => setMeta({ ...meta, plinthQty: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+            <div>
+              <label className="text-white/60 text-xs font-bold">Weight</label>
+              <input type="text" value={meta.weight} onChange={(e) => setMeta({ ...meta, weight: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+            </div>
+            <div className="sm:col-span-2">
+              <label className="text-white/60 text-xs font-bold">Notes</label>
+              <textarea value={meta.notes} onChange={(e) => setMeta({ ...meta, notes: e.target.value })} rows={2} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none" />
+            </div>
+          </div>
+          {order && (meta.hezeOrderNumber !== (order.hezeOrderNumber || "") || meta.customerName !== (order.customerName || "") || meta.postcode !== (order.postcode || "") || meta.plinthQty !== (order.plinthQty != null ? String(order.plinthQty) : "") || meta.weight !== (order.weight || "") || meta.notes !== (order.notes || "")) && (
+            <button
+              onClick={async () => {
+                setSavingMeta(true);
+                await fetch(`/api/orders/${orderId}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(meta) });
+                setSavingMeta(false);
+                await loadOrder();
+              }}
+              disabled={savingMeta}
+              className="mt-3 px-6 py-2 rounded bg-accent text-white font-bold text-sm hover:bg-accent-light transition disabled:opacity-50"
+            >
+              {savingMeta ? "Saving..." : "Save Changes"}
+            </button>
+          )}
+        </div>
+      )}
 
       <ManualBarcodeInput onSubmit={handleManualSubmit} />
 
