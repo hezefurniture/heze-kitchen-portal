@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { generateOrderPdf } from "@/lib/generate-order-pdf";
+import { OrderItemsTable } from "@/components/order-items-table";
 
 interface OrderDetail {
   id: string;
@@ -33,11 +34,13 @@ export default function ToBookOrderDetailPage() {
   const orderId = params.orderId as string;
   const [order, setOrder] = useState<OrderDetail | null>(null);
 
-  useEffect(() => {
+  const loadOrder = useCallback(() => {
     fetch(`/api/orders/${orderId}`)
       .then((r) => r.json())
       .then(setOrder);
   }, [orderId]);
+
+  useEffect(() => { loadOrder(); }, [loadOrder]);
 
   if (!order) {
     return (
@@ -91,33 +94,7 @@ export default function ToBookOrderDetailPage() {
         </div>
       )}
 
-      <div className="w-full max-w-4xl bg-white rounded-lg overflow-x-auto">
-        <table className="w-full text-sm table-fixed">
-          <thead>
-            <tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
-              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
-              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
-              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">SCANNED</th>
-            </tr>
-          </thead>
-          <tbody>
-            {order.items.map((item) => {
-              const isScanned = item.scannedQty >= item.quantity;
-              const isPartial = item.scannedQty > 0 && !isScanned;
-              return (
-                <tr
-                  key={item.id}
-                  className={isScanned ? "bg-green-200" : isPartial ? "bg-yellow-200" : "bg-yellow-100"}
-                >
-                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">{item.itemName}</td>
-                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
-                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+      <OrderItemsTable orderId={orderId} items={order.items} onUpdate={loadOrder} />
 
       <div className="mt-6 flex flex-wrap gap-3 justify-center">
         <button
