@@ -12,6 +12,8 @@ interface OrderSummary {
   despatchedAt: string | null;
   despatchedBy: string | null;
   totalQty: number;
+  hezeOrderNumber: string | null;
+  postcode: string | null;
 }
 
 export default function ArchivePage() {
@@ -22,6 +24,8 @@ export default function ArchivePage() {
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterOrderId, setFilterOrderId] = useState("");
+  const [filterHezeOrderNumber, setFilterHezeOrderNumber] = useState("");
+  const [filterPostcode, setFilterPostcode] = useState("");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -74,6 +78,8 @@ export default function ArchivePage() {
 
   const filteredOrders = orders.filter((o) => {
     if (filterOrderId && !o.orderNumber.toLowerCase().includes(filterOrderId.toLowerCase())) return false;
+    if (filterHezeOrderNumber && !(o.hezeOrderNumber || "").toLowerCase().includes(filterHezeOrderNumber.toLowerCase())) return false;
+    if (filterPostcode && !(o.postcode || "").toLowerCase().includes(filterPostcode.toLowerCase())) return false;
     if (filterDateFrom && o.despatchedAt) {
       if (new Date(o.despatchedAt) < new Date(filterDateFrom)) return false;
     }
@@ -94,21 +100,31 @@ export default function ArchivePage() {
     <div className="flex flex-col items-center pt-4 px-3 pb-20">
       {/* Filter bar */}
       <div className="w-full max-w-5xl bg-gray-600 rounded-lg px-3 sm:px-6 py-3 sm:py-4 mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-end gap-3 sm:gap-6">
-          <span className="text-white font-black text-lg sm:text-xl">FILTER</span>
-          <div className="flex flex-col">
+        <div className="flex flex-wrap items-end gap-3 sm:gap-4">
+          <span className="text-white font-black text-lg sm:text-xl shrink-0">FILTER</span>
+          <div className="flex flex-col min-w-0">
             <label className="text-white text-xs font-bold mb-1">Order ID</label>
             <input type="text" placeholder="SQ-2424" value={filterOrderId} onChange={(e) => setFilterOrderId(e.target.value)}
-              className="px-3 py-2 rounded bg-white text-gray-800 text-sm w-full sm:w-48 focus:outline-none focus:ring-2 focus:ring-accent" />
+              className="px-3 py-2 rounded bg-white text-gray-800 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-accent" />
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
+            <label className="text-white text-xs font-bold mb-1">Heze Order No.</label>
+            <input type="text" placeholder="HZ-1234" value={filterHezeOrderNumber} onChange={(e) => setFilterHezeOrderNumber(e.target.value)}
+              className="px-3 py-2 rounded bg-white text-gray-800 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-accent" />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <label className="text-white text-xs font-bold mb-1">Postcode</label>
+            <input type="text" placeholder="B69 2BT" value={filterPostcode} onChange={(e) => setFilterPostcode(e.target.value)}
+              className="px-3 py-2 rounded bg-white text-gray-800 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-accent" />
+          </div>
+          <div className="flex flex-col min-w-0">
             <label className="text-white text-xs font-bold mb-1">Despatch Date Range</label>
             <div className="flex items-center gap-2">
               <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)}
-                className="px-2 sm:px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent flex-1 min-w-0" />
+                className="px-2 sm:px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent min-w-0" />
               <span className="text-white">-</span>
               <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)}
-                className="px-2 sm:px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent flex-1 min-w-0" />
+                className="px-2 sm:px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent min-w-0" />
             </div>
           </div>
         </div>
@@ -138,6 +154,13 @@ export default function ArchivePage() {
             {/* Order info */}
             <div className="mb-2">
               <h3 className="text-base sm:text-lg font-black text-white truncate">ORDER: {order.orderNumber}</h3>
+              {(order.hezeOrderNumber || order.postcode) && (
+                <p className="text-white/50 text-xs sm:text-sm truncate">
+                  {order.hezeOrderNumber && <span>{order.hezeOrderNumber}</span>}
+                  {order.hezeOrderNumber && order.postcode && <span> · </span>}
+                  {order.postcode && <span>{order.postcode}</span>}
+                </p>
+              )}
               <div className="flex flex-wrap gap-x-4 text-white/70 text-xs sm:text-sm">
                 <span>Despatched: {formatDate(order.despatchedAt)}</span>
                 <span>Packer: {order.despatchedBy || "-"}</span>
