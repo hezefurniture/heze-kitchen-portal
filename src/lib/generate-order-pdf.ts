@@ -77,21 +77,21 @@ export function generateOrderPdf(data: OrderPdfData) {
   const zone3Top = zone2Top + zone2H;
   const zone3H = totalH * 0.35; // notes
 
-  // Order number (gray, medium) — upper portion of zone 1
-  const orderY = zone1Top + zone1H * 0.35;
-  doc.setTextColor(140, 140, 140);
-  doc.setFontSize(22);
-  doc.setFont("helvetica", "normal");
-  doc.text(data.orderNumber, pageW / 2, orderY, { align: "center" });
-
-  // Heze order number (black, very large bold) — lower portion of zone 1
+  // Heze order number (black, very large bold) — upper portion of zone 1
   if (data.hezeOrderNumber) {
-    const hezeY = zone1Top + zone1H * 0.72;
+    const hezeY = zone1Top + zone1H * 0.38;
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(48);
     doc.setFont("helvetica", "bold");
     doc.text(data.hezeOrderNumber, pageW / 2, hezeY, { align: "center" });
   }
+
+  // Order number (black, bold) — lower portion of zone 1
+  const orderY = zone1Top + zone1H * 0.76;
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(22);
+  doc.setFont("helvetica", "bold");
+  doc.text(data.orderNumber, pageW / 2, orderY, { align: "center" });
 
   // Horizontal line between zone 1 and zone 2
   doc.setDrawColor(180, 180, 180);
