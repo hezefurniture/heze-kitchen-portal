@@ -174,7 +174,7 @@ export default function AdditionsPage() {
                 <div className="min-w-0 flex-1">
                   <h3 className="text-base sm:text-xl font-black text-white truncate">ORDER: {order.orderNumber}</h3>
                   {(order.hezeOrderNumber || order.postcode) && (
-                    <p className="text-white/50 text-xs sm:text-sm truncate">
+                    <p className="text-white/70 text-sm truncate">
                       {order.hezeOrderNumber && <span>{order.hezeOrderNumber}</span>}
                       {order.hezeOrderNumber && order.postcode && <span> · </span>}
                       {order.postcode && <span>{order.postcode}</span>}
