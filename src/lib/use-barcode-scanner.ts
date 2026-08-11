@@ -73,6 +73,7 @@ export function useBarcodeScanner(onScan: (barcode: string) => void) {
       if (active && active !== input && active !== document.body) {
         const tag = active.tagName;
         if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+        if (active.closest('[role="dialog"]') || active.closest('[role="alertdialog"]')) return;
       }
       input.focus({ preventScroll: true });
     };

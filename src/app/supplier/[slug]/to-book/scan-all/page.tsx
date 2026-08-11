@@ -47,6 +47,7 @@ export default function ScanAllPage() {
   const router = useRouter();
   const slug = params.slug as string;
   const scanningRef = useRef(false);
+  const manualScanRef = useRef(false);
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [excludedOrderIds, setExcludedOrderIds] = useState<Set<string>>(new Set());
@@ -95,6 +96,8 @@ export default function ScanAllPage() {
     if (scanningRef.current) return;
     scanningRef.current = true;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
     const scanUrl = "/api/scan";
     const excluded = Array.from(excludedOrderIds);
     const scanBody = {
@@ -109,7 +112,9 @@ export default function ScanAllPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(scanBody),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
       const result: ScanResult = await res.json();
       setLastScan(result);
       if (result.matched) {
@@ -118,41 +123,53 @@ export default function ScanAllPage() {
           setLastScannedOrder(result.orderNumber);
           setLastScannedBarcode(result.barcode || barcode.trim());
           setLastScannedOrderId(result.orderId);
+          if (result.orderId) {
+            setOrders((prev) => prev.map((order) => {
+              if (order.id !== result.orderId) return order;
+              const map = new Map(result.scannedItems!.map((s) => [s.itemId, s.newQty]));
+              return { ...order, items: order.items.map((item) => map.has(item.id) ? { ...item, scannedQty: map.get(item.id)! } : item) };
+            }));
+          }
         }
-        if (isSoundEnabled()) playSuccessSound();
+        if (soundOn) playSuccessSound();
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 1500);
       } else if (result.ambiguous && result.candidates?.length) {
         setAmbiguousBarcode(result.barcode || barcode.trim());
         setAmbiguousCandidates(result.candidates);
       } else {
-        if (isSoundEnabled()) playErrorSound();
+        if (soundOn) playErrorSound();
       }
-      await loadOrders();
     } catch {
+      clearTimeout(timeoutId);
       addToQueue(scanUrl, scanBody);
       refreshQueueCount();
-      if (isSoundEnabled()) playSuccessSound();
+      if (soundOn) playSuccessSound();
       setLastScan({ matched: true, orderNumber: "QUEUED", itemName: barcode.trim() });
       setShowConfirmation(true);
       setTimeout(() => setShowConfirmation(false), 1500);
     } finally {
       scanningRef.current = false;
     }
-  }, [supplierId, excludedOrderIds, loadOrders, refreshQueueCount]);
+    void loadOrders();
+  }, [supplierId, excludedOrderIds, lastScannedOrderId, soundOn, loadOrders, refreshQueueCount]);
 
   // Document-level barcode capture (DataWedge + USB scanners)
   const { handleManualSubmit } = useBarcodeScanner(handleScan);
 
   const handleManualScan = async (orderId: string, itemId: string, action: "increment" | "decrement") => {
+    if (manualScanRef.current) return;
+    manualScanRef.current = true;
     try {
       await fetch(`/api/orders/${orderId}/manual-scan`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ itemId, action, type: "delivery" }),
       });
-      await loadOrders();
-    } catch {}
+    } catch {} finally {
+      manualScanRef.current = false;
+    }
+    void loadOrders();
   };
 
   const handleSetQty = async (
@@ -182,7 +199,7 @@ export default function ScanAllPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ itemId: candidate.itemId, action: "increment", type: "delivery" }),
       });
-      if (isSoundEnabled()) playSuccessSound();
+      if (soundOn) playSuccessSound();
       setLastScannedItems([{
         itemId: candidate.itemId,
         itemName: candidate.itemName,
@@ -193,8 +210,8 @@ export default function ScanAllPage() {
       setLastScannedOrder(candidate.orderNumber);
       setLastScannedBarcode(ambiguousBarcode);
       setLastScannedOrderId(candidate.orderId);
-      await loadOrders();
     } catch {}
+    void loadOrders();
   };
 
   const toggleSound = () => { const next = !soundOn; setSoundOn(next); setSoundEnabled(next); };

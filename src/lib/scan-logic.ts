@@ -33,24 +33,28 @@ export interface ScanResult {
   error?: string;
 }
 
-/**
- * Load the Extom ambiguous-barcode list from AppSettings.
- * Returns a Set of barcode strings.
- */
+// In-memory cache for Extom ambiguous barcodes — avoids a DB hit on every scan.
+// TTL of 60 s; invalidated on server restart (acceptable for a rarely-changed list).
+let _ambiguousCache: { barcodes: Set<string>; ts: number } | null = null;
+
 async function getExtomAmbiguousBarcodes(
   tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
 ): Promise<Set<string>> {
+  const now = Date.now();
+  if (_ambiguousCache && now - _ambiguousCache.ts < 60_000) return _ambiguousCache.barcodes;
   const settings = await tx.appSettings.findUnique({
     where: { id: "singleton" },
     select: { extomAmbiguousBarcodes: true },
   });
-  if (!settings?.extomAmbiguousBarcodes) return new Set();
-  try {
-    const arr = JSON.parse(settings.extomAmbiguousBarcodes);
-    return new Set(Array.isArray(arr) ? arr : []);
-  } catch {
-    return new Set();
+  let barcodes = new Set<string>();
+  if (settings?.extomAmbiguousBarcodes) {
+    try {
+      const arr = JSON.parse(settings.extomAmbiguousBarcodes);
+      barcodes = new Set(Array.isArray(arr) ? arr : []);
+    } catch { /* invalid JSON */ }
   }
+  _ambiguousCache = { barcodes, ts: now };
+  return barcodes;
 }
 
 export async function assignDeliveryScan(
@@ -63,7 +67,8 @@ export async function assignDeliveryScan(
   excludeOrderIds?: string[]
 ): Promise<ScanResult> {
   return prisma.$transaction(async (tx) => {
-    // Find the first order item matching this barcode with open quantity
+    // One query: fetch matching items + their order + supplier + all sibling items.
+    // Eliminates the separate tx.supplier.findUnique and second tx.orderItem.findMany calls.
     const items = await tx.orderItem.findMany({
       where: {
         barcode,
@@ -74,15 +79,12 @@ export async function assignDeliveryScan(
         },
         ...(deliveryId ? { deliveryId } : {}),
       },
-      include: { order: true },
+      include: { order: { include: { supplier: true, items: true } } },
       orderBy: { order: { createdAt: "asc" } },
     });
 
-    // Filter to items where scannedQty < quantity
     const openItems = items.filter((i) => i.scannedQty < i.quantity);
 
-    // Prioritise the preferred order (the order the previous scan landed in)
-    // so consecutive items from the same delivery stay grouped.
     let item = preferredOrderId
       ? openItems.find((i) => i.orderId === preferredOrderId) ?? openItems[0]
       : openItems[0];
@@ -91,20 +93,14 @@ export async function assignDeliveryScan(
       return { matched: false, error: "No matching item found or all quantities fulfilled" };
     }
 
-    const supplier = await tx.supplier.findUnique({ where: { id: supplierId } });
-    const isBrw = supplier?.slug === "brw";
-    const isExtom = supplier?.slug === "extom";
-    const isAkrylik = supplier?.slug === "akrylik";
+    const supplier = item.order.supplier;
+    const isBrw = supplier.slug === "brw";
+    const isExtom = supplier.slug === "extom";
+    const isAkrylik = supplier.slug === "akrylik";
 
-    // Extom disambiguation: if this barcode is in the ambiguous list, ALWAYS
-    // ask the operator to pick which item was scanned — even if only one name
-    // has open qty. This prevents the system from silently assigning scans to
-    // the wrong item when the supplier ships the wrong box mix.
     if (isExtom) {
       const ambiguousSet = await getExtomAmbiguousBarcodes(tx);
       if (ambiguousSet.has(barcode)) {
-        // Show ALL items in the earliest order with this barcode (open + complete)
-        // so the operator can see the full picture.
         const sameOrderAll = items.filter((i) => i.orderId === item.orderId);
         if (sameOrderAll.length > 1) {
           return {
@@ -125,41 +121,47 @@ export async function assignDeliveryScan(
       }
     }
 
-    // BRW: one barcode = one physical box, increment by 1 per scan (multi-box).
-    // Akrylik: one barcode = one box type whose contents are all listed as separate
-    // rows; one scan marks ALL items in the box fully received in a single pass.
     const sameOrderOpenItems = (isBrw || isAkrylik)
       ? items.filter((i) => i.orderId === item.orderId && i.scannedQty < i.quantity)
       : [item];
 
+    // Compute new quantities in memory — no need to read back return values from DB.
     const updatedMap = new Map<string, number>();
     for (const target of sameOrderOpenItems) {
-      const u = await tx.orderItem.update({
-        where: { id: target.id },
-        data: isAkrylik
-          ? { scannedQty: target.quantity }
-          : { scannedQty: { increment: 1 } },
-      });
-      updatedMap.set(target.id, u.scannedQty);
+      updatedMap.set(target.id, isAkrylik ? target.quantity : target.scannedQty + 1);
+    }
 
-      await tx.scanLog.create({
-        data: {
-          orderItemId: target.id,
-          scannedById: userId,
-          scanType: "DELIVERY",
-          barcode,
-        },
+    if (isAkrylik) {
+      // Each item gets its own target quantity — individual updates required.
+      for (const target of sameOrderOpenItems) {
+        await tx.orderItem.update({
+          where: { id: target.id },
+          data: { scannedQty: target.quantity },
+        });
+      }
+    } else {
+      // All items get the same +1 — collapse N updates into one query.
+      await tx.orderItem.updateMany({
+        where: { id: { in: sameOrderOpenItems.map((t) => t.id) } },
+        data: { scannedQty: { increment: 1 } },
       });
     }
 
-    const updatedScannedQty = updatedMap.get(item.id) ?? item.scannedQty + 1;
-
-    // Check if all items in this order are fully scanned
-    const orderItems = await tx.orderItem.findMany({
-      where: { orderId: item.orderId },
+    // Collapse N scan-log inserts into one query.
+    await tx.scanLog.createMany({
+      data: sameOrderOpenItems.map((target) => ({
+        orderItemId: target.id,
+        scannedById: userId,
+        scanType: "DELIVERY" as const,
+        barcode,
+      })),
     });
 
-    const allScanned = orderItems.every((oi) => {
+    const updatedScannedQty = updatedMap.get(item.id) ?? item.scannedQty + 1;
+
+    // Use the already-loaded sibling items — no second findMany.
+    const allOrderItems = item.order.items;
+    const allScanned = allOrderItems.every((oi) => {
       const qty = updatedMap.has(oi.id) ? updatedMap.get(oi.id)! : oi.scannedQty;
       return qty >= oi.quantity;
     });
@@ -203,16 +205,12 @@ export async function assignDespatchScan(
   userId: string
 ): Promise<ScanResult> {
   return prisma.$transaction(async (tx) => {
+    // One query: items + order + supplier + all sibling items.
     const items = await tx.orderItem.findMany({
-      where: {
-        orderId,
-        barcode,
-      },
-      include: { order: true },
+      where: { orderId, barcode },
+      include: { order: { include: { supplier: true, items: true } } },
     });
 
-    // Despatch is now capped at the originally-ordered quantity so that items
-    // missing at booking can still be scanned during despatch.
     const openItems = items.filter((i) => i.despatchedQty < i.quantity);
     const item = openItems[0];
 
@@ -220,13 +218,10 @@ export async function assignDespatchScan(
       return { matched: false, error: "No matching item found or all quantities despatched" };
     }
 
-    const supplier = await tx.supplier.findUnique({
-      where: { id: item.order.supplierId },
-    });
-    const isBrw = supplier?.slug === "brw";
-    const isExtom = supplier?.slug === "extom";
+    const supplier = item.order.supplier;
+    const isBrw = supplier.slug === "brw";
+    const isExtom = supplier.slug === "extom";
 
-    // Extom disambiguation for despatch — always ask when barcode is ambiguous
     if (isExtom) {
       const ambiguousSet = await getExtomAmbiguousBarcodes(tx);
       if (ambiguousSet.has(barcode) && items.length > 1) {
@@ -247,38 +242,37 @@ export async function assignDespatchScan(
       }
     }
 
-    // BRW Kitchens special-case: bulk-despatch all same-barcode items
     const targets = isBrw
       ? items.filter((i) => i.despatchedQty < i.quantity)
       : [item];
 
+    // Compute new quantities in memory.
     const updatedMap = new Map<string, number>();
     for (const target of targets) {
-      const u = await tx.orderItem.update({
-        where: { id: target.id },
-        data: { despatchedQty: { increment: 1 } },
-      });
-      updatedMap.set(target.id, u.despatchedQty);
-
-      await tx.scanLog.create({
-        data: {
-          orderItemId: target.id,
-          scannedById: userId,
-          scanType: "DESPATCH",
-          barcode,
-        },
-      });
+      updatedMap.set(target.id, target.despatchedQty + 1);
     }
+
+    // Collapse N updates into one query.
+    await tx.orderItem.updateMany({
+      where: { id: { in: targets.map((t) => t.id) } },
+      data: { despatchedQty: { increment: 1 } },
+    });
+
+    // Collapse N scan-log inserts into one query.
+    await tx.scanLog.createMany({
+      data: targets.map((target) => ({
+        orderItemId: target.id,
+        scannedById: userId,
+        scanType: "DESPATCH" as const,
+        barcode,
+      })),
+    });
 
     const updatedDespatchedQty = updatedMap.get(item.id) ?? item.despatchedQty + 1;
 
-    // Auto-complete only when every item (including those missing at booking)
-    // has been fully despatched against its originally-ordered quantity.
-    const orderItems = await tx.orderItem.findMany({
-      where: { orderId },
-    });
-
-    const allDespatched = orderItems.every((oi) => {
+    // Use already-loaded sibling items — no second findMany.
+    const allOrderItems = item.order.items;
+    const allDespatched = allOrderItems.every((oi) => {
       const qty = updatedMap.has(oi.id) ? updatedMap.get(oi.id)! : oi.despatchedQty;
       return qty >= oi.quantity;
     });

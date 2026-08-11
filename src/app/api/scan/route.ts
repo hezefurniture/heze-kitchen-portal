@@ -37,13 +37,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Missing supplierId" }, { status: 400 });
   }
 
-  const where: any = {
-    order: { supplierId },
-  };
-  if (deliveryId) {
-    where.deliveryId = deliveryId;
-  }
-
   // Get orders with their items for this supplier/delivery
   const ordersWhere: any = { supplierId, status: "PENDING" };
 

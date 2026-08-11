@@ -29,6 +29,8 @@ interface ScanResult {
   itemName?: string;
   newScannedQty?: number;
   totalQty?: number;
+  orderId?: string;
+  scannedItems?: { itemId: string; itemName: string; barcode: string; newQty: number; totalQty: number }[];
   error?: string;
 }
 
@@ -38,6 +40,7 @@ export default function ScanPage() {
   const slug = params.slug as string;
   const deliveryId = params.id as string;
   const scanningRef = useRef(false);
+  const manualScanRef = useRef(false);
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null);
@@ -81,6 +84,8 @@ export default function ScanPage() {
     if (scanningRef.current) return;
     scanningRef.current = true;
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
     const scanUrl = "/api/scan";
     const scanBody = { barcode: barcode.trim(), supplierId, deliveryId };
 
@@ -89,18 +94,27 @@ export default function ScanPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(scanBody),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
       const result: ScanResult = await res.json();
       setLastScan(result);
       if (result.matched) {
+        if (result.scannedItems?.length && result.orderId) {
+          setOrders((prev) => prev.map((order) => {
+            if (order.id !== result.orderId) return order;
+            const map = new Map(result.scannedItems!.map((s) => [s.itemId, s.newQty]));
+            return { ...order, items: order.items.map((item) => map.has(item.id) ? { ...item, scannedQty: map.get(item.id)! } : item) };
+          }));
+        }
         if (soundOn) playSuccessSound();
         setShowConfirmation(true);
         setTimeout(() => setShowConfirmation(false), 1500);
       } else {
         if (soundOn) playErrorSound();
       }
-      await loadOrders();
     } catch {
+      clearTimeout(timeoutId);
       addToQueue(scanUrl, scanBody);
       refreshQueueCount();
       if (soundOn) playSuccessSound();
@@ -110,20 +124,25 @@ export default function ScanPage() {
     } finally {
       scanningRef.current = false;
     }
+    void loadOrders();
   }, [supplierId, deliveryId, soundOn, loadOrders, refreshQueueCount]);
 
   // Document-level barcode capture (DataWedge + USB scanners)
   const { handleManualSubmit } = useBarcodeScanner(handleScan);
 
   const handleManualScan = async (orderId: string, itemId: string, action: "increment" | "decrement") => {
+    if (manualScanRef.current) return;
+    manualScanRef.current = true;
     try {
       await fetch(`/api/orders/${orderId}/manual-scan`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ itemId, action, type: "delivery" }),
       });
-      await loadOrders();
-    } catch {}
+    } catch {} finally {
+      manualScanRef.current = false;
+    }
+    void loadOrders();
   };
 
   const toggleSound = () => { const next = !soundOn; setSoundOn(next); setSoundEnabled(next); };

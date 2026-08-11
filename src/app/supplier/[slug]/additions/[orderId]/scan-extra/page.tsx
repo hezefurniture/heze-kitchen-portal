@@ -59,6 +59,10 @@ export default function AdditionsScanExtraPage() {
 
   const handleScan = useCallback(async (barcode: string) => {
     if (!barcode.trim() || !order) return;
+    if (scanningRef.current) return;
+    scanningRef.current = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
     const scanUrl = "/api/scan";
     const scanBody = { barcode: barcode.trim(), supplierId: order.supplier.id, allowedStatuses: ["PENDING", "IN_STOCK"] };
     try {
@@ -66,7 +70,9 @@ export default function AdditionsScanExtraPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(scanBody),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
       const result = await res.json();
       setLastScan(result);
       if (result.matched) {
@@ -76,15 +82,18 @@ export default function AdditionsScanExtraPage() {
       } else {
         if (soundOn) playErrorSound();
       }
-      await loadOrder();
     } catch {
+      clearTimeout(timeoutId);
       addToQueue(scanUrl, scanBody);
       refreshQueueCount();
       if (soundOn) playSuccessSound();
       setLastScan({ matched: true, orderNumber: "QUEUED", itemName: barcode.trim() });
       setShowConfirmation(true);
       setTimeout(() => setShowConfirmation(false), 2000);
+    } finally {
+      scanningRef.current = false;
     }
+    void loadOrder();
   }, [order, soundOn, loadOrder, refreshQueueCount]);
 
   // Document-level barcode capture (DataWedge + USB scanners)

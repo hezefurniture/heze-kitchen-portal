@@ -86,11 +86,6 @@ export async function POST(
   });
 
   if (type === "delivery") {
-    const allScanned = orderItems.every((oi) => {
-      const qty = oi.id === itemId ? (type === "delivery" ? (action === "increment" ? updated.scannedQty : updated.scannedQty) : oi.scannedQty) : oi.scannedQty;
-      return qty >= oi.quantity;
-    });
-    // Re-check with actual updated values
     const allDone = orderItems.every((oi) => {
       const val = oi.id === itemId ? updated.scannedQty : oi.scannedQty;
       return val >= oi.quantity;

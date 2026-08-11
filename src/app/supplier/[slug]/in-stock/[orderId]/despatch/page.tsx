@@ -33,6 +33,7 @@ export default function DespatchPage() {
   const slug = params.slug as string;
   const orderId = params.orderId as string;
   const scanningRef = useRef(false);
+  const manualScanRef = useRef(false);
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [lastScan, setLastScan] = useState<any>(null);
@@ -73,6 +74,8 @@ export default function DespatchPage() {
     if (!barcode.trim()) return;
     if (scanningRef.current) return;
     scanningRef.current = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
     const scanUrl = `/api/orders/${orderId}/despatch`;
     const scanBody = { barcode: barcode.trim() };
     try {
@@ -80,7 +83,9 @@ export default function DespatchPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(scanBody),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
       const result = await res.json();
       setLastScan(result);
       if (result.matched) {
@@ -88,6 +93,11 @@ export default function DespatchPage() {
           setLastScannedItems(result.scannedItems);
           setLastScannedOrder(result.orderNumber);
           setLastScannedBarcode(result.barcode || barcode.trim());
+          setOrder((prev) => {
+            if (!prev) return prev;
+            const map = new Map(result.scannedItems.map((s: any) => [s.itemId, s.newQty]));
+            return { ...prev, items: prev.items.map((item) => map.has(item.id) ? { ...item, despatchedQty: map.get(item.id) } : item) };
+          });
         }
         if (soundOn) playSuccessSound();
         setShowConfirmation(true);
@@ -98,8 +108,8 @@ export default function DespatchPage() {
       } else {
         if (soundOn) playErrorSound();
       }
-      await loadOrder();
     } catch {
+      clearTimeout(timeoutId);
       addToQueue(scanUrl, scanBody);
       refreshQueueCount();
       if (soundOn) playSuccessSound();
@@ -109,19 +119,24 @@ export default function DespatchPage() {
     } finally {
       scanningRef.current = false;
     }
+    void loadOrder();
   }, [orderId, soundOn, loadOrder, refreshQueueCount]);
 
   const { handleManualSubmit } = useBarcodeScanner(handleScan);
 
   const handleManualScan = async (itemId: string, action: "increment" | "decrement") => {
+    if (manualScanRef.current) return;
+    manualScanRef.current = true;
     try {
       await fetch(`/api/orders/${orderId}/manual-scan`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ itemId, action, type: "despatch" }),
       });
-      await loadOrder();
-    } catch {}
+    } catch {} finally {
+      manualScanRef.current = false;
+    }
+    void loadOrder();
   };
 
   const handleSetQty = async (
@@ -168,7 +183,8 @@ export default function DespatchPage() {
   const handleForceDespatch = async () => {
     setForcingDespatch(true);
     try {
-      await fetch(`/api/orders/${orderId}/force-despatch`, { method: "POST" });
+      const res = await fetch(`/api/orders/${orderId}/force-despatch`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed");
       setShowForceConfirm(false);
       setIsComplete(true);
     } catch {} finally {
