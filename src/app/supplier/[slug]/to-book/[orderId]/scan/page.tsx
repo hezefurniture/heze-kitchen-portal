@@ -105,8 +105,8 @@ export default function BookScanPage() {
           setLastScannedBarcode(result.barcode || barcode.trim());
           setOrder((prev) => {
             if (!prev) return prev;
-            const map = new Map(result.scannedItems.map((s: any) => [s.itemId, s.newQty]));
-            return { ...prev, items: prev.items.map((item) => map.has(item.id) ? { ...item, scannedQty: map.get(item.id) } : item) };
+            const map = new Map<string, number>(result.scannedItems.map((s: any) => [s.itemId as string, s.newQty as number]));
+            return { ...prev, items: prev.items.map((item) => map.has(item.id) ? { ...item, scannedQty: map.get(item.id)! } : item) };
           });
           setScanHistory((prev) => [
             ...result.scannedItems.map((s: any) => ({
