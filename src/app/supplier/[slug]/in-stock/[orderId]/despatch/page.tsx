@@ -11,6 +11,7 @@ import { ManualBarcodeInput } from "@/components/manual-barcode-input";
 import { EditableQty } from "@/components/editable-qty";
 import { LastScannedPanel, type LastScannedItem } from "@/components/last-scanned-panel";
 import { DisambiguateModal, type AmbiguousCandidate } from "@/components/disambiguate-modal";
+import { ScanHistoryModal, type ScanHistoryEntry } from "@/components/scan-history-modal";
 
 interface OrderItem {
   id: string;
@@ -45,6 +46,8 @@ export default function DespatchPage() {
   const [ambiguousBarcode, setAmbiguousBarcode] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  const [scanHistory, setScanHistory] = useState<ScanHistoryEntry[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
   const [showForceConfirm, setShowForceConfirm] = useState(false);
   const [forcingDespatch, setForcingDespatch] = useState(false);
   const { isOnline, queueCount, refreshQueueCount } = useOnlineStatus();
@@ -98,6 +101,15 @@ export default function DespatchPage() {
             const map = new Map(result.scannedItems.map((s: any) => [s.itemId, s.newQty]));
             return { ...prev, items: prev.items.map((item) => map.has(item.id) ? { ...item, despatchedQty: map.get(item.id) } : item) };
           });
+          setScanHistory((prev) => [
+            ...result.scannedItems.map((s: any) => ({
+              barcode: result.barcode || barcode.trim(),
+              itemName: s.itemName,
+              orderNumber: result.orderNumber || "",
+              scannedAt: new Date(),
+            })),
+            ...prev,
+          ]);
         }
         if (soundOn) playSuccessSound();
         setShowConfirmation(true);
@@ -302,7 +314,13 @@ export default function DespatchPage() {
         items={lastScannedItems}
         type="despatch"
         onUpdate={handleSetQty}
+        scanHistoryCount={scanHistory.length}
+        onViewHistory={() => setShowHistory(true)}
       />
+
+      {showHistory && (
+        <ScanHistoryModal entries={scanHistory} onClose={() => setShowHistory(false)} />
+      )}
 
       {ambiguousCandidates && (
         <DisambiguateModal

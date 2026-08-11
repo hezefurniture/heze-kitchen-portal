@@ -21,6 +21,8 @@ interface LastScannedPanelProps {
     nextValue: number,
     type: "delivery" | "despatch"
   ) => Promise<void>;
+  scanHistoryCount?: number;
+  onViewHistory?: () => void;
 }
 
 export function LastScannedPanel({
@@ -29,6 +31,8 @@ export function LastScannedPanel({
   items,
   type,
   onUpdate,
+  scanHistoryCount,
+  onViewHistory,
 }: LastScannedPanelProps) {
   if (!items.length) return null;
 
@@ -48,6 +52,14 @@ export function LastScannedPanel({
             <span>
               Barcode: <span className="font-mono text-gray-800">{barcode}</span>
             </span>
+          )}
+          {onViewHistory && scanHistoryCount !== undefined && scanHistoryCount > 0 && (
+            <button
+              onClick={onViewHistory}
+              className="text-blue-600 hover:text-blue-800 font-bold transition text-xs sm:text-sm underline"
+            >
+              History ({scanHistoryCount})
+            </button>
           )}
         </div>
       </div>
