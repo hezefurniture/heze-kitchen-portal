@@ -32,6 +32,8 @@ interface Order {
 interface ScanResult {
   matched: boolean;
   orderNumber?: string;
+  hezeOrderNumber?: string;
+  postcode?: string;
   itemName?: string;
   newScannedQty?: number;
   totalQty?: number;
@@ -241,8 +243,13 @@ export default function ScanAllPage() {
               </>
             ) : (
               <>
-                <h2 className="text-2xl sm:text-4xl font-black text-white mb-2 sm:mb-4">ORDER</h2>
-                <p className="text-[8vw] sm:text-7xl font-black text-white leading-tight text-center">{lastScan.orderNumber}</p>
+                <p className="text-[8vw] sm:text-7xl font-black text-white leading-tight text-center">{lastScan.hezeOrderNumber || lastScan.orderNumber}</p>
+                {lastScan.orderNumber && (
+                  <p className="text-xl sm:text-3xl font-bold text-white/90 mt-2">{lastScan.orderNumber}</p>
+                )}
+                {lastScan.postcode && (
+                  <p className="text-base sm:text-xl font-semibold text-white/75 mt-1">{lastScan.postcode}</p>
+                )}
               </>
             )}
           </div>
