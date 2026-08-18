@@ -22,6 +22,8 @@ export interface AmbiguousCandidate {
 export interface ScanResult {
   matched: boolean;
   orderNumber?: string;
+  hezeOrderNumber?: string;
+  postcode?: string;
   itemName?: string;
   newScannedQty?: number;
   totalQty?: number;
@@ -189,6 +191,8 @@ export async function assignDeliveryScan(
     return {
       matched: true,
       orderNumber: item.order.orderNumber,
+      hezeOrderNumber: item.order.hezeOrderNumber ?? undefined,
+      postcode: item.order.postcode ?? undefined,
       itemName: item.itemName,
       newScannedQty: updatedScannedQty,
       totalQty: item.quantity,
