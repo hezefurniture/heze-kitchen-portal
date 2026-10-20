@@ -225,6 +225,7 @@ export async function assignDespatchScan(
     const supplier = item.order.supplier;
     const isBrw = supplier.slug === "brw";
     const isExtom = supplier.slug === "extom";
+    const isAkrylik = supplier.slug === "akrylik";
 
     if (isExtom) {
       const ambiguousSet = await getExtomAmbiguousBarcodes(tx);
@@ -246,21 +247,29 @@ export async function assignDespatchScan(
       }
     }
 
-    const targets = isBrw
+    // BRW: +1 on every open line sharing the barcode. Akrylik: one scan despatches the whole box.
+    const targets = isBrw || isAkrylik
       ? items.filter((i) => i.despatchedQty < i.quantity)
       : [item];
 
-    // Compute new quantities in memory.
     const updatedMap = new Map<string, number>();
     for (const target of targets) {
-      updatedMap.set(target.id, target.despatchedQty + 1);
+      updatedMap.set(target.id, isAkrylik ? target.quantity : target.despatchedQty + 1);
     }
 
-    // Collapse N updates into one query.
-    await tx.orderItem.updateMany({
-      where: { id: { in: targets.map((t) => t.id) } },
-      data: { despatchedQty: { increment: 1 } },
-    });
+    if (isAkrylik) {
+      for (const target of targets) {
+        await tx.orderItem.update({
+          where: { id: target.id },
+          data: { despatchedQty: target.quantity },
+        });
+      }
+    } else {
+      await tx.orderItem.updateMany({
+        where: { id: { in: targets.map((t) => t.id) } },
+        data: { despatchedQty: { increment: 1 } },
+      });
+    }
 
     // Collapse N scan-log inserts into one query.
     await tx.scanLog.createMany({
@@ -297,7 +306,7 @@ export async function assignDespatchScan(
       itemId: t.id,
       itemName: t.itemName,
       barcode: t.barcode,
-      newQty: updatedMap.get(t.id) ?? t.despatchedQty + 1,
+      newQty: updatedMap.get(t.id) ?? (isAkrylik ? t.quantity : t.despatchedQty + 1),
       totalQty: t.quantity,
     }));
 

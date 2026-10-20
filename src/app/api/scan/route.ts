@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { assignDeliveryScan } from "@/lib/scan-logic";
 import { OrderStatus } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { syncAkrylikInBackground } from "@/lib/akrylik";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -19,6 +20,7 @@ export async function POST(req: NextRequest) {
 
   const userId = (session.user as any).id;
   const result = await assignDeliveryScan(barcode, supplierId, userId, deliveryId, preferredOrderId, allowedStatuses as OrderStatus[] | undefined, excludeOrderIds);
+  if (result.matched && result.orderId) syncAkrylikInBackground({ orderIds: [result.orderId] });
 
   return NextResponse.json(result);
 }

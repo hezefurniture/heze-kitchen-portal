@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { parseReceiptUrl } from "@/lib/akrylik";
+
+interface AkrylikPackageInput {
+  code: string;
+  orderNumber: string;
+  omRef: string;
+  label: string;
+}
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -9,7 +17,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { slug, rows, orderMeta } = await req.json();
+  const { slug, rows, orderMeta, akrylik } = await req.json();
 
   if (!slug || !rows || !Array.isArray(rows) || rows.length === 0) {
     return NextResponse.json({ error: "Invalid data" }, { status: 400 });
@@ -22,13 +30,43 @@ export async function POST(req: NextRequest) {
 
   const userId = (session.user as any).id;
 
+  let akrylikReceiptUrl: string | null = null;
+  let akrylikPackages: AkrylikPackageInput[] = [];
+  if (akrylik) {
+    const link = supplier.slug === "akrylik" && typeof akrylik.receiptUrl === "string"
+      ? parseReceiptUrl(akrylik.receiptUrl)
+      : null;
+    if (!link || !Array.isArray(akrylik.packages) || akrylik.packages.length === 0) {
+      return NextResponse.json({ error: "Invalid Akrylik import data" }, { status: 400 });
+    }
+    akrylikReceiptUrl = link.url;
+    akrylikPackages = akrylik.packages.map((p: any) => ({
+      code: String(p.code).trim().toUpperCase(),
+      orderNumber: String(p.orderNumber).trim(),
+      omRef: String(p.omRef || ""),
+      label: String(p.label || ""),
+    }));
+    const duplicates = await prisma.akrylikPackage.findMany({
+      where: { code: { in: akrylikPackages.map((p) => p.code) } },
+      select: { code: true },
+    });
+    if (duplicates.length) {
+      return NextResponse.json(
+        { error: `Already imported: ${duplicates.map((d) => d.code).join(", ")}` },
+        { status: 409 }
+      );
+    }
+  }
+
   // Create delivery record
   const delivery = await prisma.delivery.create({
     data: {
       supplierId: supplier.id,
       uploadedById: userId,
+      ...(akrylikReceiptUrl ? { akrylikReceiptUrl } : {}),
     },
   });
+  const orderIdByNumber = new Map<string, string>();
 
   // Group rows by order number.
   // For BRW and Extom, multiple element types can share the same barcode
@@ -97,6 +135,15 @@ export async function POST(req: NextRequest) {
       },
       update: metaData,
     });
+    orderIdByNumber.set(orderNumber, order.id);
+
+    // New Akrylik packages for an order already booked in reopen it for receiving.
+    if (akrylikReceiptUrl && order.status === "IN_STOCK") {
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { status: "PENDING", movedToStockAt: null, movedToStockBy: null },
+      });
+    }
 
     // Create order items
     for (const item of items) {
@@ -112,6 +159,21 @@ export async function POST(req: NextRequest) {
         },
       });
     }
+  }
+
+  if (akrylikReceiptUrl) {
+    await prisma.akrylikPackage.createMany({
+      data: akrylikPackages
+        .filter((p) => orderIdByNumber.has(p.orderNumber))
+        .map((p) => ({
+          code: p.code,
+          orderId: orderIdByNumber.get(p.orderNumber)!,
+          deliveryId: delivery.id,
+          omRef: p.omRef,
+          label: p.label,
+          receiptUrl: akrylikReceiptUrl!,
+        })),
+    });
   }
 
   return NextResponse.json({ deliveryId: delivery.id });

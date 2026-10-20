@@ -56,8 +56,10 @@ model Delivery {
   uploadedBy   User     @relation(fields: [uploadedById], references: [id])
   uploadedById String
   uploadedAt   DateTime @default(now())
+  akrylikReceiptUrl String?
 
-  items OrderItem[]
+  items           OrderItem[]
+  akrylikPackages AkrylikPackage[]
 }
 
 model Order {
@@ -82,7 +84,8 @@ model Order {
   despatchedAt    DateTime?
   despatchedBy    String?
 
-  items OrderItem[]
+  items           OrderItem[]
+  akrylikPackages AkrylikPackage[]
 
   @@unique([supplierId, orderNumber])
 }
@@ -148,4 +151,24 @@ model ScanLog {
   scanType    ScanType
   barcode     String
   scannedAt   DateTime @default(now())
+}
+
+// One physical Akrylik package imported from their delivery link; tracks confirmation back to Akrylik.
+model AkrylikPackage {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId    String
+  delivery   Delivery  @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  deliveryId String
+  omRef      String
+  label      String
+  receiptUrl String
+  syncedAt   DateTime?
+  lastError  String?
+  attempts   Int       @default(0)
+  createdAt  DateTime  @default(now())
+
+  @@index([orderId])
+  @@index([deliveryId])
 }

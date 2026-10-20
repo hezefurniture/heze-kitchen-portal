@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { syncAkrylikInBackground } from "@/lib/akrylik";
 
 export async function POST(
   req: NextRequest,
@@ -127,6 +128,8 @@ export async function POST(
       });
     }
   }
+
+  if (type === "delivery") syncAkrylikInBackground({ orderIds: [params.id] });
 
   return NextResponse.json({ success: true, [field]: updated[field] });
 }

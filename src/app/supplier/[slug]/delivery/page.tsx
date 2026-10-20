@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { ColumnMappingConfig } from "@/lib/file-parser";
+import type { AkrylikPreview, PreviewPackage } from "@/lib/akrylik";
 
 interface ParsedRow {
   itemName: string;
@@ -31,6 +32,7 @@ interface OrderGroup {
   bracketQty: string;
   weight: string;
   notes: string;
+  akrylikPackages?: PreviewPackage[];
 }
 
 export default function DeliveryUploadPage() {
@@ -46,6 +48,11 @@ export default function DeliveryUploadPage() {
   const [orderGroups, setOrderGroups] = useState<OrderGroup[]>([]);
   const [mappings, setMappings] = useState<ColumnMappingConfig[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
+  const pdfRef = useRef<HTMLInputElement>(null);
+  const [akrylikUrl, setAkrylikUrl] = useState("");
+  const [akrylikLoading, setAkrylikLoading] = useState(false);
+  const [akrylikReceiptUrl, setAkrylikReceiptUrl] = useState<string | null>(null);
+  const [akrylikNotices, setAkrylikNotices] = useState<string[]>([]);
 
   // Load column mappings for this supplier
   useEffect(() => {
@@ -124,6 +131,69 @@ export default function DeliveryUploadPage() {
     e.preventDefault();
     setDragging(false);
     handleFiles(e.dataTransfer.files);
+  };
+
+  const importAkrylik = async (source: { file: File } | { url: string }) => {
+    setError("");
+    setAkrylikLoading(true);
+    try {
+      let res: Response;
+      if ("file" in source) {
+        const form = new FormData();
+        form.append("file", source.file);
+        res = await fetch("/api/akrylik/preview", { method: "POST", body: form });
+      } else {
+        res = await fetch("/api/akrylik/preview", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: source.url }),
+        });
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Import failed");
+      const preview = data as AkrylikPreview;
+      if (!preview.groups.length) {
+        throw new Error(
+          preview.alreadyImported.length
+            ? "Every package on this Akrylik delivery has already been imported."
+            : "No packages found on this Akrylik delivery."
+        );
+      }
+      const notices = [...preview.warnings];
+      if (preview.alreadyImported.length) {
+        notices.push(`${preview.alreadyImported.length} package(s) were imported before and have been skipped.`);
+      }
+      setAkrylikNotices(notices);
+      setAkrylikReceiptUrl(preview.receiptUrl);
+      setOrderGroups(
+        preview.groups.map((g) => ({
+          orderNumber: g.orderNumber,
+          editedOrderNumber: g.orderNumber,
+          items: g.items,
+          hezeOrderNumber: g.hezeOrderNumber,
+          customerName: "",
+          postcode: g.postcode,
+          plinthQty: "",
+          plinthColour: "",
+          sealQty: "",
+          bracketQty: "",
+          weight: "",
+          notes: g.notes,
+          akrylikPackages: g.packages,
+        }))
+      );
+      setReviewStep(true);
+    } catch (err: any) {
+      setError(err.message || "Import failed");
+    } finally {
+      setAkrylikLoading(false);
+    }
+  };
+
+  const leaveReview = () => {
+    setReviewStep(false);
+    setAkrylikReceiptUrl(null);
+    setAkrylikNotices([]);
   };
 
   const handleReview = () => {
@@ -215,11 +285,25 @@ export default function DeliveryUploadPage() {
       if (Object.keys(meta).length > 0) orderMeta[key] = meta;
     }
 
+    const akrylik = akrylikReceiptUrl
+      ? {
+          receiptUrl: akrylikReceiptUrl,
+          packages: orderGroups.flatMap((g) =>
+            (g.akrylikPackages ?? []).map((p) => ({
+              code: p.code,
+              orderNumber: g.editedOrderNumber.trim() || g.orderNumber,
+              omRef: p.omRef,
+              label: p.label,
+            }))
+          ),
+        }
+      : undefined;
+
     try {
       const res = await fetch("/api/delivery", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, rows: allRows, orderMeta }),
+        body: JSON.stringify({ slug, rows: allRows, orderMeta, akrylik }),
       });
 
       if (!res.ok) {
@@ -246,6 +330,17 @@ export default function DeliveryUploadPage() {
         </p>
 
         <div className="w-full max-w-3xl space-y-4">
+          {akrylikReceiptUrl && (
+            <div className="bg-white/95 rounded-lg px-4 py-3 text-sm text-gray-800">
+              <p className="font-bold">Imported from Akrylik delivery link</p>
+              <p className="text-gray-600 text-xs mt-1">
+                Each scanned box is confirmed to Akrylik automatically as &ldquo;Heze Warehouse App&rdquo;.
+              </p>
+              {akrylikNotices.map((n, i) => (
+                <p key={i} className="text-amber-700 text-xs mt-1">{n}</p>
+              ))}
+            </div>
+          )}
           {orderGroups.map((group, idx) => (
             <div key={idx} className="bg-card rounded-lg px-4 sm:px-6 py-4">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
@@ -401,7 +496,7 @@ export default function DeliveryUploadPage() {
 
           <div className="flex gap-4 mt-4">
             <button
-              onClick={() => setReviewStep(false)}
+              onClick={leaveReview}
               className="flex-1 py-3 rounded border-2 border-white text-white font-bold text-lg hover:bg-white/10 transition"
             >
               Back
@@ -425,6 +520,58 @@ export default function DeliveryUploadPage() {
       <p className="text-white/80 mb-4 sm:mb-8 text-base sm:text-lg text-center">
         Upload CSV or Excel files to create new kitchen delivery
       </p>
+
+      {slug === "akrylik" && (
+        <div className="w-full max-w-2xl bg-white/95 rounded-lg px-4 sm:px-6 py-4 mb-4 sm:mb-6">
+          <h2 className="text-gray-900 font-black text-lg">Akrylik delivery (new system)</h2>
+          <p className="text-gray-600 text-sm mb-3">
+            Upload the delivery PDF (recommended — it includes box contents) or paste the delivery link.
+          </p>
+          <button
+            onClick={() => pdfRef.current?.click()}
+            disabled={akrylikLoading}
+            className="w-full py-3 rounded bg-accent text-white font-bold hover:bg-accent-light transition disabled:opacity-50"
+          >
+            {akrylikLoading ? "Reading Akrylik delivery..." : "Upload Akrylik PDF"}
+          </button>
+          <input
+            ref={pdfRef}
+            type="file"
+            accept="application/pdf,.pdf"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) importAkrylik({ file });
+              e.target.value = "";
+            }}
+          />
+          <form
+            className="flex flex-col sm:flex-row gap-2 mt-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (akrylikUrl.trim()) importAkrylik({ url: akrylikUrl.trim() });
+            }}
+          >
+            <input
+              type="url"
+              value={akrylikUrl}
+              onChange={(e) => setAkrylikUrl(e.target.value)}
+              placeholder="https://skan.akrylik.pl/planer/package-logistics/receipt/delivery/…"
+              className="flex-1 min-w-0 px-3 py-2 rounded border border-gray-300 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            <button
+              type="submit"
+              disabled={akrylikLoading || !akrylikUrl.trim()}
+              className="px-4 py-2 rounded bg-gray-800 text-white font-bold text-sm hover:bg-gray-700 transition disabled:opacity-50"
+            >
+              Import link
+            </button>
+          </form>
+          <p className="text-gray-500 text-xs mt-3">
+            For orders from Akrylik&rsquo;s old system, keep using the CSV/Excel upload below.
+          </p>
+        </div>
+      )}
 
       {/* Drop zone */}
       <div

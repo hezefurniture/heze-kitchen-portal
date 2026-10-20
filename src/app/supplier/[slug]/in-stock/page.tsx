@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { AkrylikSyncBanner } from "@/components/akrylik-sync-banner";
 
 interface OrderSummary {
   id: string;
@@ -97,6 +98,7 @@ export default function InStockPage() {
 
   return (
     <div className="flex flex-col items-center pt-6 px-3 pb-20">
+      {slug === "akrylik" && <AkrylikSyncBanner />}
       <h1 className="text-2xl sm:text-4xl font-black text-white mb-1 text-center">Kitchens In Stock</h1>
       <p className="text-white/80 mb-6 text-sm sm:text-lg text-center">Fully scanned kitchens ready for despatch</p>
 
