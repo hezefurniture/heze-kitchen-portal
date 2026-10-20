@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { isUiTheme } from "@/lib/ui-theme";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,7 @@ export async function GET() {
   });
 
   return NextResponse.json(
-    settings || { id: "singleton", navLogo: null, mainLogo: null, appIcon192: null, appIcon512: null, extomAmbiguousBarcodes: null }
+    settings || { id: "singleton", navLogo: null, mainLogo: null, appIcon192: null, appIcon512: null, extomAmbiguousBarcodes: null, defaultUiTheme: "classic" }
   );
 }
 
@@ -21,7 +22,11 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { navLogo, mainLogo, appIcon192, appIcon512, extomAmbiguousBarcodes } = await req.json();
+  const { navLogo, mainLogo, appIcon192, appIcon512, extomAmbiguousBarcodes, defaultUiTheme } = await req.json();
+
+  if (defaultUiTheme !== undefined && !isUiTheme(defaultUiTheme)) {
+    return NextResponse.json({ error: "Invalid default appearance" }, { status: 400 });
+  }
 
   // Validate size - base64 images can be large but cap at ~5MB each
   const MAX_SIZE = 7_000_000;
@@ -44,6 +49,7 @@ export async function PUT(req: NextRequest) {
   if (appIcon192 !== undefined) update.appIcon192 = appIcon192 || null;
   if (appIcon512 !== undefined) update.appIcon512 = appIcon512 || null;
   if (extomAmbiguousBarcodes !== undefined) update.extomAmbiguousBarcodes = extomAmbiguousBarcodes || null;
+  if (defaultUiTheme !== undefined) update.defaultUiTheme = defaultUiTheme;
 
   const settings = await prisma.appSettings.upsert({
     where: { id: "singleton" },

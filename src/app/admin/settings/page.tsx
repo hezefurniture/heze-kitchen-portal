@@ -9,6 +9,7 @@ export default function SettingsPage() {
   const [appIcon512, setAppIcon512] = useState<string | null>(null);
   const [ambiguousBarcodes, setAmbiguousBarcodes] = useState<string[]>([]);
   const [newBarcode, setNewBarcode] = useState("");
+  const [defaultUiTheme, setDefaultUiTheme] = useState<"classic" | "modern">("classic");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const navInputRef = useRef<HTMLInputElement>(null);
@@ -24,6 +25,7 @@ export default function SettingsPage() {
         setMainLogo(data.mainLogo || null);
         setAppIcon192(data.appIcon192 || null);
         setAppIcon512(data.appIcon512 || null);
+        setDefaultUiTheme(data.defaultUiTheme === "modern" ? "modern" : "classic");
         try {
           const parsed = JSON.parse(data.extomAmbiguousBarcodes || "[]");
           if (Array.isArray(parsed)) setAmbiguousBarcodes(parsed);
@@ -66,6 +68,7 @@ export default function SettingsPage() {
           appIcon192,
           appIcon512,
           extomAmbiguousBarcodes: JSON.stringify(ambiguousBarcodes),
+          defaultUiTheme,
         }),
       });
       if (res.ok) {
@@ -89,6 +92,39 @@ export default function SettingsPage() {
           {message}
         </div>
       )}
+
+      {/* Default appearance */}
+      <fieldset className="bg-white rounded-lg p-6 mb-6">
+        <legend className="sr-only">Default appearance</legend>
+        <h2 className="text-lg font-bold text-gray-800 mb-2">Default Appearance</h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Used by everyone who hasn&rsquo;t picked their own. People can still change theirs from the bottom bar.
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          {([
+            { value: "classic", label: "Classic", hint: "The original purple and gold look" },
+            { value: "modern", label: "Modern", hint: "Dark, frosted-glass bars" },
+          ] as const).map((opt) => (
+            <label
+              key={opt.value}
+              className={`cursor-pointer rounded-lg border-2 px-4 py-3 transition ${
+                defaultUiTheme === opt.value ? "border-gray-800 bg-gray-50" : "border-gray-200 hover:border-gray-400"
+              }`}
+            >
+              <input
+                type="radio"
+                name="defaultUiTheme"
+                value={opt.value}
+                checked={defaultUiTheme === opt.value}
+                onChange={() => setDefaultUiTheme(opt.value)}
+                className="mr-2 accent-gray-800"
+              />
+              <span className="font-bold text-gray-800">{opt.label}</span>
+              <span className="block text-xs text-gray-500 mt-1">{opt.hint}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       {/* Nav Logo */}
       <div className="bg-white rounded-lg p-6 mb-6">

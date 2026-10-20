@@ -1,22 +1,25 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./theme-modern.css";
 import { AuthProvider } from "@/components/layout/auth-provider";
+import { getUiThemeState } from "@/lib/ui-theme";
 
 export const metadata: Metadata = {
   title: "Kitchens Portal - Heze Furniture",
   description: "Kitchen warehouse barcode scanning portal",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { effective } = await getUiThemeState();
   return (
-    <html lang="en">
+    <html lang="en" data-ui={effective}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="theme-color" content="#7B2D5F" />
+        <meta name="theme-color" content={effective === "modern" ? "#140E1D" : "#7B2D5F"} />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

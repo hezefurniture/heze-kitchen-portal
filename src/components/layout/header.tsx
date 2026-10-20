@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { AppearancePicker } from "@/components/appearance-picker";
 
 const supplierNames: Record<string, string> = {
   brw: "BRW Kitchens",
@@ -66,7 +67,7 @@ export function Header() {
 
   return (
     <>
-      <header ref={headerRef} className="bg-header text-white sticky top-0 z-50">
+      <header ref={headerRef} className="ui-chrome-top bg-header text-white sticky top-0 z-50">
         {/* Mobile: 3-column grid — logo left, supplier center, hamburger right */}
         <div className="grid grid-cols-[auto_1fr_auto] items-center px-3 py-3 lg:hidden">
           <Link href="/dashboard" className="shrink-0 self-center flex items-center">
@@ -125,7 +126,7 @@ export function Header() {
       {/* Mobile dropdown menu — positioned dynamically below header */}
       {menuOpen && (
         <div
-          className="lg:hidden fixed left-0 right-0 bg-header z-50 shadow-xl border-t border-white/10"
+          className="ui-chrome-menu lg:hidden fixed left-0 right-0 bg-header z-50 shadow-xl border-t border-white/10"
           style={{ top: headerHeight }}
         >
           <nav className="flex flex-col">
@@ -145,9 +146,10 @@ export function Header() {
       )}
 
       {/* Footer — icons only */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-200 px-3 py-1 flex justify-between items-center text-gray-700 text-xs z-50">
+      <div className="ui-chrome-bottom fixed bottom-0 left-0 right-0 bg-gray-200 px-3 py-1 flex justify-between items-center text-gray-700 text-xs z-50">
         <span className="truncate mr-2">User: {(session?.user as any)?.username || session?.user?.name || "..."}</span>
         <div className="flex items-center gap-4 shrink-0">
+          <AppearancePicker />
           <button
             onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}
             className="hover:text-gray-900 min-h-[44px] flex items-center justify-center"

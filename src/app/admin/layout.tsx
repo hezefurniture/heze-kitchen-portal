@@ -40,7 +40,7 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen bg-primary flex flex-col">
-      <header className="bg-header text-white sticky top-0 z-50">
+      <header className="ui-chrome-top bg-header text-white sticky top-0 z-50">
         {/* Mobile */}
         <div className="flex items-center justify-between px-3 py-3 lg:hidden">
           <Link href="/dashboard" className="text-lg font-black">

@@ -1,0 +1,218 @@
+/* Modern appearance, active when <html data-ui="modern">. Classic is the untouched default.
+   Layering follows Apple's model: glass only on the floating chrome (top bar, bottom bar, menu);
+   content cards get a light translucent fill without blur; tables, forms and dialogs stay solid. */
+
+html[data-ui="modern"] {
+  color-scheme: dark;
+  --m-env: #140e1d;
+  --m-ink: #ffffff;
+  --m-ink-dark: #1a1320;
+  --m-chrome-rgb: 24 17 33;
+  --m-accent: #d9ae4a;
+  --m-accent-hover: #e6c46f;
+  --m-gold: #f2cf73;
+  --m-focus: #f2cf73;
+  --m-focus-on-light: #6d28d9;
+}
+
+html[data-ui="modern"] body {
+  background-color: var(--m-env);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Environment: brand colour moved into the backdrop so the glass has light to sample.
+   One light source, top-left, matching the highlights on the chrome. */
+html[data-ui="modern"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(55% 38% at 8% -6%, rgb(217 174 74 / .16), transparent 70%),
+    radial-gradient(60% 55% at 105% 30%, rgb(155 77 127 / .42), transparent 72%),
+    radial-gradient(75% 55% at 25% 112%, rgb(72 92 178 / .26), transparent 70%),
+    linear-gradient(160deg, #1b1126 0%, #140e1d 55%, #0e0f1d 100%);
+}
+html[data-ui="modern"] .min-h-screen.bg-primary { background: transparent; }
+
+html[data-ui="modern"] ::-webkit-scrollbar-track { background: #140e1d; }
+html[data-ui="modern"] ::-webkit-scrollbar-thumb { background: rgb(255 255 255 / .22); }
+
+/* ---------- Typography ---------- */
+html[data-ui="modern"] h1 { letter-spacing: -0.022em; }
+html[data-ui="modern"] .font-black { font-weight: 800; }
+html[data-ui="modern"] table,
+html[data-ui="modern"] .rounded-full { font-variant-numeric: tabular-nums; }
+
+/* Secondary text by alpha: at least 60% so it clears 4.5:1 on the cards. */
+html[data-ui="modern"] .text-white\/40 { color: rgb(255 255 255 / .62); }
+html[data-ui="modern"] .text-white\/50 { color: rgb(255 255 255 / .66); }
+html[data-ui="modern"] .text-white\/60 { color: rgb(255 255 255 / .72); }
+
+/* ---------- Chrome: solid twin first ---------- */
+html[data-ui="modern"] .ui-chrome-top,
+html[data-ui="modern"] .ui-chrome-menu,
+html[data-ui="modern"] .ui-chrome-bottom {
+  background: rgb(var(--m-chrome-rgb));
+  color: var(--m-ink);
+}
+html[data-ui="modern"] .ui-chrome-top { box-shadow: inset 0 -1px 0 rgb(255 255 255 / .08); }
+html[data-ui="modern"] .ui-chrome-menu { border-top-color: rgb(255 255 255 / .08); }
+html[data-ui="modern"] .ui-chrome-bottom { box-shadow: inset 0 1px 0 rgb(255 255 255 / .12); }
+
+/* Glass enhancement. Smoked tint, not white: content (including white tables) scrolls beneath
+   the bars, and white ink must stay above 4.5:1 over the brightest thing that can pass under. */
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-ui="modern"] .ui-chrome-top {
+    background: rgb(var(--m-chrome-rgb) / .72);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    backdrop-filter: blur(20px) saturate(1.5);
+    box-shadow:
+      inset 0 -1px 0 rgb(255 255 255 / .10),
+      0 10px 24px -16px rgb(0 0 0 / .7);
+  }
+  html[data-ui="modern"] .ui-chrome-menu {
+    background: rgb(var(--m-chrome-rgb) / .86);
+    -webkit-backdrop-filter: blur(24px) saturate(1.4);
+    backdrop-filter: blur(24px) saturate(1.4);
+  }
+  html[data-ui="modern"] .ui-chrome-bottom {
+    background: rgb(var(--m-chrome-rgb) / .78);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5);
+    backdrop-filter: blur(20px) saturate(1.5);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / .14),
+      0 -10px 24px -16px rgb(0 0 0 / .7);
+  }
+}
+
+/* Chrome contents */
+html[data-ui="modern"] .ui-chrome-bottom.text-gray-700,
+html[data-ui="modern"] .ui-chrome-bottom .text-gray-700 { color: rgb(255 255 255 / .9); }
+html[data-ui="modern"] .ui-chrome-bottom :is(a, button):hover { color: #fff; }
+html[data-ui="modern"] .ui-chrome-top .bg-white.text-gray-800 {
+  background: rgb(255 255 255 / .14);
+  color: #fff;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .2);
+  padding-inline: .6rem;
+}
+html[data-ui="modern"] .ui-chrome-top .text-yellow-400 { color: var(--m-gold); }
+html[data-ui="modern"] .ui-chrome-top nav a { border-radius: 999px; }
+html[data-ui="modern"] .ui-chrome-top nav a.border-white {
+  border-color: rgb(255 255 255 / .28);
+  background: rgb(255 255 255 / .16);
+}
+html[data-ui="modern"] .ui-chrome-menu a.bg-white\/20 { background: rgb(255 255 255 / .12); box-shadow: inset 3px 0 0 var(--m-gold); }
+
+/* ---------- Content layer: translucent fill, no blur ---------- */
+html[data-ui="modern"] .bg-card {
+  background-color: rgb(255 255 255 / .065);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / .10),
+    inset 0 0 0 1px rgb(255 255 255 / .07),
+    0 12px 28px -20px rgb(0 0 0 / .7);
+}
+html[data-ui="modern"] .bg-card\/60 {
+  background-color: rgb(255 255 255 / .05);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .07);
+}
+html[data-ui="modern"] .bg-card-light {
+  background-color: rgb(255 255 255 / .12);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .10);
+}
+html[data-ui="modern"] .bg-card-light:hover { background-color: rgb(255 255 255 / .2); }
+html[data-ui="modern"] .drop-zone { border-color: rgb(255 255 255 / .22); }
+
+/* One control geometry: buttons are capsules (circles when square), fields stay rounded rectangles. */
+html[data-ui="modern"] :is(a, button).rounded,
+html[data-ui="modern"] :is(a, button).rounded-lg { border-radius: 999px; }
+
+/* Dashboard supplier tiles: the content material with a gold rim instead of white slabs. */
+html[data-ui="modern"] a.bg-white.border-accent {
+  background-color: rgb(255 255 255 / .07);
+  border-color: rgb(217 174 74 / .85);
+  border-width: 2px;
+  border-radius: 26px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .12), 0 16px 32px -22px rgb(0 0 0 / .8);
+}
+html[data-ui="modern"] a.bg-white.border-accent :is(.text-gray-700, .text-gray-800, .text-gray-900) { color: #fff; }
+html[data-ui="modern"] a.bg-white.border-accent:hover { background-color: rgb(255 255 255 / .12); }
+
+/* Solid reading planes keep white for bright warehouse light; only the geometry changes. */
+html[data-ui="modern"] .rounded { border-radius: 12px; }
+html[data-ui="modern"] .rounded-lg { border-radius: 18px; }
+html[data-ui="modern"] .rounded-xl { border-radius: 22px; }
+html[data-ui="modern"] .rounded-2xl { border-radius: 26px; }
+html[data-ui="modern"] :is(.bg-white, .bg-white\/95).rounded-lg { box-shadow: 0 16px 36px -22px rgb(0 0 0 / .75); }
+
+/* ---------- Primary action: the one tinted element ---------- */
+html[data-ui="modern"] .bg-accent {
+  background-color: var(--m-accent);
+  color: var(--m-ink-dark);
+}
+html[data-ui="modern"] :is(a, button).bg-accent {
+  border-radius: 999px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .35), 0 10px 22px -14px rgb(217 174 74 / .8);
+  transition: transform .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+html[data-ui="modern"] :is(a, button).bg-accent:hover { background-color: var(--m-accent-hover); }
+html[data-ui="modern"] :is(a, button).bg-accent:active { transform: scale(.98); box-shadow: inset 0 1px 0 rgb(255 255 255 / .25); }
+html[data-ui="modern"] .bg-accent svg[stroke="white"] { stroke: currentColor; }
+html[data-ui="modern"] .text-accent { color: var(--m-gold); }
+
+/* ---------- Status colours darkened to clear 4.5:1 with white text ---------- */
+html[data-ui="modern"] :is(.bg-green-500, .bg-green-600, .bg-scan-green):not([class*="text-gray"]):not([class*="text-black"]) { background-color: #15803d; }
+html[data-ui="modern"] :is(.bg-yellow-500, .bg-amber-500):not([class*="text-gray"]):not([class*="text-black"]) { background-color: #b45309; }
+html[data-ui="modern"] :is(.bg-red-500, .bg-red-600):not([class*="text-gray"]):not([class*="text-black"]) { background-color: #c81e1e; }
+html[data-ui="modern"] .bg-red-400:not([class*="text-gray"]):not([class*="text-black"]) { background-color: #dc2626; }
+html[data-ui="modern"] :is(.bg-red-500\/80, .bg-red-600\/80) { background-color: rgb(200 30 30 / .94); }
+html[data-ui="modern"] :is(.bg-blue-500, .bg-blue-600):not([class*="text-gray"]) { background-color: #1d4ed8; }
+
+/* ---------- Focus ---------- */
+html[data-ui="modern"] :focus-visible { outline: 3px solid var(--m-focus); outline-offset: 2px; }
+html[data-ui="modern"] :is(.bg-white, .bg-white\/95) :focus-visible { outline-color: var(--m-focus-on-light); }
+
+/* ---------- Preferences: solid, high contrast, system colours, print ---------- */
+@media (prefers-reduced-transparency: reduce) {
+  html[data-ui="modern"] :is(.ui-chrome-top, .ui-chrome-menu, .ui-chrome-bottom) {
+    background: rgb(var(--m-chrome-rgb));
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  html[data-ui="modern"] .bg-card { background-color: #241b30; }
+}
+@media (prefers-contrast: more) {
+  html[data-ui="modern"] :is(.ui-chrome-top, .ui-chrome-menu, .ui-chrome-bottom) {
+    background: #0d0912;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  html[data-ui="modern"] .bg-card { background-color: #241b30; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .4); }
+  html[data-ui="modern"] :is(.text-white\/40, .text-white\/50, .text-white\/60) { color: rgb(255 255 255 / .88); }
+}
+@media (forced-colors: active) {
+  html[data-ui="modern"] body::before { display: none; }
+  html[data-ui="modern"] :is(.ui-chrome-top, .ui-chrome-menu, .ui-chrome-bottom, .bg-card, .bg-card-light) {
+    background: Canvas;
+    color: CanvasText;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    border: 1px solid CanvasText;
+  }
+  html[data-ui="modern"] :is(a, button):is(.bg-accent, [class*="bg-red-"], [class*="bg-green-"], [class*="bg-blue-"], .bg-card-light) {
+    border: 1px solid ButtonText;
+  }
+  html[data-ui="modern"] :focus-visible { outline-color: Highlight; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-ui="modern"] :is(a, button).bg-accent { transition: none; }
+  html[data-ui="modern"] :is(a, button).bg-accent:active { transform: none; }
+}
+@media print {
+  html[data-ui="modern"] body::before { display: none; }
+  html[data-ui="modern"] body { background: #fff; }
+}

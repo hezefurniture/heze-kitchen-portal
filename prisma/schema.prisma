@@ -33,6 +33,7 @@ model User {
   role       Role     @default(USER)
   createdAt  DateTime @default(now())
   loginToken String?  @unique
+  uiTheme    String? // "classic" | "modern"; null follows AppSettings.defaultUiTheme
 
   deliveries Delivery[]
   scanLogs   ScanLog[]
@@ -116,6 +117,7 @@ model AppSettings {
   appIcon192 String? // base64 encoded 192x192 PWA icon
   appIcon512 String? // base64 encoded 512x512 PWA icon
   extomAmbiguousBarcodes String? // JSON array of barcode strings for Extom disambiguation
+  defaultUiTheme String @default("classic") // "classic" | "modern"
   updatedAt  DateTime @default(now()) @updatedAt
 }
 

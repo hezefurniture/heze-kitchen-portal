@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { AppearancePicker } from "@/components/appearance-picker";
 import Link from "next/link";
 
 const suppliers = [
@@ -24,9 +25,10 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-primary flex flex-col overflow-x-hidden">
       {/* Footer */}
-      <div className="fixed bottom-0 left-0 right-0 bg-gray-200 px-3 py-1 flex justify-between items-center text-gray-700 text-xs z-50">
+      <div className="ui-chrome-bottom fixed bottom-0 left-0 right-0 bg-gray-200 px-3 py-1 flex justify-between items-center text-gray-700 text-xs z-50">
         <span className="truncate mr-2">User: {(session?.user as any)?.username || session?.user?.name || "..."}</span>
         <div className="flex items-center gap-4 shrink-0">
+          <AppearancePicker />
           <button
             onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}
             className="hover:text-gray-900 min-h-[44px] flex items-center justify-center"
