@@ -117,7 +117,7 @@ export default function SettingsPage() {
                 value={opt.value}
                 checked={defaultUiTheme === opt.value}
                 onChange={() => setDefaultUiTheme(opt.value)}
-                className="mr-2 accent-gray-800"
+                className="mr-2 w-5 h-5 align-middle accent-gray-800"
               />
               <span className="font-bold text-gray-800">{opt.label}</span>
               <span className="block text-xs text-gray-500 mt-1">{opt.hint}</span>
@@ -138,14 +138,14 @@ export default function SettingsPage() {
             <br />
             <button
               onClick={() => { setNavLogo(null); if (navInputRef.current) navInputRef.current.value = ""; }}
-              className="text-red-500 text-sm font-bold hover:text-red-700"
+              className="min-h-[44px] sm:min-h-[32px] px-3 -ml-3 text-red-700 text-sm font-bold hover:text-red-900"
             >
               Remove Logo
             </button>
           </div>
         ) : (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-4">
-            <p className="text-gray-400 mb-2">No logo uploaded</p>
+            <p className="text-gray-500 mb-2">No logo uploaded</p>
           </div>
         )}
         <input
@@ -169,14 +169,14 @@ export default function SettingsPage() {
             <br />
             <button
               onClick={() => { setMainLogo(null); if (mainInputRef.current) mainInputRef.current.value = ""; }}
-              className="text-red-500 text-sm font-bold hover:text-red-700"
+              className="min-h-[44px] sm:min-h-[32px] px-3 -ml-3 text-red-700 text-sm font-bold hover:text-red-900"
             >
               Remove Logo
             </button>
           </div>
         ) : (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-4">
-            <p className="text-gray-400 mb-2">No logo uploaded</p>
+            <p className="text-gray-500 mb-2">No logo uploaded</p>
           </div>
         )}
         <input
@@ -205,14 +205,14 @@ export default function SettingsPage() {
                 <br />
                 <button
                   onClick={() => { setAppIcon192(null); if (icon192InputRef.current) icon192InputRef.current.value = ""; }}
-                  className="text-red-500 text-sm font-bold hover:text-red-700"
+                  className="min-h-[44px] sm:min-h-[32px] px-3 -ml-3 text-red-700 text-sm font-bold hover:text-red-900"
                 >
                   Remove
                 </button>
               </div>
             ) : (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mb-3">
-                <p className="text-gray-400 text-sm">No icon</p>
+                <p className="text-gray-500 text-sm">No icon</p>
               </div>
             )}
             <input
@@ -235,14 +235,14 @@ export default function SettingsPage() {
                 <br />
                 <button
                   onClick={() => { setAppIcon512(null); if (icon512InputRef.current) icon512InputRef.current.value = ""; }}
-                  className="text-red-500 text-sm font-bold hover:text-red-700"
+                  className="min-h-[44px] sm:min-h-[32px] px-3 -ml-3 text-red-700 text-sm font-bold hover:text-red-900"
                 >
                   Remove
                 </button>
               </div>
             ) : (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center mb-3">
-                <p className="text-gray-400 text-sm">No icon</p>
+                <p className="text-gray-500 text-sm">No icon</p>
               </div>
             )}
             <input
@@ -307,7 +307,7 @@ export default function SettingsPage() {
                 <span className="text-gray-800 font-mono text-sm">{bc}</span>
                 <button
                   onClick={() => setAmbiguousBarcodes((prev) => prev.filter((b) => b !== bc))}
-                  className="text-red-500 text-sm font-bold hover:text-red-700 ml-3"
+                  className="min-h-[44px] sm:min-h-[32px] px-3 text-red-700 text-sm font-bold hover:text-red-900 ml-1"
                 >
                   Remove
                 </button>
@@ -315,7 +315,7 @@ export default function SettingsPage() {
             ))}
           </div>
         ) : (
-          <p className="text-gray-400 text-sm">No ambiguous barcodes configured.</p>
+          <p className="text-gray-500 text-sm">No ambiguous barcodes configured.</p>
         )}
       </div>
 

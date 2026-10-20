@@ -103,11 +103,11 @@ function CandidateButton({
       disabled={done}
       className={`w-full text-left rounded-lg border-2 px-4 py-3 transition ${
         done
-          ? "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
+          ? "border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed"
           : "border-accent bg-accent/5 hover:bg-accent/15 text-gray-800"
       }`}
     >
-      <span className="font-bold text-sm block break-all">
+      <span className="font-bold text-sm block break-words">
         {c.itemName}
       </span>
       <span className="text-xs text-gray-500">

@@ -55,12 +55,12 @@ export function AppearancePicker({ className = "" }: { className?: string }) {
         value={state.userTheme ?? "default"}
         onChange={(e) => onChange(e.target.value)}
         disabled={saving}
-        className="bg-transparent font-bold cursor-pointer min-h-[44px] pr-1 focus:outline-none"
+        className="bg-transparent font-bold cursor-pointer min-h-[44px] pr-1"
         aria-label="Appearance"
       >
-        <option value="default">Default ({LABELS[state.defaultTheme]})</option>
-        <option value="classic">Classic</option>
-        <option value="modern">Modern</option>
+        <option className="text-gray-900" value="default">Default ({LABELS[state.defaultTheme]})</option>
+        <option className="text-gray-900" value="classic">Classic</option>
+        <option className="text-gray-900" value="modern">Modern</option>
       </select>
     </label>
   );

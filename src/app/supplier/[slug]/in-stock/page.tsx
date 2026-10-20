@@ -98,9 +98,9 @@ export default function InStockPage() {
 
   return (
     <div className="flex flex-col items-center pt-6 px-3 pb-20">
-      {slug === "akrylik" && <AkrylikSyncBanner />}
       <h1 className="text-2xl sm:text-4xl font-black text-white mb-1 text-center">Kitchens In Stock</h1>
       <p className="text-white/80 mb-6 text-sm sm:text-lg text-center">Fully scanned kitchens ready for despatch</p>
+      {slug === "akrylik" && <AkrylikSyncBanner />}
 
       <div className="w-full max-w-4xl space-y-3">
         {orders.length === 0 && (
@@ -175,7 +175,7 @@ export default function InStockPage() {
                   <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20,6 9,17 4,12" /></svg>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-base sm:text-xl font-black text-white truncate">ORDER: {order.orderNumber}</h3>
+                  <h3 className="text-base sm:text-xl font-black text-white truncate">Order: {order.orderNumber}</h3>
                   {(order.hezeOrderNumber || order.postcode) && (
                     <p className="text-white/70 text-sm truncate">
                       {order.hezeOrderNumber && <span>{order.hezeOrderNumber}</span>}
@@ -189,12 +189,12 @@ export default function InStockPage() {
 
               {/* Buttons - wrap on mobile */}
               <div className="flex flex-wrap gap-2 sm:justify-end">
-                <Link href={`/supplier/${slug}/in-stock/${order.id}/despatch`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded transition text-sm sm:text-base">Despatch</Link>
-                <Link href={`/supplier/${slug}/in-stock/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-4 sm:px-6 py-2 sm:py-3 rounded transition text-sm sm:text-base">View</Link>
-                <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white p-2 sm:p-3 rounded transition" title="Edit order number">
+                <Link href={`/supplier/${slug}/in-stock/${order.id}/despatch`} className="bg-card-light hover:bg-gray-500 text-white font-bold min-h-[44px] sm:min-h-[48px] px-5 sm:px-6 inline-flex items-center justify-center rounded transition text-sm sm:text-base">Despatch</Link>
+                <Link href={`/supplier/${slug}/in-stock/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold min-h-[44px] sm:min-h-[48px] px-5 sm:px-6 inline-flex items-center justify-center rounded transition text-sm sm:text-base">View</Link>
+                <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white w-11 h-11 sm:w-12 sm:h-12 inline-flex items-center justify-center rounded transition" title="Edit order number" aria-label="Edit order details">
                   <EditIcon />
                 </button>
-                <button onClick={() => handleDelete(order.id, order.orderNumber)} className="bg-red-600/80 hover:bg-red-600 text-white p-2 sm:p-3 rounded transition" title="Remove order">
+                <button onClick={() => handleDelete(order.id, order.orderNumber)} className="bg-red-600/80 hover:bg-red-600 text-white w-11 h-11 sm:w-12 sm:h-12 ml-3 inline-flex items-center justify-center rounded transition" title="Remove order" aria-label="Remove order">
                   <TrashIcon />
                 </button>
               </div>

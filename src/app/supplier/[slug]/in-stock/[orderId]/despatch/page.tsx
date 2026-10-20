@@ -238,13 +238,13 @@ export default function DespatchPage() {
             {lastScan.orderNumber === "QUEUED" ? (
               <>
                 <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">QUEUED OFFLINE</h2>
-                <p className="text-lg sm:text-xl text-white break-all text-center">{lastScan.itemName}</p>
+                <p className="text-lg sm:text-xl text-white break-words text-center">{lastScan.itemName}</p>
                 <p className="text-base sm:text-lg text-white/80 mt-2">Will sync when back online</p>
               </>
             ) : (
               <>
                 <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">DESPATCHED</h2>
-                <p className="text-lg sm:text-xl text-white break-all text-center">{lastScan.itemName}</p>
+                <p className="text-lg sm:text-xl text-white break-words text-center">{lastScan.itemName}</p>
                 <p className="text-base sm:text-lg text-white/80 mt-2">{lastScan.newScannedQty}/{lastScan.totalQty}</p>
               </>
             )}
@@ -260,15 +260,15 @@ export default function DespatchPage() {
             <div className="bg-red-50 rounded-lg overflow-hidden mb-5">
               <table className="w-full text-sm">
                 <thead><tr className="bg-red-100 text-red-800 text-xs font-bold">
-                  <th className="py-2 px-3 text-left">ITEM</th>
-                  <th className="py-2 px-3 text-center">ORDERED</th>
-                  <th className="py-2 px-3 text-center">DESPATCHED</th>
-                  <th className="py-2 px-3 text-center">MISSING</th>
+                  <th className="py-2 px-3 text-left">Item</th>
+                  <th className="py-2 px-3 text-center">Ordered</th>
+                  <th className="py-2 px-3 text-center">Despatched</th>
+                  <th className="py-2 px-3 text-center">Missing</th>
                 </tr></thead>
                 <tbody>
                   {remainingItems.map((item) => (
                     <tr key={item.id} className="border-t border-red-100">
-                      <td className="py-2 px-3 text-red-900 text-xs break-all">{item.itemName}</td>
+                      <td className="py-2 px-3 text-red-900 text-xs break-words">{item.itemName}</td>
                       <td className="py-2 px-3 text-center text-red-900 text-xs">{item.quantity}</td>
                       <td className="py-2 px-3 text-center text-red-900 text-xs">{item.despatchedQty}</td>
                       <td className="py-2 px-3 text-center text-red-900 font-bold text-xs">{item.quantity - item.despatchedQty}</td>
@@ -298,7 +298,7 @@ export default function DespatchPage() {
 
       <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-2 justify-center">
         <h1 className="text-3xl font-black text-white">Despatch: {order.orderNumber}</h1>
-        <button onClick={toggleSound} className="text-white/70 hover:text-white transition" title={soundOn ? "Mute" : "Unmute"}>
+        <button onClick={toggleSound} className="text-white/80 hover:text-white transition min-w-[44px] min-h-[44px] flex items-center justify-center" title={soundOn ? "Mute" : "Unmute"} aria-label={soundOn ? "Mute sounds" : "Unmute sounds"}>
           {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
         </button>
         {!isOnline && <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">OFFLINE</span>}
@@ -341,10 +341,10 @@ export default function DespatchPage() {
       <div className="w-full max-w-4xl bg-white rounded-lg overflow-x-auto">
         <table className="w-full text-sm table-fixed">
           <thead><tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20">DSP</th>
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[72px] sm:w-24">MNL</th>
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-left font-bold">Name</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">Qty</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-20"><span className="sm:hidden">Sent</span><span className="hidden sm:inline">Despatched</span></th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[100px] sm:w-32">Adjust</th>
           </tr></thead>
           <tbody>
             {order.items.map((item) => {
@@ -364,10 +364,10 @@ export default function DespatchPage() {
               const missingCount = item.quantity - item.scannedQty;
               return (
                 <tr key={item.id} className={rowClass}>
-                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-left text-gray-800 text-sm break-words">
                     {item.itemName}
-                    {neverReceived && <span className="block text-red-600 text-[10px] font-bold">NOT RECEIVED AT BOOKING</span>}
-                    {partiallyMissing && <span className="block text-orange-700 text-[10px] font-bold">{missingCount} OF {item.quantity} NOT RECEIVED AT BOOKING</span>}
+                    {neverReceived && <span className="block text-red-700 text-xs font-bold">Not received at booking</span>}
+                    {partiallyMissing && <span className="block text-orange-800 text-xs font-bold">{missingCount} of {item.quantity} not received at booking</span>}
                   </td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">
@@ -380,9 +380,9 @@ export default function DespatchPage() {
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.despatchedQty <= 0}
-                        className="w-8 h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-sm flex items-center justify-center transition">-</button>
+                        aria-label="Decrease" className="w-11 h-11 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
                       <button onClick={() => handleManualScan(item.id, "increment")} disabled={item.despatchedQty >= item.quantity}
-                        className="w-8 h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-sm flex items-center justify-center transition">+</button>
+                        aria-label="Increase" className="w-11 h-11 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
                     </div>
                   </td>
                 </tr>

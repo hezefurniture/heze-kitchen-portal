@@ -86,3 +86,43 @@ body {
   min-width: 44px;
   min-height: 44px;
 }
+
+/* ---------- Shared accessibility fixes (both appearances) ---------- */
+
+/* Gold carries dark ink: white on #D4A843 is 2.2:1, #1A1320 is 8.2:1. */
+html .bg-accent { color: #1a1320; }
+html .bg-accent svg[stroke="white"] { stroke: currentColor; }
+
+/* Status fills darkened so white text clears 4.5:1. Disabled controls keep their own grey. */
+html :is(.bg-green-500, .bg-green-600, .bg-scan-green):not([class*="text-gray"]):not([class*="text-black"]):not(:disabled) { background-color: #15803d; }
+html :is(.bg-yellow-500, .bg-amber-500):not([class*="text-gray"]):not([class*="text-black"]):not(:disabled) { background-color: #b45309; }
+html .bg-red-400:not([class*="text-gray"]):not([class*="text-black"]):not(:disabled) { background-color: #dc2626; }
+html :is(.bg-red-500, .bg-red-600):not([class*="text-gray"]):not([class*="text-black"]):not(:disabled) { background-color: #c81e1e; }
+html :is(.bg-red-500\/80, .bg-red-600\/80) { background-color: rgb(200 30 30 / .94); }
+html :is(.bg-blue-500, .bg-blue-600):not([class*="text-gray"]):not(:disabled) { background-color: #1d4ed8; }
+html :is(.bg-green-500, .bg-green-600, .bg-red-400, .bg-red-500, .bg-red-600, .bg-blue-500, .bg-blue-600):is(button, a):not(:disabled):hover { filter: brightness(.9); }
+
+/* Secondary text by alpha must stay at or above 80% white to clear 4.5:1 on the cards. */
+html .text-white\/40, html .text-white\/50, html .text-white\/60, html .text-white\/70 { color: rgb(255 255 255 / .82); }
+html .text-white\/80 { color: rgb(255 255 255 / .9); }
+html .bg-card .bg-white\/10 { background-color: rgb(0 0 0 / .15); }
+
+/* Placeholder and hint grey: #9CA3AF on white is 2.5:1; #6B7280 is 4.8:1. */
+html input::placeholder, html textarea::placeholder { color: #6b7280; opacity: 1; }
+
+/* Small destructive / success text links on white. */
+html .bg-white :is(.text-red-500, .text-red-600) { color: #b91c1c; }
+html .bg-white .text-green-600 { color: #15803d; }
+
+/* Form fields: 44px tall on phones, one height per form. */
+@media (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="hidden"]),
+  select {
+    min-height: 44px;
+  }
+  input[type="file"] { min-height: 44px; }
+}
+
+/* Gold focus ring everywhere; violet on light surfaces where gold would vanish. */
+:focus-visible { outline: 3px solid #e4b84a; outline-offset: 2px; }
+.bg-white :focus-visible, .bg-white\/95 :focus-visible, .bg-gray-50 :focus-visible { outline-color: #6d28d9; }

@@ -218,7 +218,7 @@ export default function BookScanPage() {
             {lastScan.orderNumber === "QUEUED" ? (
               <>
                 <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">QUEUED OFFLINE</h2>
-                <p className="text-xl sm:text-2xl text-white break-all text-center">{lastScan.itemName}</p>
+                <p className="text-xl sm:text-2xl text-white break-words text-center">{lastScan.itemName}</p>
                 <p className="text-base sm:text-lg text-white/80 mt-4">Will sync when back online</p>
               </>
             ) : (
@@ -342,10 +342,10 @@ export default function BookScanPage() {
       <div className="w-full max-w-4xl bg-white rounded-lg overflow-x-auto">
         <table className="w-full text-sm table-fixed">
           <thead><tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-16">DONE</th>
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[72px] sm:w-24">+/-</th>
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-left font-bold">Name</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">Qty</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-16">Done</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[100px] sm:w-32">Adjust</th>
           </tr></thead>
           <tbody>
             {order.items.map((item) => {
@@ -353,7 +353,7 @@ export default function BookScanPage() {
               const partial = item.scannedQty > 0 && !done;
               return (
                 <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
-                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">{item.itemName}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-left text-gray-800 text-sm break-words">{item.itemName}</td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">
                     <EditableQty
@@ -365,9 +365,9 @@ export default function BookScanPage() {
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.scannedQty <= 0}
-                        className="w-8 h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-sm flex items-center justify-center transition">-</button>
+                        aria-label="Decrease" className="w-11 h-11 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
                       <button onClick={() => handleManualScan(item.id, "increment")} disabled={item.scannedQty >= item.quantity}
-                        className="w-8 h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-sm flex items-center justify-center transition">+</button>
+                        aria-label="Increase" className="w-11 h-11 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
                     </div>
                   </td>
                 </tr>

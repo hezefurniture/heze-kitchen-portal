@@ -20,9 +20,10 @@ const config: Config = {
         },
         header: "#1E1E2E",
         card: {
-          DEFAULT: "#5A6B8A",
-          light: "#6B7C9B",
+          DEFAULT: "#4D5C7B",
+          light: "#5D6D8E",
         },
+        ink: "#1A1320",
         success: "#4CAF50",
         warning: "#FF9800",
         scan: {

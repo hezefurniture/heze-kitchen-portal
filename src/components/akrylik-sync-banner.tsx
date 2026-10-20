@@ -39,29 +39,29 @@ export function AkrylikSyncBanner() {
   if (!status || status.unsynced === 0) return null;
 
   return (
-    <div className="w-full max-w-4xl bg-amber-100 text-amber-900 rounded-lg px-4 py-3 mb-4 text-sm">
+    <div className="w-full max-w-4xl bg-amber-100 text-amber-900 rounded-lg px-4 py-3 mb-4 mt-1 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span>
           <strong>{status.unsynced}</strong> received box{status.unsynced !== 1 ? "es have" : " has"} not been
           confirmed to Akrylik yet.
         </span>
         <div className="flex gap-3">
-          <button onClick={() => setShowDetails((v) => !v)} className="underline font-bold">
+          <button onClick={() => setShowDetails((v) => !v)} className="underline font-bold min-h-[44px] px-2">
             {showDetails ? "Hide" : "Details"}
           </button>
           <button
             onClick={retry}
             disabled={retrying}
-            className="px-3 py-1 rounded bg-amber-700 text-white font-bold disabled:opacity-50"
+            className="min-h-[44px] px-4 rounded bg-amber-800 text-white font-bold disabled:opacity-50"
           >
-            {retrying ? "Retrying..." : "Retry now"}
+            {retrying ? "Retrying..." : "Retry Now"}
           </button>
         </div>
       </div>
       {showDetails && (
         <ul className="mt-2 space-y-1 text-xs">
           {status.packages.map((p) => (
-            <li key={p.code} className="break-all">
+            <li key={p.code} className="break-words">
               <span className="font-mono">{p.code}</span>
               {p.error ? ` — ${p.error}` : " — waiting to send"}
             </li>

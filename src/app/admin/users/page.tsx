@@ -121,15 +121,15 @@ export default function UsersPage() {
 
   return (
     <div className="max-w-4xl mx-auto pt-8 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-black text-white">User Management</h1>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+        <h1 className="text-2xl sm:text-3xl font-black text-white">Users</h1>
         <button
           onClick={() => {
             setEditId(null);
             setForm({ username: "", name: "", password: "", role: "USER" });
             setShowForm(true);
           }}
-          className="px-6 py-2 bg-accent text-white font-bold rounded hover:bg-accent-light transition"
+          className="min-h-[44px] px-6 bg-accent text-white font-bold rounded hover:bg-accent-light transition"
         >
           Add User
         </button>
@@ -143,7 +143,7 @@ export default function UsersPage() {
           <h2 className="text-xl font-bold text-white">
             {editId ? "Edit User" : "New User"}
           </h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <input
               type="text"
               placeholder="Username"
@@ -213,7 +213,7 @@ export default function UsersPage() {
               className="flex justify-center bg-white p-2 rounded border"
               dangerouslySetInnerHTML={{ __html: qrUser.svg }}
             />
-            <p className="text-xs text-gray-500 mt-3 break-all text-center">
+            <p className="text-xs text-gray-500 mt-3 break-words text-center">
               Token: {qrUser.token}
             </p>
             <p className="text-xs text-gray-600 mt-2 text-center">
@@ -239,7 +239,51 @@ export default function UsersPage() {
       )}
 
       <div className="bg-white rounded-lg overflow-hidden">
-        <table className="w-full">
+        <ul className="sm:hidden divide-y divide-gray-200">
+          {users.map((user) => (
+            <li key={user.id} className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-bold text-gray-900 break-words">{user.name}</p>
+                  <p className="text-sm text-gray-600 break-words">{user.username}</p>
+                </div>
+                <span
+                    className={`px-2 py-1 rounded text-xs font-bold ${
+                      user.role === "ADMIN"
+                        ? "bg-purple-100 text-purple-800"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {user.role === "ADMIN" ? "Admin" : "User"}
+                  </span>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-3">
+                  <button
+                    onClick={() => handleShowQr(user.id)}
+                    className="min-h-[44px] sm:min-h-[36px] px-3 rounded border border-gray-300 text-green-700 hover:bg-green-50 text-sm font-bold"
+                    aria-label={`Show login QR code for ${user.name}`}
+                  >
+                    QR Code
+                  </button>
+                  <button
+                    onClick={() => handleEdit(user)}
+                    className="min-h-[44px] sm:min-h-[36px] px-3 rounded border border-gray-300 text-blue-700 hover:bg-blue-50 text-sm font-bold"
+                    aria-label={`Edit ${user.name}`}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(user.id)}
+                    className="min-h-[44px] sm:min-h-[36px] px-3 ml-2 rounded border border-red-300 text-red-700 hover:bg-red-50 text-sm font-bold"
+                    aria-label={`Delete ${user.name}`}
+                  >
+                    Delete
+                  </button>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <table className="hidden sm:table w-full">
           <thead>
             <tr className="bg-gray-100 text-gray-700 text-sm">
               <th className="py-3 px-4 text-left font-bold">Username</th>
@@ -258,31 +302,36 @@ export default function UsersPage() {
                     className={`px-2 py-1 rounded text-xs font-bold ${
                       user.role === "ADMIN"
                         ? "bg-purple-100 text-purple-800"
-                        : "bg-gray-100 text-gray-600"
+                        : "bg-gray-100 text-gray-700"
                     }`}
                   >
-                    {user.role}
+                    {user.role === "ADMIN" ? "Admin" : "User"}
                   </span>
                 </td>
-                <td className="py-3 px-4 text-right">
+                <td className="py-3 px-4">
+                  <div className="flex justify-end gap-2">
                   <button
                     onClick={() => handleShowQr(user.id)}
-                    className="text-green-600 hover:text-green-800 text-sm mr-4"
+                    className="min-h-[44px] sm:min-h-[36px] px-3 rounded border border-gray-300 text-green-700 hover:bg-green-50 text-sm font-bold"
+                    aria-label={`Show login QR code for ${user.name}`}
                   >
-                    QR
+                    QR Code
                   </button>
                   <button
                     onClick={() => handleEdit(user)}
-                    className="text-blue-600 hover:text-blue-800 text-sm mr-4"
+                    className="min-h-[44px] sm:min-h-[36px] px-3 rounded border border-gray-300 text-blue-700 hover:bg-blue-50 text-sm font-bold"
+                    aria-label={`Edit ${user.name}`}
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(user.id)}
-                    className="text-red-600 hover:text-red-800 text-sm"
+                    className="min-h-[44px] sm:min-h-[36px] px-3 ml-2 rounded border border-red-300 text-red-700 hover:bg-red-50 text-sm font-bold"
+                    aria-label={`Delete ${user.name}`}
                   >
                     Delete
                   </button>
+                  </div>
                 </td>
               </tr>
             ))}

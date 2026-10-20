@@ -21,9 +21,9 @@ export function ManualBarcodeInput({ onSubmit }: ManualBarcodeInputProps) {
     return (
       <button
         onClick={() => setExpanded(true)}
-        className="text-white/50 text-xs underline mb-3"
+        className="mb-3 min-h-[44px] px-4 rounded border border-white/40 text-white text-sm font-bold hover:bg-white/10 transition"
       >
-        Type barcode manually
+        Type Barcode Manually
       </button>
     );
   }
@@ -38,17 +38,18 @@ export function ManualBarcodeInput({ onSubmit }: ManualBarcodeInputProps) {
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
           placeholder="Type barcode..."
-          className="flex-1 px-3 py-2 rounded bg-white/10 border border-white/30 text-white placeholder-white/40 text-center font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+          className="flex-1 min-w-0 min-h-[44px] px-3 py-2 rounded bg-white/10 border border-white/40 text-white placeholder-white/85 text-center font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <button
           onClick={submit}
-          className="px-3 py-2 bg-accent text-white font-bold rounded hover:bg-accent-light transition text-sm"
+          className="min-h-[44px] min-w-[44px] px-4 py-2 bg-accent text-white font-bold rounded hover:bg-accent-light transition text-sm"
         >
           Go
         </button>
         <button
           onClick={() => { setExpanded(false); setValue(""); }}
-          className="px-2 py-2 text-white/50 hover:text-white transition text-sm"
+          className="min-h-[44px] min-w-[44px] flex items-center justify-center text-white/80 hover:text-white transition text-xl"
+          aria-label="Close manual entry"
         >
           &times;
         </button>

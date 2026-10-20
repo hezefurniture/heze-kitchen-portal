@@ -78,7 +78,7 @@ export function EditableQty({
           (e.target as HTMLInputElement).blur();
         }
       }}
-      className={`w-full max-w-full text-center bg-white border border-gray-300 rounded text-gray-800 text-xs sm:text-sm py-0.5 px-0 focus:outline-none focus:ring-2 focus:ring-accent ${className}`}
+      className={`w-full max-w-full text-center bg-white border border-gray-300 rounded text-gray-800 text-sm py-0.5 px-0 focus:outline-none focus:ring-2 focus:ring-accent ${className}`}
     />
   );
 }

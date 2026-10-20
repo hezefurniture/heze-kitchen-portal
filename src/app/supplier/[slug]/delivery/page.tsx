@@ -344,7 +344,7 @@ export default function DeliveryUploadPage() {
           {orderGroups.map((group, idx) => (
             <div key={idx} className="bg-card rounded-lg px-4 sm:px-6 py-4">
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
-                <label className="text-white/70 text-sm font-bold whitespace-nowrap">Order Number:</label>
+                <label className="text-white text-sm font-bold whitespace-nowrap">Order Number</label>
                 <input
                   type="text"
                   value={group.editedOrderNumber}
@@ -356,9 +356,9 @@ export default function DeliveryUploadPage() {
                   className="w-full sm:flex-1 px-3 py-2 rounded bg-white text-gray-800 font-bold focus:outline-none focus:ring-2 focus:ring-accent"
                 />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <div>
-                  <label className="text-white/50 text-xs">Heze Order Number</label>
+                  <label className="block text-white text-sm font-bold mb-1">Heze Order Number</label>
                   <input
                     type="text"
                     value={group.hezeOrderNumber}
@@ -367,25 +367,12 @@ export default function DeliveryUploadPage() {
                       updated[idx].hezeOrderNumber = e.target.value;
                       setOrderGroups(updated);
                     }}
-                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                     placeholder="e.g. HZ-1234"
                   />
                 </div>
                 <div>
-                  <label className="text-white/50 text-xs">Customer Name</label>
-                  <input
-                    type="text"
-                    value={group.customerName}
-                    onChange={(e) => {
-                      const updated = [...orderGroups];
-                      updated[idx].customerName = e.target.value;
-                      setOrderGroups(updated);
-                    }}
-                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                </div>
-                <div>
-                  <label className="text-white/50 text-xs">Postcode</label>
+                  <label className="block text-white text-sm font-bold mb-1">Postcode</label>
                   <input
                     type="text"
                     value={group.postcode}
@@ -394,88 +381,108 @@ export default function DeliveryUploadPage() {
                       updated[idx].postcode = e.target.value;
                       setOrderGroups(updated);
                     }}
-                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                </div>
-                <div>
-                  <label className="text-white/50 text-xs">Plinth Quantity</label>
-                  <input
-                    type="number"
-                    value={group.plinthQty}
-                    onChange={(e) => {
-                      const updated = [...orderGroups];
-                      updated[idx].plinthQty = e.target.value;
-                      setOrderGroups(updated);
-                    }}
-                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                </div>
-                <div>
-                  <label className="text-white/50 text-xs">Plinth Colour</label>
-                  <input
-                    type="text"
-                    value={group.plinthColour}
-                    onChange={(e) => {
-                      const updated = [...orderGroups];
-                      updated[idx].plinthColour = e.target.value;
-                      setOrderGroups(updated);
-                    }}
-                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                </div>
-                <div>
-                  <label className="text-white/50 text-xs">Seal Quantity</label>
-                  <input
-                    type="number"
-                    value={group.sealQty}
-                    onChange={(e) => {
-                      const updated = [...orderGroups];
-                      updated[idx].sealQty = e.target.value;
-                      setOrderGroups(updated);
-                    }}
-                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                </div>
-                <div>
-                  <label className="text-white/50 text-xs">Bracket Quantity</label>
-                  <input
-                    type="number"
-                    value={group.bracketQty}
-                    onChange={(e) => {
-                      const updated = [...orderGroups];
-                      updated[idx].bracketQty = e.target.value;
-                      setOrderGroups(updated);
-                    }}
-                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                </div>
-                <div>
-                  <label className="text-white/50 text-xs">Weight</label>
-                  <input
-                    type="text"
-                    value={group.weight}
-                    onChange={(e) => {
-                      const updated = [...orderGroups];
-                      updated[idx].weight = e.target.value;
-                      setOrderGroups(updated);
-                    }}
-                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="text-white/50 text-xs">Notes</label>
-                  <textarea
-                    value={group.notes}
-                    onChange={(e) => {
-                      const updated = [...orderGroups];
-                      updated[idx].notes = e.target.value;
-                      setOrderGroups(updated);
-                    }}
-                    rows={2}
-                    className="w-full px-3 py-1.5 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                    className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                   />
                 </div>
               </div>
+              <details className="mb-3 group" open={Boolean(group.customerName || group.plinthQty || group.plinthColour || group.sealQty || group.bracketQty || group.weight || group.notes)}>
+                <summary className="cursor-pointer select-none min-h-[44px] flex items-center text-white text-sm font-bold">
+                  More details <span className="ml-2 font-normal text-white/80">customer, plinths, seals, weight, notes</span>
+                </summary>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-white text-sm font-bold mb-1">Customer Name</label>
+                    <input
+                      type="text"
+                      value={group.customerName}
+                      onChange={(e) => {
+                        const updated = [...orderGroups];
+                        updated[idx].customerName = e.target.value;
+                        setOrderGroups(updated);
+                      }}
+                      className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white text-sm font-bold mb-1">Plinth Quantity</label>
+                    <input
+                      type="number"
+                      value={group.plinthQty}
+                      onChange={(e) => {
+                        const updated = [...orderGroups];
+                        updated[idx].plinthQty = e.target.value;
+                        setOrderGroups(updated);
+                      }}
+                      className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white text-sm font-bold mb-1">Plinth Colour</label>
+                    <input
+                      type="text"
+                      value={group.plinthColour}
+                      onChange={(e) => {
+                        const updated = [...orderGroups];
+                        updated[idx].plinthColour = e.target.value;
+                        setOrderGroups(updated);
+                      }}
+                      className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white text-sm font-bold mb-1">Seal Quantity</label>
+                    <input
+                      type="number"
+                      value={group.sealQty}
+                      onChange={(e) => {
+                        const updated = [...orderGroups];
+                        updated[idx].sealQty = e.target.value;
+                        setOrderGroups(updated);
+                      }}
+                      className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white text-sm font-bold mb-1">Bracket Quantity</label>
+                    <input
+                      type="number"
+                      value={group.bracketQty}
+                      onChange={(e) => {
+                        const updated = [...orderGroups];
+                        updated[idx].bracketQty = e.target.value;
+                        setOrderGroups(updated);
+                      }}
+                      className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white text-sm font-bold mb-1">Weight</label>
+                    <input
+                      type="text"
+                      value={group.weight}
+                      onChange={(e) => {
+                        const updated = [...orderGroups];
+                        updated[idx].weight = e.target.value;
+                        setOrderGroups(updated);
+                      }}
+                      className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-white text-sm font-bold mb-1">Notes</label>
+                    <textarea
+                      value={group.notes}
+                      onChange={(e) => {
+                        const updated = [...orderGroups];
+                        updated[idx].notes = e.target.value;
+                        setOrderGroups(updated);
+                      }}
+                      rows={2}
+                      className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent resize-none"
+                    />
+                  </div>
+                </div>
+              </details>
 
               <div className="text-white/60 text-sm">
                 {group.items.length} item{group.items.length !== 1 ? "s" : ""} &middot;{" "}
@@ -483,9 +490,9 @@ export default function DeliveryUploadPage() {
               </div>
               <div className="mt-2 space-y-1">
                 {group.items.map((item, i) => (
-                  <div key={i} className="text-white/50 text-xs flex justify-between px-2">
-                    <span className="truncate mr-2">{item.itemName}</span>
-                    <span className="shrink-0">x{item.quantity}</span>
+                  <div key={i} className="text-white/80 text-sm flex justify-between gap-3 px-2">
+                    <span className="min-w-0 break-words">{item.itemName}</span>
+                    <span className="shrink-0 tabular-nums">×{item.quantity}</span>
                   </div>
                 ))}
               </div>
@@ -524,7 +531,7 @@ export default function DeliveryUploadPage() {
       {slug === "akrylik" && (
         <div className="w-full max-w-2xl bg-white/95 rounded-lg px-4 sm:px-6 py-4 mb-4 sm:mb-6">
           <h2 className="text-gray-900 font-black text-lg">Akrylik delivery (new system)</h2>
-          <p className="text-gray-600 text-sm mb-3">
+          <p className="text-gray-700 text-sm mb-3">
             Upload the delivery PDF (recommended — it includes box contents) or paste the delivery link.
           </p>
           <button
@@ -557,17 +564,17 @@ export default function DeliveryUploadPage() {
               value={akrylikUrl}
               onChange={(e) => setAkrylikUrl(e.target.value)}
               placeholder="https://skan.akrylik.pl/planer/package-logistics/receipt/delivery/…"
-              className="flex-1 min-w-0 px-3 py-2 rounded border border-gray-300 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
+              className="flex-1 min-w-0 px-3 py-2 rounded border border-gray-300 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             />
             <button
               type="submit"
               disabled={akrylikLoading || !akrylikUrl.trim()}
-              className="px-4 py-2 rounded bg-gray-800 text-white font-bold text-sm hover:bg-gray-700 transition disabled:opacity-50"
+              className="min-h-[44px] px-4 py-2 rounded bg-gray-800 text-white font-bold text-sm hover:bg-gray-700 transition disabled:opacity-50"
             >
-              Import link
+              Import Link
             </button>
           </form>
-          <p className="text-gray-500 text-xs mt-3">
+          <p className="text-gray-600 text-xs mt-3">
             For orders from Akrylik&rsquo;s old system, keep using the CSV/Excel upload below.
           </p>
         </div>

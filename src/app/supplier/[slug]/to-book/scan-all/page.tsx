@@ -238,7 +238,7 @@ export default function ScanAllPage() {
             {lastScan.orderNumber === "QUEUED" ? (
               <>
                 <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">QUEUED OFFLINE</h2>
-                <p className="text-xl sm:text-2xl text-white break-all text-center">{lastScan.itemName}</p>
+                <p className="text-xl sm:text-2xl text-white break-words text-center">{lastScan.itemName}</p>
                 <p className="text-base sm:text-lg text-white/80 mt-4">Will sync when back online</p>
               </>
             ) : (
@@ -318,7 +318,7 @@ export default function ScanAllPage() {
             <div key={order.id} className={`fade-in ${isExcluded ? "opacity-50" : ""}`}>
               <div className={`w-full ${isExcluded ? "bg-card/60" : "bg-card"} rounded-lg px-3 sm:px-6 py-3 sm:py-4`}>
                 <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="block text-left w-full mb-1">
-                  <h3 className={`text-base sm:text-xl font-black truncate ${isExcluded ? "text-white/50 line-through" : "text-white"}`}>ORDER: {order.orderNumber}</h3>
+                  <h3 className={`text-base sm:text-xl font-black truncate ${isExcluded ? "text-white/50 line-through" : "text-white"}`}>Order: {order.orderNumber}</h3>
                   <p className="text-white/60 text-xs sm:text-sm">Uploaded: {new Date(order.createdAt).toLocaleDateString("en-GB")}</p>
                 </button>
                 <button
@@ -332,7 +332,7 @@ export default function ScanAllPage() {
                     });
                     setOrders((prev) => prev.map((o) => o.id === order.id ? { ...o, isAddition: next } : o));
                   }}
-                  className={`mb-2 hidden sm:flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-bold transition ${
+                  className={`mb-2 hidden sm:flex items-center gap-1.5 min-h-[44px] px-3 rounded border text-sm font-bold transition ${
                     order.isAddition
                       ? "border-blue-400 bg-blue-500/20 text-blue-300"
                       : "border-white/20 text-white/50 hover:border-white/40"
@@ -361,7 +361,10 @@ export default function ScanAllPage() {
                         });
                       }}
                       style={{ width: "52px", height: "22px", minWidth: "52px" }}
-                      className={`relative rounded-full transition-colors duration-200 shrink-0 focus:outline-none ${isExcluded ? "bg-red-500" : "bg-green-500"}`}
+                      role="switch"
+                      aria-checked={!isExcluded}
+                      aria-label={`Include ${order.orderNumber} in scanning`}
+                      className={`relative rounded-full transition-colors duration-200 shrink-0 after:absolute after:content-[''] after:-inset-x-0 after:-inset-y-[11px] ${isExcluded ? "bg-red-500" : "bg-green-500"}`}
                       title={isExcluded ? "Excluded from scanning — tap to include" : "Included in scanning — tap to exclude"}
                     >
                       <span
@@ -375,7 +378,7 @@ export default function ScanAllPage() {
                         className="absolute bg-white rounded-full shadow transition-transform duration-200"
                       />
                     </button>
-                    <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="p-1">
+                    <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label={isExpanded ? "Hide items" : "Show items"} aria-expanded={isExpanded}>
                       <ChevronIcon expanded={isExpanded} />
                     </button>
                   </div>
@@ -385,10 +388,10 @@ export default function ScanAllPage() {
                 <div className="bg-white rounded-b-lg overflow-x-auto">
                   <table className="w-full text-sm table-fixed">
                     <thead><tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
-                      <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
-                      <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
-                      <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-16">DONE</th>
-                      <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[72px] sm:w-24">+/-</th>
+                      <th className="py-2 sm:py-3 px-2 sm:px-4 text-left font-bold">Name</th>
+                      <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">Qty</th>
+                      <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-16">Done</th>
+                      <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[100px] sm:w-32">Adjust</th>
                     </tr></thead>
                     <tbody>
                       {order.items.map((item) => {
@@ -396,7 +399,7 @@ export default function ScanAllPage() {
                         const partial = item.scannedQty > 0 && !done;
                         return (
                           <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
-                            <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">{item.itemName}</td>
+                            <td className="py-2 sm:py-3 px-2 sm:px-4 text-left text-gray-800 text-sm break-words">{item.itemName}</td>
                             <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
                             <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">
                               <EditableQty
@@ -408,9 +411,9 @@ export default function ScanAllPage() {
                             <td className="py-2 sm:py-3 px-1 sm:px-4 text-center">
                               <div className="flex items-center justify-center gap-1">
                                 <button onClick={() => handleManualScan(order.id, item.id, "decrement")} disabled={item.scannedQty <= 0}
-                                  className="w-8 h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-sm flex items-center justify-center transition">-</button>
+                                  aria-label="Decrease" className="w-11 h-11 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
                                 <button onClick={() => handleManualScan(order.id, item.id, "increment")} disabled={item.scannedQty >= item.quantity}
-                                  className="w-8 h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-sm flex items-center justify-center transition">+</button>
+                                  aria-label="Increase" className="w-11 h-11 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
                               </div>
                             </td>
                           </tr>

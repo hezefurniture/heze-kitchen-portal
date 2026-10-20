@@ -16,6 +16,7 @@ export function Header() {
   const params = useParams();
   const pathname = usePathname();
   const { data: session } = useSession();
+  const isAdmin = (session?.user as any)?.role === "ADMIN";
   const slug = params?.slug as string;
   const supplierName = supplierNames[slug] || "";
   const [navLogo, setNavLogo] = useState<string | null>(null);
@@ -60,7 +61,7 @@ export function Header() {
       <img src={navLogo} alt="Logo" className="h-10 max-w-[120px] object-contain block" />
     ) : (
       <span className="font-bold leading-none block">
-        <span className="text-[9px] tracking-wider block">KITCHENS</span>
+        <span className="text-[11px] tracking-wider block">KITCHENS</span>
         <span className="text-xl font-black block -mt-0.5">PORTAL</span>
       </span>
     );
@@ -73,14 +74,12 @@ export function Header() {
           <Link href="/dashboard" className="shrink-0 self-center flex items-center">
             <LogoBlock />
           </Link>
-          <div className="flex flex-col items-center justify-self-center self-center">
-            <span className="bg-white text-gray-800 text-[11px] px-2 py-0.5 rounded font-bold leading-tight">
+<Link href="/dashboard" aria-label={`${supplierName} — change supplier`} className="flex flex-col items-center justify-center min-h-[44px] px-2 justify-self-center">
+            <span className="supplier-chip bg-white text-gray-800 text-xs px-2.5 py-0.5 rounded-full font-bold leading-tight">
               {supplierName}
             </span>
-            <Link href="/dashboard" className="text-yellow-400 text-[10px] hover:underline leading-tight mt-0.5">
-              change &gt;
-            </Link>
-          </div>
+            <span className="text-yellow-400 text-[11px] leading-tight mt-0.5">Change ›</span>
+          </Link>
           <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="p-2 shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center justify-self-end self-center"
@@ -112,18 +111,40 @@ export function Header() {
               </Link>
             ))}
           </nav>
-          <div className="flex flex-col items-center shrink-0">
-            <span className="bg-white text-gray-800 text-[11px] px-2 py-0.5 rounded font-bold leading-tight">
-              {supplierName}
-            </span>
-            <Link href="/dashboard" className="text-yellow-400 text-[10px] hover:underline leading-tight mt-0.5">
-              change &gt;
+          <div className="flex items-center gap-4 shrink-0">
+            <Link href="/dashboard" aria-label={`${supplierName} — change supplier`} className="flex flex-col items-center justify-center min-h-[44px] px-1">
+              <span className="supplier-chip bg-white text-gray-800 text-xs px-2.5 py-0.5 rounded-full font-bold leading-tight">
+                {supplierName}
+              </span>
+              <span className="text-yellow-400 text-[11px] leading-tight mt-0.5">Change ›</span>
             </Link>
+            <AppearancePicker className="text-sm" />
+            <button
+              onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center hover:text-white/80"
+              aria-label="Log out"
+              title="Log out"
+            >
+              <LogoutIcon />
+            </button>
+            {isAdmin && (
+              <Link href="/admin/users" className="min-h-[44px] min-w-[44px] flex items-center justify-center hover:text-white/80" aria-label="Admin settings" title="Admin settings">
+                <GearIcon />
+              </Link>
+            )}
           </div>
         </div>
       </header>
 
       {/* Mobile dropdown menu — positioned dynamically below header */}
+      {menuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/50"
+          style={{ top: headerHeight }}
+          onClick={() => setMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
       {menuOpen && (
         <div
           className="ui-chrome-menu lg:hidden fixed left-0 right-0 bg-header z-50 shadow-xl border-t border-white/10"
@@ -141,23 +162,32 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
+            <Link href="/dashboard" className="text-lg font-bold px-6 py-4 border-b border-white/10 text-white/90 active:bg-white/10">
+              All Suppliers
+            </Link>
+            {isAdmin && (
+              <Link href="/admin/users" className="text-lg font-bold px-6 py-4 text-white/90 active:bg-white/10">
+                Admin
+              </Link>
+            )}
           </nav>
         </div>
       )}
 
       {/* Footer — icons only */}
-      <div className="ui-chrome-bottom fixed bottom-0 left-0 right-0 bg-gray-200 px-3 py-1 flex justify-between items-center text-gray-700 text-xs z-50">
+      <div className="ui-chrome-bottom lg:hidden fixed bottom-0 left-0 right-0 bg-gray-200 px-3 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] flex justify-between items-center text-gray-700 text-xs z-50">
         <span className="truncate mr-2">User: {(session?.user as any)?.username || session?.user?.name || "..."}</span>
         <div className="flex items-center gap-4 shrink-0">
           <AppearancePicker />
           <button
             onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}
-            className="hover:text-gray-900 min-h-[44px] flex items-center justify-center"
-            title="Logout"
+            className="hover:text-gray-900 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            aria-label="Log out"
+            title="Log out"
           >
             <LogoutIcon />
           </button>
-          <Link href="/admin/users" className="hover:text-gray-900 min-h-[44px] flex items-center justify-center" title="Settings">
+          <Link href="/admin/users" className="hover:text-gray-900 min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Settings" title="Settings">
             <GearIcon />
           </Link>
         </div>

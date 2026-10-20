@@ -87,7 +87,6 @@ export default function AdminLayout({
             <Link href="/dashboard" className="text-lg font-black">
               KITCHENS PORTAL
             </Link>
-            <span className="text-white/60">|</span>
             <span className="font-bold">Admin</span>
           </div>
           <div className="flex items-center gap-4">
@@ -98,7 +97,6 @@ export default function AdminLayout({
                 {link.label}
               </Link>
             ))}
-            <span className="text-white/30">|</span>
             <Link href="/dashboard" className="text-white/80 hover:text-white">
               Dashboard
             </Link>

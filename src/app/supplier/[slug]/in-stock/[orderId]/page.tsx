@@ -61,7 +61,7 @@ export default function OrderDetailPage() {
   return (
     <div className="flex flex-col items-center pt-8 px-4 pb-20">
       <h1 className="text-3xl font-black text-white mb-2">
-        ORDER: {order.orderNumber}
+        Order: {order.orderNumber}
       </h1>
       <p className="text-white/60 mb-4 text-center">
         {order.movedToStockAt

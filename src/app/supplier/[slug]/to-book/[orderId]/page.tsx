@@ -54,8 +54,8 @@ export default function ToBookOrderDetailPage() {
 
   return (
     <div className="flex flex-col items-center pt-4 sm:pt-8 px-2 sm:px-4 pb-20">
-      <h1 className="text-2xl sm:text-3xl font-black text-white mb-4 sm:mb-6 text-center break-all px-2">
-        ORDER: {order.orderNumber}
+      <h1 className="text-2xl sm:text-3xl font-black text-white mb-4 sm:mb-6 text-center break-words px-2">
+        Order: {order.orderNumber}
       </h1>
 
       {hasMeta && (

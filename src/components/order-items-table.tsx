@@ -85,13 +85,17 @@ export function OrderItemsTable({ orderId, items, showDespatched = false, onUpda
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
-              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
-              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
-              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-20">SCN</th>
+              <th className="py-2 sm:py-3 px-2 sm:px-4 text-left font-bold">Name</th>
+              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">Qty</th>
+              <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-24">
+                <span className="sm:hidden">Scan</span><span className="hidden sm:inline">Scanned</span>
+              </th>
               {showDespatched && (
-                <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-14 sm:w-24">DSP</th>
+                <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-28">
+                  <span className="sm:hidden">Sent</span><span className="hidden sm:inline">Despatched</span>
+                </th>
               )}
-              <th className="py-2 sm:py-3 px-1 text-center font-bold w-16 sm:w-24"></th>
+              <th className="py-2 sm:py-3 px-1 text-center font-bold w-24"><span className="sr-only">Actions</span></th>
             </tr>
           </thead>
           <tbody>
@@ -110,7 +114,7 @@ export function OrderItemsTable({ orderId, items, showDespatched = false, onUpda
                             type="text"
                             value={editForm.itemName}
                             onChange={(e) => setEditForm({ ...editForm, itemName: e.target.value })}
-                            className="px-2 py-1.5 rounded border border-gray-300 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="min-h-[44px] sm:min-h-[36px] px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                             placeholder="Item name"
                             autoFocus
                           />
@@ -118,21 +122,21 @@ export function OrderItemsTable({ orderId, items, showDespatched = false, onUpda
                             type="text"
                             value={editForm.barcode}
                             onChange={(e) => setEditForm({ ...editForm, barcode: e.target.value })}
-                            className="px-2 py-1.5 rounded border border-gray-300 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                            className="min-h-[44px] sm:min-h-[36px] px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                             placeholder="Barcode"
                           />
                           <input
                             type="number"
                             value={editForm.quantity}
                             onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
-                            className="px-2 py-1.5 rounded border border-gray-300 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
+                            className="min-h-[44px] sm:min-h-[36px] px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent w-full"
                             placeholder="Qty"
                             min="1"
                           />
                         </div>
                         <div className="flex gap-2">
-                          <button onClick={handleEditSave} className="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded hover:bg-blue-500">Save</button>
-                          <button onClick={() => setEditingId(null)} className="px-3 py-1 border border-gray-300 text-gray-600 text-xs font-bold rounded hover:bg-gray-100">Cancel</button>
+                          <button onClick={handleEditSave} className="min-h-[44px] sm:min-h-[36px] px-5 bg-blue-600 text-white text-sm font-bold rounded hover:bg-blue-500">Save</button>
+                          <button onClick={() => setEditingId(null)} className="min-h-[44px] sm:min-h-[36px] px-5 border border-gray-300 bg-white text-gray-700 text-sm font-bold rounded hover:bg-gray-100">Cancel</button>
                         </div>
                       </div>
                     </td>
@@ -145,19 +149,19 @@ export function OrderItemsTable({ orderId, items, showDespatched = false, onUpda
                   key={item.id}
                   className={isScanned ? "bg-green-200" : isPartial ? "bg-yellow-200" : "bg-yellow-100"}
                 >
-                  <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm break-all">{item.itemName}</td>
+                  <td className="py-2 sm:py-3 px-2 sm:px-4 text-left text-gray-800 text-sm break-words">{item.itemName}</td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.quantity}</td>
                   <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.scannedQty}</td>
                   {showDespatched && (
                     <td className="py-2 sm:py-3 px-1 sm:px-4 text-center text-gray-800 text-xs sm:text-sm">{item.despatchedQty}</td>
                   )}
-                  <td className="py-2 sm:py-3 px-1 text-center">
-                    <div className="flex justify-center gap-1">
-                      <button onClick={() => handleEditStart(item)} className="text-blue-600 hover:text-blue-800 p-0.5" title="Edit item">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
+                  <td className="py-1 sm:py-2 px-0 text-center">
+                    <div className="flex justify-center gap-1 sm:gap-3">
+                      <button onClick={() => handleEditStart(item)} className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center rounded text-blue-700 hover:bg-blue-100" title="Edit item" aria-label={`Edit ${item.itemName}`}>
+                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                       </button>
-                      <button onClick={() => handleDelete(item)} className="text-red-500 hover:text-red-700 p-0.5" title="Remove item">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,6 5,6 21,6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                      <button onClick={() => handleDelete(item)} className="w-11 h-11 sm:w-9 sm:h-9 flex items-center justify-center rounded text-red-700 hover:bg-red-100" title="Remove item" aria-label={`Remove ${item.itemName}`}>
+                        <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,6 5,6 21,6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                       </button>
                     </div>
                   </td>
@@ -174,7 +178,7 @@ export function OrderItemsTable({ orderId, items, showDespatched = false, onUpda
                         type="text"
                         value={addForm.itemName}
                         onChange={(e) => setAddForm({ ...addForm, itemName: e.target.value })}
-                        className="px-2 py-1.5 rounded border border-gray-300 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="min-h-[44px] sm:min-h-[36px] px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                         placeholder="Item name"
                         autoFocus
                       />
@@ -182,21 +186,21 @@ export function OrderItemsTable({ orderId, items, showDespatched = false, onUpda
                         type="text"
                         value={addForm.barcode}
                         onChange={(e) => setAddForm({ ...addForm, barcode: e.target.value })}
-                        className="px-2 py-1.5 rounded border border-gray-300 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        className="min-h-[44px] sm:min-h-[36px] px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                         placeholder="Barcode"
                       />
                       <input
                         type="number"
                         value={addForm.quantity}
                         onChange={(e) => setAddForm({ ...addForm, quantity: e.target.value })}
-                        className="px-2 py-1.5 rounded border border-gray-300 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 w-full"
+                        className="min-h-[44px] sm:min-h-[36px] px-3 py-1.5 rounded border border-gray-300 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent w-full"
                         placeholder="Qty"
                         min="1"
                       />
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={handleAdd} className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded hover:bg-green-500">Add</button>
-                      <button onClick={() => { setAddingItem(false); setError(""); }} className="px-3 py-1 border border-gray-300 text-gray-600 text-xs font-bold rounded hover:bg-gray-100">Cancel</button>
+                      <button onClick={handleAdd} className="min-h-[44px] sm:min-h-[36px] px-5 bg-green-600 text-white text-sm font-bold rounded hover:bg-green-500">Add Item</button>
+                      <button onClick={() => { setAddingItem(false); setError(""); }} className="min-h-[44px] sm:min-h-[36px] px-5 border border-gray-300 bg-white text-gray-700 text-sm font-bold rounded hover:bg-gray-100">Cancel</button>
                     </div>
                   </div>
                 </td>
@@ -211,7 +215,7 @@ export function OrderItemsTable({ orderId, items, showDespatched = false, onUpda
       {!addingItem && (
         <button
           onClick={() => { setAddingItem(true); setError(""); }}
-          className="mt-3 flex items-center gap-1.5 text-white/70 hover:text-white text-sm font-bold transition"
+          className="mt-3 min-h-[44px] px-4 rounded border border-white/40 flex items-center gap-1.5 text-white hover:bg-white/10 text-sm font-bold transition"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
           Add Item

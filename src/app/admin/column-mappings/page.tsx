@@ -254,7 +254,7 @@ export default function ColumnMappingsPage() {
             <div key={field.key} className="bg-white rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-lg font-bold text-gray-800">{field.label}</h3>
-                <span className="text-xs text-gray-400 font-mono">{field.key}</span>
+                <span className="text-xs text-gray-500 font-mono">{field.key}</span>
               </div>
 
               {/* Source columns */}

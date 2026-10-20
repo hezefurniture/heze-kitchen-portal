@@ -56,7 +56,7 @@ export function LastScannedPanel({
           {onViewHistory && scanHistoryCount !== undefined && scanHistoryCount > 0 && (
             <button
               onClick={onViewHistory}
-              className="text-blue-600 hover:text-blue-800 font-bold transition text-xs sm:text-sm underline"
+              className="min-h-[44px] px-3 -mr-3 text-blue-700 hover:text-blue-900 font-bold transition text-sm underline"
             >
               History ({scanHistoryCount})
             </button>
@@ -67,19 +67,19 @@ export function LastScannedPanel({
         <table className="w-full text-xs sm:text-sm table-fixed">
           <thead>
             <tr className="text-gray-600">
-              <th className="py-1 px-1 sm:px-2 text-left font-bold">NAME</th>
-              <th className="py-1 px-1 sm:px-2 text-center font-bold w-14 sm:w-20">
-                {type === "despatch" ? "DONE" : "SCANNED"}
+              <th className="py-1 px-1 sm:px-2 text-left font-bold">Name</th>
+              <th className="py-1 px-1 sm:px-2 text-center font-bold w-20 sm:w-24">
+                {type === "despatch" ? "Despatched" : "Scanned"}
               </th>
-              <th className="py-1 px-1 sm:px-2 text-center font-bold w-10 sm:w-14">
-                QTY
+              <th className="py-1 px-1 sm:px-2 text-center font-bold w-12 sm:w-14">
+                Qty
               </th>
             </tr>
           </thead>
           <tbody>
             {items.map((it) => (
               <tr key={it.itemId} className="border-t border-gray-200">
-                <td className="py-1 px-1 sm:px-2 text-gray-800 break-all">
+                <td className="py-1 px-1 sm:px-2 text-gray-800 break-words">
                   {it.itemName}
                 </td>
                 <td className="py-1 px-1 sm:px-2 text-center">

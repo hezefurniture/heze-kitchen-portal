@@ -155,7 +155,7 @@ export default function ScanPage() {
             {lastScan.orderNumber === "QUEUED" ? (
               <>
                 <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">QUEUED OFFLINE</h2>
-                <p className="text-xl sm:text-2xl text-white break-all text-center">{lastScan.itemName}</p>
+                <p className="text-xl sm:text-2xl text-white break-words text-center">{lastScan.itemName}</p>
                 <p className="text-base sm:text-lg text-white/80 mt-4">Will sync when back online</p>
               </>
             ) : (
@@ -169,8 +169,8 @@ export default function ScanPage() {
       )}
 
       <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-2 justify-center">
-        <h1 className="text-4xl font-black text-white">Step 2</h1>
-        <button onClick={toggleSound} className="text-white/70 hover:text-white transition" title={soundOn ? "Mute sounds" : "Unmute sounds"}>
+        <h1 className="text-2xl sm:text-4xl font-black text-white">Book In Delivery</h1>
+        <button onClick={toggleSound} className="text-white/80 hover:text-white transition min-w-[44px] min-h-[44px] flex items-center justify-center" title={soundOn ? "Mute sounds" : "Unmute sounds"} aria-label={soundOn ? "Mute sounds" : "Unmute sounds"}>
           {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
         </button>
         {!isOnline && <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">OFFLINE</span>}
@@ -194,10 +194,10 @@ export default function ScanPage() {
           const isExpanded = expandedOrder === order.id;
           return (
             <div key={order.id} className="fade-in">
-              <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="w-full bg-card rounded-lg px-6 py-4 flex items-center justify-between hover:bg-card-light transition">
-                <h3 className="text-xl font-black text-white">ORDER: {order.orderNumber}</h3>
-                <div className="flex items-center gap-4">
-                  <span className="text-white text-lg">DELIVERED {orderScanned}/{orderTotal}</span>
+              <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="w-full bg-card rounded-lg px-4 sm:px-6 py-4 flex items-center justify-between gap-3 text-left hover:bg-card-light transition" aria-expanded={isExpanded}>
+                <h3 className="text-lg sm:text-xl font-black text-white min-w-0">Order: <span className="whitespace-nowrap">{order.orderNumber}</span></h3>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-white text-base sm:text-lg">Delivered {orderScanned}/{orderTotal}</span>
                   <ChevronIcon expanded={isExpanded} />
                 </div>
               </button>
@@ -205,8 +205,8 @@ export default function ScanPage() {
                 <div className="bg-white rounded-b-lg overflow-hidden">
                   <table className="w-full">
                     <thead><tr className="bg-gray-100 text-gray-700 text-sm">
-                      <th className="py-3 px-4 text-center font-bold">NAME</th>
-                      <th className="py-3 px-4 text-center font-bold w-24">QTY</th>
+                      <th className="py-3 px-4 text-left font-bold">Name</th>
+                      <th className="py-3 px-4 text-center font-bold w-24">Qty</th>
                       <th className="py-3 px-4 text-center font-bold w-24">SCANNED</th>
                       <th className="py-3 px-4 text-center font-bold w-32">MANUAL</th>
                     </tr></thead>
@@ -216,15 +216,15 @@ export default function ScanPage() {
                         const partial = item.scannedQty > 0 && !done;
                         return (
                           <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
-                            <td className="py-3 px-4 text-center text-gray-800">{item.itemName}</td>
+                            <td className="py-3 px-4 text-left text-gray-800">{item.itemName}</td>
                             <td className="py-3 px-4 text-center text-gray-800">{item.quantity}</td>
                             <td className="py-3 px-4 text-center text-gray-800">{item.scannedQty}</td>
                             <td className="py-3 px-4 text-center">
                               <div className="flex items-center justify-center gap-1">
                                 <button onClick={() => handleManualScan(order.id, item.id, "decrement")} disabled={item.scannedQty <= 0}
-                                  className="w-8 h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
+                                  aria-label="Decrease" className="w-11 h-11 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
                                 <button onClick={() => handleManualScan(order.id, item.id, "increment")} disabled={item.scannedQty >= item.quantity}
-                                  className="w-8 h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
+                                  aria-label="Increase" className="w-11 h-11 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
                               </div>
                             </td>
                           </tr>

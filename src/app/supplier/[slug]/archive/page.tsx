@@ -99,36 +99,31 @@ export default function ArchivePage() {
   return (
     <div className="flex flex-col items-center pt-4 px-3 pb-20">
       {/* Filter bar */}
-      <div className="w-full max-w-5xl bg-gray-600 rounded-lg px-3 sm:px-6 py-3 sm:py-4 mb-4 sm:mb-6">
-        <div className="flex flex-wrap items-end gap-3 sm:gap-4">
-          <span className="text-white font-black text-lg sm:text-xl shrink-0">FILTER</span>
-          <div className="flex flex-col min-w-0">
-            <label className="text-white text-xs font-bold mb-1">Order ID</label>
-            <input type="text" placeholder="SQ-2424" value={filterOrderId} onChange={(e) => setFilterOrderId(e.target.value)}
-              className="px-3 py-2 rounded bg-white text-gray-800 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-accent" />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <label className="text-white text-xs font-bold mb-1">Heze Order No.</label>
-            <input type="text" placeholder="HZ-1234" value={filterHezeOrderNumber} onChange={(e) => setFilterHezeOrderNumber(e.target.value)}
-              className="px-3 py-2 rounded bg-white text-gray-800 text-sm w-36 focus:outline-none focus:ring-2 focus:ring-accent" />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <label className="text-white text-xs font-bold mb-1">Postcode</label>
-            <input type="text" placeholder="B69 2BT" value={filterPostcode} onChange={(e) => setFilterPostcode(e.target.value)}
-              className="px-3 py-2 rounded bg-white text-gray-800 text-sm w-32 focus:outline-none focus:ring-2 focus:ring-accent" />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <label className="text-white text-xs font-bold mb-1">Despatch Date Range</label>
-            <div className="flex items-center gap-2">
-              <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)}
-                className="px-2 sm:px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent min-w-0" />
-              <span className="text-white">-</span>
-              <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)}
-                className="px-2 sm:px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent min-w-0" />
+      <section aria-labelledby="archive-filter" className="w-full max-w-5xl bg-card rounded-lg px-4 sm:px-6 py-4 mb-4 sm:mb-6">
+        <h2 id="archive-filter" className="text-white font-bold text-base sm:text-lg mb-3">Filter</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <label className="flex flex-col min-w-0 text-white text-xs font-bold gap-1">
+            Order ID
+            <input type="text" placeholder="SQ-2424" value={filterOrderId} onChange={(e) => setFilterOrderId(e.target.value)} className="w-full min-h-[44px] sm:min-h-[40px] px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+          </label>
+          <label className="flex flex-col min-w-0 text-white text-xs font-bold gap-1">
+            Heze Order No.
+            <input type="text" placeholder="HZ-1234" value={filterHezeOrderNumber} onChange={(e) => setFilterHezeOrderNumber(e.target.value)} className="w-full min-h-[44px] sm:min-h-[40px] px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+          </label>
+          <label className="flex flex-col min-w-0 text-white text-xs font-bold gap-1">
+            Postcode
+            <input type="text" placeholder="B69 2BT" value={filterPostcode} onChange={(e) => setFilterPostcode(e.target.value)} className="w-full min-h-[44px] sm:min-h-[40px] px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+          </label>
+          <fieldset className="col-span-2 lg:col-span-1 min-w-0">
+            <legend className="text-white text-xs font-bold mb-1">Despatched Between</legend>
+            <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+              <input type="date" aria-label="From date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} className="w-full min-h-[44px] sm:min-h-[40px] px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent min-w-0" />
+              <span className="text-white" aria-hidden="true">–</span>
+              <input type="date" aria-label="To date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} className="w-full min-h-[44px] sm:min-h-[40px] px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent min-w-0" />
             </div>
-          </div>
+          </fieldset>
         </div>
-      </div>
+      </section>
 
       {/* Orders list */}
       <div className="w-full max-w-5xl space-y-3">
@@ -153,7 +148,7 @@ export default function ArchivePage() {
 
             {/* Order info */}
             <div className="mb-2">
-              <h3 className="text-base sm:text-lg font-black text-white truncate">ORDER: {order.orderNumber}</h3>
+              <h3 className="text-base sm:text-lg font-black text-white truncate">Order: {order.orderNumber}</h3>
               {(order.hezeOrderNumber || order.postcode) && (
                 <p className="text-white/70 text-sm truncate">
                   {order.hezeOrderNumber && <span>{order.hezeOrderNumber}</span>}
@@ -172,17 +167,17 @@ export default function ArchivePage() {
               {isAdmin && (
                 <button
                   onClick={() => handleRestore(order.id, order.orderNumber)}
-                  className="hidden sm:inline-flex bg-blue-600/80 hover:bg-blue-600 text-white font-bold px-4 sm:px-6 py-2 rounded transition text-sm items-center gap-1"
+                  className="hidden sm:inline-flex bg-blue-600/80 hover:bg-blue-600 text-white font-bold min-h-[44px] sm:min-h-[48px] px-5 sm:px-6 rounded transition text-sm items-center gap-1"
                   title="Restore to In Stock"
                 >
                   <RestoreIcon /> Restore
                 </button>
               )}
-              <Link href={`/supplier/${slug}/archive/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold px-4 sm:px-6 py-2 rounded transition text-sm">View</Link>
-              <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white p-2 rounded transition" title="Edit order number">
+              <Link href={`/supplier/${slug}/archive/${order.id}`} className="bg-card-light hover:bg-gray-500 text-white font-bold min-h-[44px] sm:min-h-[48px] px-5 sm:px-6 inline-flex items-center justify-center rounded transition text-sm">View</Link>
+              <button onClick={() => handleEditStart(order)} className="bg-card-light hover:bg-gray-500 text-white w-11 h-11 sm:w-12 sm:h-12 inline-flex items-center justify-center rounded transition" title="Edit order number" aria-label="Edit order details">
                 <EditIcon />
               </button>
-              <button onClick={() => handleDelete(order.id, order.orderNumber)} className="bg-red-600/80 hover:bg-red-600 text-white p-2 rounded transition" title="Remove order">
+              <button onClick={() => handleDelete(order.id, order.orderNumber)} className="bg-red-600/80 hover:bg-red-600 text-white w-11 h-11 sm:w-12 sm:h-12 ml-3 inline-flex items-center justify-center rounded transition" title="Remove order" aria-label="Remove order">
                 <TrashIcon />
               </button>
             </div>

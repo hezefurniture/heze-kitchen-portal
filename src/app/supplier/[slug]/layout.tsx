@@ -8,7 +8,7 @@ export default function SupplierLayout({
   return (
     <div className="min-h-screen bg-primary flex flex-col">
       <Header />
-      <main className="flex-1 pb-12">{children}</main>
+      <main className="flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:pb-12">{children}</main>
     </div>
   );
 }

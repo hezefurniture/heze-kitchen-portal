@@ -128,7 +128,7 @@ export default function ScanExtraPage() {
             {lastScan.orderNumber === "QUEUED" ? (
               <>
                 <h2 className="text-2xl sm:text-4xl font-black text-white mb-4">QUEUED OFFLINE</h2>
-                <p className="text-xl sm:text-2xl text-white break-all text-center">{lastScan.itemName}</p>
+                <p className="text-xl sm:text-2xl text-white break-words text-center">{lastScan.itemName}</p>
                 <p className="text-base sm:text-lg text-white/80 mt-4">Will sync when back online</p>
               </>
             ) : (
@@ -143,7 +143,7 @@ export default function ScanExtraPage() {
 
       <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-2 justify-center">
         <h1 className="text-3xl font-black text-white">Scan Extra: {order.orderNumber}</h1>
-        <button onClick={toggleSound} className="text-white/70 hover:text-white transition" title={soundOn ? "Mute" : "Unmute"}>
+        <button onClick={toggleSound} className="text-white/80 hover:text-white transition min-w-[44px] min-h-[44px] flex items-center justify-center" title={soundOn ? "Mute" : "Unmute"} aria-label={soundOn ? "Mute sounds" : "Unmute sounds"}>
           {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
         </button>
         {!isOnline && <span className="bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">OFFLINE</span>}
@@ -163,10 +163,10 @@ export default function ScanExtraPage() {
       <div className="w-full max-w-4xl bg-white rounded-lg overflow-hidden">
         <table className="w-full">
           <thead><tr className="bg-gray-100 text-gray-700 text-xs sm:text-sm">
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold">NAME</th>
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">QTY</th>
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-16">SCN</th>
-            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[72px] sm:w-24">MNL</th>
+            <th className="py-2 sm:py-3 px-2 sm:px-4 text-left font-bold">Name</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-10 sm:w-16">Qty</th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-12 sm:w-16"><span className="sm:hidden">Scan</span><span className="hidden sm:inline">Scanned</span></th>
+            <th className="py-2 sm:py-3 px-1 sm:px-4 text-center font-bold w-[100px] sm:w-32">Adjust</th>
           </tr></thead>
           <tbody>
             {order.items.map((item) => {
@@ -174,15 +174,15 @@ export default function ScanExtraPage() {
               const partial = item.scannedQty > 0 && !done;
               return (
                 <tr key={item.id} className={done ? "bg-green-200" : partial ? "bg-yellow-200" : "bg-yellow-100"}>
-                  <td className="py-3 px-4 text-center text-gray-800">{item.itemName}</td>
+                  <td className="py-3 px-4 text-left text-gray-800">{item.itemName}</td>
                   <td className="py-3 px-4 text-center text-gray-800">{item.quantity}</td>
                   <td className="py-3 px-4 text-center text-gray-800">{item.scannedQty}</td>
                   <td className="py-3 px-4 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button onClick={() => handleManualScan(item.id, "decrement")} disabled={item.scannedQty <= 0}
-                        className="w-8 h-8 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
+                        aria-label="Decrease" className="w-11 h-11 rounded bg-red-400 hover:bg-red-500 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">-</button>
                       <button onClick={() => handleManualScan(item.id, "increment")} disabled={item.scannedQty >= item.quantity}
-                        className="w-8 h-8 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
+                        aria-label="Increase" className="w-11 h-11 rounded bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white font-bold text-lg flex items-center justify-center transition">+</button>
                     </div>
                   </td>
                 </tr>
