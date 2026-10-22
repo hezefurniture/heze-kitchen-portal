@@ -444,8 +444,8 @@ export default function ScanAllPage() {
         })}
       </div>
 
-      <div className="mt-6 sm:mt-8 mb-8">
-        <button onClick={() => router.push(`/supplier/${slug}/to-book`)} className="px-10 sm:px-16 py-4 rounded-lg border-2 border-accent text-white font-bold text-xl sm:text-2xl hover:bg-accent/20 transition min-h-[56px]">
+      <div className="scan-actions mt-6 sm:mt-8 mb-8 flex justify-center">
+        <button onClick={() => router.push(`/supplier/${slug}/to-book`)} className="w-full max-w-md sm:w-auto px-10 sm:px-16 py-4 rounded-lg border-2 border-accent text-white font-bold text-xl sm:text-2xl hover:bg-accent/20 transition min-h-[56px]">
           Done
         </button>
       </div>

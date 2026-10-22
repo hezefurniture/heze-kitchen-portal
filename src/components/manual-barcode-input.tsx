@@ -38,6 +38,12 @@ export function ManualBarcodeInput({ onSubmit }: ManualBarcodeInputProps) {
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
           placeholder="Type barcode..."
+          aria-label="Barcode"
+          enterKeyHint="go"
+          autoCapitalize="characters"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
           className="flex-1 min-w-0 min-h-[44px] px-3 py-2 rounded bg-white/10 border border-white/40 text-white placeholder-white/85 text-center font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent"
         />
         <button

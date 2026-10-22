@@ -26,8 +26,8 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-primary flex flex-col overflow-x-hidden">
       {/* Footer */}
       <div className="ui-chrome-bottom fixed bottom-0 lg:bottom-auto lg:top-0 left-0 right-0 bg-gray-200 px-3 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] lg:pb-1 flex justify-between items-center text-gray-700 text-xs z-50">
-        <span className="truncate mr-2">User: {(session?.user as any)?.username || session?.user?.name || "..."}</span>
-        <div className="flex items-center gap-4 shrink-0">
+        <span className="truncate mr-2 min-w-0 font-bold" aria-label="Signed in as">{(session?.user as any)?.username || session?.user?.name || "..."}</span>
+        <div className="flex items-center gap-1 shrink-0">
           <AppearancePicker />
           <button
             onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}

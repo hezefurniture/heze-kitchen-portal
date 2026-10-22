@@ -72,7 +72,7 @@ export default function OrderDetailPage() {
 
       {hasMeta && (
         <div className="w-full max-w-4xl bg-card rounded-lg px-4 sm:px-6 py-3 mb-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
+          <div className="grid grid-cols-1 min-[400px]:grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
             {order.hezeOrderNumber && (
               <div><span className="text-white/50">Heze Order:</span> <span className="text-white font-medium">{order.hezeOrderNumber}</span></div>
             )}

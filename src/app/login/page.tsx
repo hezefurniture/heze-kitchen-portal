@@ -170,10 +170,16 @@ export default function LoginPage() {
         </div>
 
         {mode === "password" && (
-          <form onSubmit={handleSubmit} className="w-80 mx-auto space-y-4">
+          <form onSubmit={handleSubmit} className="w-full max-w-sm mx-auto px-6 space-y-4">
             <input
               type="text"
               placeholder="Username"
+              aria-label="Username"
+              autoComplete="username"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="next"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-4 py-3 rounded bg-white text-gray-800 text-lg focus:outline-none focus:ring-2 focus:ring-accent"
@@ -182,6 +188,9 @@ export default function LoginPage() {
             <input
               type="password"
               placeholder="Password"
+              aria-label="Password"
+              autoComplete="current-password"
+              enterKeyHint="go"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 rounded bg-white text-gray-800 text-lg focus:outline-none focus:ring-2 focus:ring-accent"

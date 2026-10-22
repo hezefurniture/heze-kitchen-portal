@@ -152,7 +152,7 @@ export default function ToBookPage() {
                     </div>
                     <div>
                       <label className="text-white/60 text-xs font-bold">Postcode</label>
-                      <input type="text" value={editMeta.postcode} onChange={(e) => setEditMeta({ ...editMeta, postcode: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+                      <input type="text" value={editMeta.postcode} autoCapitalize="characters" autoCorrect="off" onChange={(e) => setEditMeta({ ...editMeta, postcode: e.target.value })} className="w-full px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
                     </div>
                     <div>
                       <label className="text-white/60 text-xs font-bold">Plinth Quantity</label>

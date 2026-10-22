@@ -375,7 +375,7 @@ export default function DeliveryUploadPage() {
                   <label className="block text-white text-sm font-bold mb-1">Postcode</label>
                   <input
                     type="text"
-                    value={group.postcode}
+                    value={group.postcode} autoCapitalize="characters" autoCorrect="off"
                     onChange={(e) => {
                       const updated = [...orderGroups];
                       updated[idx].postcode = e.target.value;

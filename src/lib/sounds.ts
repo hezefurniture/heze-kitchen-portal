@@ -10,7 +10,13 @@ function getAudioCtx(): AudioContext {
   return audioCtx;
 }
 
+// Haptics carry the result when the warehouse is too loud to hear the tone.
+function vibrate(pattern: number | number[]) {
+  try { navigator.vibrate?.(pattern); } catch {}
+}
+
 export function playSuccessSound() {
+  vibrate(40);
   try {
     const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
@@ -30,6 +36,7 @@ export function playSuccessSound() {
 }
 
 export function playErrorSound() {
+  vibrate([90, 60, 90]);
   try {
     const ctx = getAudioCtx();
     const osc = ctx.createOscillator();

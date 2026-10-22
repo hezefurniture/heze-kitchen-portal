@@ -176,8 +176,8 @@ export function Header() {
 
       {/* Footer — icons only */}
       <div className="ui-chrome-bottom lg:hidden fixed bottom-0 left-0 right-0 bg-gray-200 px-3 pt-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] flex justify-between items-center text-gray-700 text-xs z-50">
-        <span className="truncate mr-2">User: {(session?.user as any)?.username || session?.user?.name || "..."}</span>
-        <div className="flex items-center gap-4 shrink-0">
+        <span className="truncate mr-2 min-w-0 font-bold" aria-label="Signed in as">{(session?.user as any)?.username || session?.user?.name || "..."}</span>
+        <div className="flex items-center gap-1 shrink-0">
           <AppearancePicker />
           <button
             onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}

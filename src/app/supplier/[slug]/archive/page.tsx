@@ -112,7 +112,7 @@ export default function ArchivePage() {
           </label>
           <label className="flex flex-col min-w-0 text-white text-xs font-bold gap-1">
             Postcode
-            <input type="text" placeholder="B69 2BT" value={filterPostcode} onChange={(e) => setFilterPostcode(e.target.value)} className="w-full min-h-[44px] sm:min-h-[40px] px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
+            <input type="text" placeholder="B69 2BT" value={filterPostcode} autoCapitalize="characters" autoCorrect="off" onChange={(e) => setFilterPostcode(e.target.value)} className="w-full min-h-[44px] sm:min-h-[40px] px-3 py-2 rounded bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent" />
           </label>
           <fieldset className="col-span-2 lg:col-span-1 min-w-0">
             <legend className="text-white text-xs font-bold mb-1">Despatched Between</legend>

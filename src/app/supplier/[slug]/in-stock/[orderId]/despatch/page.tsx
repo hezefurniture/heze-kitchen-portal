@@ -297,7 +297,7 @@ export default function DespatchPage() {
       )}
 
       <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-2 justify-center">
-        <h1 className="text-3xl font-black text-white">Despatch: {order.orderNumber}</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-white">Despatch: {order.orderNumber}</h1>
         <button onClick={toggleSound} className="text-white/80 hover:text-white transition min-w-[44px] min-h-[44px] flex items-center justify-center" title={soundOn ? "Mute" : "Unmute"} aria-label={soundOn ? "Mute sounds" : "Unmute sounds"}>
           {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
         </button>
@@ -393,12 +393,13 @@ export default function DespatchPage() {
       </div>
 
       {remainingItems.length > 0 && (
-        <div className="w-full max-w-4xl mt-6 flex justify-center">
+        <div className="scan-actions w-full max-w-4xl mt-6 flex justify-center">
           <button
             onClick={() => setShowForceConfirm(true)}
-            className="px-8 py-3 bg-red-600/80 hover:bg-red-600 text-white font-bold rounded-lg transition"
+            className="w-full sm:w-auto min-h-[52px] px-6 sm:px-8 py-3 bg-red-600/80 hover:bg-red-600 text-white font-bold rounded-lg transition"
           >
-            Despatch Despite Missing Items ({remainingItems.length} item{remainingItems.length !== 1 ? "s" : ""} remaining)
+            <span className="sm:hidden">Despatch Anyway · {remainingItems.length} missing</span>
+            <span className="hidden sm:inline">Despatch Despite Missing Items ({remainingItems.length} item{remainingItems.length !== 1 ? "s" : ""} remaining)</span>
           </button>
         </div>
       )}

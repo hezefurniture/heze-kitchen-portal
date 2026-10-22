@@ -142,7 +142,7 @@ export default function AdditionsScanExtraPage() {
       )}
 
       <div className="flex flex-wrap items-center gap-2 sm:gap-4 mb-2 justify-center">
-        <h1 className="text-3xl font-black text-white">Scan Extra: {order.orderNumber}</h1>
+        <h1 className="text-2xl sm:text-3xl font-black text-white">Scan Extra: {order.orderNumber}</h1>
         <button onClick={toggleSound} className="text-white/80 hover:text-white transition min-w-[44px] min-h-[44px] flex items-center justify-center" title={soundOn ? "Mute" : "Unmute"} aria-label={soundOn ? "Mute sounds" : "Unmute sounds"}>
           {soundOn ? <SoundOnIcon /> : <SoundOffIcon />}
         </button>
@@ -192,12 +192,13 @@ export default function AdditionsScanExtraPage() {
         </table>
       </div>
 
-      <div className="mt-6 flex flex-wrap gap-3 justify-center">
+      <div className="scan-actions mt-6 flex flex-wrap gap-3 justify-center">
         <button
           onClick={() => router.push(`/supplier/${slug}/additions`)}
-          className="px-10 py-3 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition"
+          className="w-full sm:w-auto min-h-[52px] px-10 py-3 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition whitespace-nowrap"
         >
-          {allDone ? "Done - Back to In Stock" : "Save & Back to In Stock"}
+          <span className="sm:hidden">{allDone ? "Done" : "Save & Back"}</span>
+          <span className="hidden sm:inline">{allDone ? "Done - Back to In Stock" : "Save & Back to In Stock"}</span>
         </button>
       </div>
     </div>

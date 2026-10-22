@@ -31,10 +31,15 @@ body {
   border: 2px dashed rgba(255, 255, 255, 0.3);
   transition: all 0.2s;
 }
-.drop-zone:hover,
 .drop-zone.dragging {
   border-color: rgba(255, 255, 255, 0.7);
   background-color: rgba(255, 255, 255, 0.05);
+}
+@media (hover: hover) and (pointer: fine) {
+  .drop-zone:hover {
+  border-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.05);
+}
 }
 
 /* Scan flash animation */
@@ -100,7 +105,9 @@ html .bg-red-400:not([class*="text-gray"]):not([class*="text-black"]):not(:disab
 html :is(.bg-red-500, .bg-red-600):not([class*="text-gray"]):not([class*="text-black"]):not(:disabled) { background-color: #c81e1e; }
 html :is(.bg-red-500\/80, .bg-red-600\/80) { background-color: rgb(200 30 30 / .94); }
 html :is(.bg-blue-500, .bg-blue-600):not([class*="text-gray"]):not(:disabled) { background-color: #1d4ed8; }
-html :is(.bg-green-500, .bg-green-600, .bg-red-400, .bg-red-500, .bg-red-600, .bg-blue-500, .bg-blue-600):is(button, a):not(:disabled):hover { filter: brightness(.9); }
+@media (hover: hover) and (pointer: fine) {
+  html :is(.bg-green-500, .bg-green-600, .bg-red-400, .bg-red-500, .bg-red-600, .bg-blue-500, .bg-blue-600):is(button, a):not(:disabled):hover { filter: brightness(.9); }
+}
 
 /* Secondary text by alpha must stay at or above 80% white to clear 4.5:1 on the cards. */
 html .text-white\/40, html .text-white\/50, html .text-white\/60, html .text-white\/70 { color: rgb(255 255 255 / .82); }
@@ -126,3 +133,62 @@ html .bg-white .text-green-600 { color: #15803d; }
 /* Gold focus ring everywhere; violet on light surfaces where gold would vanish. */
 :focus-visible { outline: 3px solid #e4b84a; outline-offset: 2px; }
 .bg-white :focus-visible, .bg-white\/95 :focus-visible, .bg-gray-50 :focus-visible { outline-color: #6d28d9; }
+
+/* ---------- Handheld (Zebra TC27) platform layer ---------- */
+:root { --page-bg: #7b2d5f; --bottom-bar-h: 3.25rem; }
+html[data-ui="modern"] { --page-bg: #241a31; }
+
+html {
+  /* Android paints a blue flash over every tapped element; controls bring their own :active state below. */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  /* An accidental pull-down mid-scan reloads the page and loses the session's scan history. */
+  overscroll-behavior: none;
+}
+body { overscroll-behavior: none; }
+
+/* min-h-screen = 100vh, which is taller than the visible area while the browser bar shows. */
+.min-h-screen { min-height: 100vh; min-height: 100dvh; }
+
+/* Controls fire immediately, never select their label on long-press, and respond on press, not release. */
+button, a[href], [role="button"], [role="switch"], summary, label:has(> input[type="radio"]), label:has(> input[type="checkbox"]) {
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+:is(button, a[href], [role="button"], [role="switch"], summary):not(:disabled) {
+  transition-property: color, background-color, border-color, box-shadow, transform, filter, opacity;
+  transition-duration: 120ms;
+  transition-timing-function: cubic-bezier(.2, .7, .2, 1);
+}
+:is(button, [role="button"], [role="switch"], summary, a[href][class*="bg-"], a[href][class*="border"]):not(:disabled):active {
+  transform: scale(.97);
+  filter: brightness(.92);
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(button, [role="button"], [role="switch"], summary, a[href]):not(:disabled):active { transform: none; }
+}
+
+/* 16px fields on touch screens: legible at arm's length and no focus zoom. */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea { font-size: 16px; }
+}
+/* The appearance menu is bar chrome, not a form field: keep it compact so the signed-in name fits. */
+.appearance-picker select { font-size: 14px; }
+
+/* Sticky header clears any status-bar inset now that the page draws edge to edge (viewport-fit=cover). */
+.ui-chrome-top { padding-top: env(safe-area-inset-top, 0px); }
+
+/* Scan pages: primary actions docked in thumb reach, just above the bottom bar. */
+@media (max-width: 1023px) {
+  .scan-actions {
+    position: sticky;
+    bottom: calc(var(--bottom-bar-h) + env(safe-area-inset-bottom, 0px));
+    z-index: 30;
+    width: 100%;
+    padding-top: 1.25rem;
+    padding-bottom: .5rem;
+    background: linear-gradient(to top, var(--page-bg) 72%, transparent);
+  }
+}

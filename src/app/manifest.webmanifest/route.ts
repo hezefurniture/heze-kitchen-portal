@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     display: "standalone",
     orientation: "portrait",
     background_color: "#7B2D5F",
-    theme_color: "#7B2D5F",
+    theme_color: "#1E1E2E",
     categories: ["business", "utilities"],
     icons: [
       {

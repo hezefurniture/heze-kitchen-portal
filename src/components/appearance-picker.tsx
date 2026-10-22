@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import type { UiTheme, UiThemeState } from "@/lib/ui-theme";
 
 const LABELS: Record<UiTheme, string> = { classic: "Classic", modern: "Modern" };
-const THEME_COLOR: Record<UiTheme, string> = { classic: "#7B2D5F", modern: "#140E1D" };
+const THEME_COLOR: Record<UiTheme, string> = { classic: "#1E1E2E", modern: "#241A31" };
 
 export function applyUiTheme(theme: UiTheme) {
   document.documentElement.dataset.ui = theme;
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLOR[theme]);
+  document.querySelector('meta[name="color-scheme"]')?.setAttribute("content", theme === "modern" ? "dark" : "light");
 }
 
 export function AppearancePicker({ className = "" }: { className?: string }) {

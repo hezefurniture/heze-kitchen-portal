@@ -273,7 +273,7 @@ export default function BookScanPage() {
 
       {(order.hezeOrderNumber || order.customerName || order.postcode || order.plinthQty || order.plinthColour || order.sealQty || order.bracketQty || order.weight || order.notes) && (
         <div className="w-full max-w-4xl bg-card rounded-lg px-4 sm:px-6 py-3 mb-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm">
+          <div className="grid grid-cols-1 min-[400px]:grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-sm">
             {order.hezeOrderNumber && (
               <div><span className="text-white/50">Heze Order:</span> <span className="text-white font-medium">{order.hezeOrderNumber}</span></div>
             )}
@@ -377,12 +377,13 @@ export default function BookScanPage() {
         </table>
       </div>
 
-      <div className="mt-6 flex flex-col items-center gap-3">
+      <div className="scan-actions mt-6 flex flex-row-reverse sm:flex-col items-stretch sm:items-center justify-center gap-2 sm:gap-3 max-w-md sm:max-w-none">
         <button
           onClick={() => router.push(`/supplier/${slug}/to-book`)}
-          className="px-8 sm:px-12 py-4 rounded bg-accent text-white font-bold text-lg hover:bg-accent-light transition min-h-[56px]"
+          className="flex-1 sm:flex-none px-4 sm:px-12 py-3 sm:py-4 rounded bg-accent text-white font-bold text-base sm:text-lg hover:bg-accent-light transition min-h-[52px] sm:min-h-[56px] whitespace-nowrap"
         >
-          {allDone ? "Done - Back to Kitchens to Book" : "Save & Back to Kitchens to Book"}
+          <span className="sm:hidden">{allDone ? "Done" : "Save & Back"}</span>
+          <span className="hidden sm:inline">{allDone ? "Done - Back to Kitchens to Book" : "Save & Back to Kitchens to Book"}</span>
         </button>
         {!allDone && totalScanned > 0 && (
           <button
@@ -394,9 +395,10 @@ export default function BookScanPage() {
                 router.push(`/supplier/${slug}/to-book`);
               } catch {}
             }}
-            className="px-8 sm:px-12 py-3 rounded border-2 border-yellow-400 text-yellow-300 font-bold text-base hover:bg-yellow-400/10 transition"
+            className="flex-1 sm:flex-none px-3 sm:px-12 py-3 rounded border-2 border-yellow-400 text-yellow-300 font-bold text-base hover:bg-yellow-400/10 transition min-h-[52px] whitespace-nowrap"
           >
-            Move to {order.isAddition ? "Additions" : "In Stock"} ({totalScanned}/{totalQty} scanned)
+            <span className="sm:hidden">To {order.isAddition ? "Additions" : "Stock"} ({totalScanned}/{totalQty})</span>
+            <span className="hidden sm:inline">Move to {order.isAddition ? "Additions" : "In Stock"} ({totalScanned}/{totalQty} scanned)</span>
           </button>
         )}
       </div>

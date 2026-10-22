@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./theme-modern.css";
 import { AuthProvider } from "@/components/layout/auth-provider";
@@ -7,6 +7,13 @@ import { getUiThemeState } from "@/lib/ui-theme";
 export const metadata: Metadata = {
   title: "Kitchens Portal - Heze Furniture",
   description: "Kitchen warehouse barcode scanning portal",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default async function RootLayout({
@@ -18,8 +25,8 @@ export default async function RootLayout({
   return (
     <html lang="en" data-ui={effective}>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="theme-color" content={effective === "modern" ? "#140E1D" : "#7B2D5F"} />
+        <meta name="theme-color" content={effective === "modern" ? "#241A31" : "#1E1E2E"} />
+        <meta name="color-scheme" content={effective === "modern" ? "dark" : "light"} />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />

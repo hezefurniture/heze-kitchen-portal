@@ -240,7 +240,7 @@ export default function ScanPage() {
       </div>
 
       {orders.length > 0 && (
-        <button onClick={() => router.push(`/supplier/${slug}/delivery/${deliveryId}/finished`)} className="mt-8 px-16 py-4 rounded-lg border-2 border-accent text-white font-bold text-2xl hover:bg-accent/20 transition">Finish</button>
+        <div className="scan-actions mt-8 flex justify-center"><button onClick={() => router.push(`/supplier/${slug}/delivery/${deliveryId}/finished`)} className="w-full max-w-md sm:w-auto px-16 py-4 rounded-lg border-2 border-accent text-white font-bold text-2xl hover:bg-accent/20 transition">Finish</button></div>
       )}
     </div>
   );
