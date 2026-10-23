@@ -53,6 +53,7 @@ export default function DeliveryUploadPage() {
   const [akrylikLoading, setAkrylikLoading] = useState(false);
   const [akrylikReceiptUrl, setAkrylikReceiptUrl] = useState<string | null>(null);
   const [akrylikNotices, setAkrylikNotices] = useState<string[]>([]);
+  const [shortReportPreview, setShortReportPreview] = useState<AkrylikPreview | null>(null);
 
   // Load column mappings for this supplier
   useEffect(() => {
@@ -159,35 +160,46 @@ export default function DeliveryUploadPage() {
             : "No packages found on this Akrylik delivery."
         );
       }
-      const notices = [...preview.warnings];
-      if (preview.alreadyImported.length) {
-        notices.push(`${preview.alreadyImported.length} package(s) were imported before and have been skipped.`);
+      if (preview.reportVariant === "short") {
+        setShortReportPreview(preview);
+        return;
       }
-      setAkrylikNotices(notices);
-      setAkrylikReceiptUrl(preview.receiptUrl);
-      setOrderGroups(
-        preview.groups.map((g) => ({
-          orderNumber: g.orderNumber,
-          editedOrderNumber: g.orderNumber,
-          items: g.items,
-          hezeOrderNumber: g.hezeOrderNumber,
-          customerName: "",
-          postcode: g.postcode,
-          plinthQty: "",
-          plinthColour: "",
-          sealQty: "",
-          bracketQty: "",
-          weight: "",
-          notes: g.notes,
-          akrylikPackages: g.packages,
-        }))
-      );
-      setReviewStep(true);
+      openAkrylikReview(preview);
     } catch (err: any) {
       setError(err.message || "Import failed");
     } finally {
       setAkrylikLoading(false);
     }
+  };
+
+  const openAkrylikReview = (preview: AkrylikPreview) => {
+    const notices = [...preview.warnings];
+    if (preview.reportVariant === "short") {
+      notices.unshift("Box contents aren't listed: this came from Akrylik's short report.");
+    }
+    if (preview.alreadyImported.length) {
+      notices.push(`${preview.alreadyImported.length} package(s) were imported before and have been skipped.`);
+    }
+    setAkrylikNotices(notices);
+    setAkrylikReceiptUrl(preview.receiptUrl);
+    setOrderGroups(
+      preview.groups.map((g) => ({
+        orderNumber: g.orderNumber,
+        editedOrderNumber: g.orderNumber,
+        items: g.items,
+        hezeOrderNumber: g.hezeOrderNumber,
+        customerName: "",
+        postcode: g.postcode,
+        plinthQty: "",
+        plinthColour: "",
+        sealQty: "",
+        bracketQty: "",
+        weight: "",
+        notes: g.notes,
+        akrylikPackages: g.packages,
+      }))
+    );
+    setReviewStep(true);
   };
 
   const leaveReview = () => {
@@ -615,6 +627,18 @@ export default function DeliveryUploadPage() {
         />
       </div>
 
+      {shortReportPreview && (
+        <ShortReportDialog
+          preview={shortReportPreview}
+          onCancel={() => setShortReportPreview(null)}
+          onContinue={() => {
+            const preview = shortReportPreview;
+            setShortReportPreview(null);
+            openAkrylikReview(preview);
+          }}
+        />
+      )}
+
       {/* Error display */}
       {error && (
         <div className="w-full max-w-2xl mt-4 bg-red-500/80 text-white rounded-lg px-4 py-3">
@@ -687,5 +711,67 @@ function CloudUploadIcon() {
       <polyline points="17,8 12,3 7,8" />
       <line x1="12" y1="3" x2="12" y2="15" />
     </svg>
+  );
+}
+
+function ShortReportDialog({
+  preview,
+  onCancel,
+  onContinue,
+}: {
+  preview: AkrylikPreview;
+  onCancel: () => void;
+  onContinue: () => void;
+}) {
+  const continueRef = useRef<HTMLButtonElement>(null);
+  const boxes = preview.groups.reduce((n, g) => n + g.packages.length, 0);
+  const kitchens = preview.groups.length;
+
+  useEffect(() => {
+    continueRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 p-0 sm:p-4" onClick={onCancel}>
+      <div
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="short-report-title"
+        aria-describedby="short-report-desc"
+        className="w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl p-5 sm:p-6 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] text-gray-800"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="short-report-title" className="text-lg font-black text-gray-900">No box contents in this PDF</h2>
+        <div id="short-report-desc" className="mt-2 space-y-2 text-sm text-gray-700">
+          <p>
+            This is Akrylik&rsquo;s <strong>short report</strong> (&ldquo;Wariant skrócony&rdquo;). It lists the orders but
+            not what&rsquo;s inside each box, so every box will show as &ldquo;contents not listed&rdquo;.
+          </p>
+          <p>
+            Found <strong>{kitchens} kitchen{kitchens !== 1 ? "s" : ""}</strong> and <strong>{boxes} box{boxes !== 1 ? "es" : ""}</strong>.
+            Scanning and confirming to Akrylik work the same either way.
+          </p>
+          <p>For contents, upload the <strong>extended report</strong> (&ldquo;Wariant rozszerzony&rdquo;) instead.</p>
+        </div>
+        <div className="mt-5 flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+          <button
+            onClick={onCancel}
+            className="min-h-[48px] px-5 rounded border border-gray-300 bg-white text-gray-800 font-bold hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+          <button
+            ref={continueRef}
+            onClick={onContinue}
+            className="min-h-[48px] px-5 rounded bg-accent text-white font-bold hover:bg-accent-light"
+          >
+            Continue Without Contents
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

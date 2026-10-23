@@ -265,6 +265,8 @@ export interface AkrylikPreview {
   groups: PreviewGroup[];
   alreadyImported: string[];
   warnings: string[];
+  // "short": a PDF without box contents (Akrylik's "Wariant skrócony"); "link": no PDF at all.
+  reportVariant: "extended" | "short" | "link";
 }
 
 // Orders sharing the same own reference (one kitchen) are merged into one portal order.
@@ -342,12 +344,9 @@ export function buildPreview(
     if (group.items.length) groups.push(group);
   }
 
-  if (pdfPackages && pdfPackages.size === 0) {
-    warnings.push(
-      "This is Akrylik's short report (\"Wariant skrócony\"), which doesn't list box contents. Upload the extended report (\"Wariant rozszerzony\") to see what's in each box."
-    );
-  } else if (pdfPackages) {
-    const missing = page.packages.filter((p) => !pdfPackages.has(p.code) && !alreadyImported.has(p.code));
+  const reportVariant = !pdfPackages ? "link" : pdfPackages.size === 0 ? "short" : "extended";
+  if (reportVariant === "extended") {
+    const missing = page.packages.filter((p) => !pdfPackages!.has(p.code) && !alreadyImported.has(p.code));
     if (missing.length) {
       warnings.push(
         `${missing.length} package${missing.length === 1 ? " is" : "s are"} on the delivery link but not in the PDF, so their contents are not listed.`
@@ -361,6 +360,7 @@ export function buildPreview(
     groups,
     alreadyImported: page.packages.filter((p) => alreadyImported.has(p.code)).map((p) => p.code),
     warnings,
+    reportVariant,
   };
 }
 
