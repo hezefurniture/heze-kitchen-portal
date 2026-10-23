@@ -563,7 +563,7 @@ export default function DeliveryUploadPage() {
               type="url"
               value={akrylikUrl}
               onChange={(e) => setAkrylikUrl(e.target.value)}
-              placeholder="https://skan.akrylik.pl/planer/package-logistics/receipt/delivery/…"
+              placeholder="https://skan.akrylik.pl/planer/package-logistics/receipt/…"
               className="flex-1 min-w-0 px-3 py-2 rounded border border-gray-300 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-accent"
             />
             <button

@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       link = typeof url === "string" ? parseReceiptUrl(url) : null;
       if (!link) {
         return NextResponse.json(
-          { error: "That doesn't look like an Akrylik delivery link (https://skan.akrylik.pl/planer/package-logistics/receipt/delivery/…)." },
+          { error: "That doesn't look like an Akrylik delivery link (https://skan.akrylik.pl/planer/package-logistics/receipt/…)." },
           { status: 400 }
         );
       }

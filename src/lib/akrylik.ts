@@ -1,33 +1,35 @@
 import { prisma } from "./db";
 
+const RECEIPT_BASE = "https://skan.akrylik.pl/planer/package-logistics/receipt";
+
+// Akrylik issues two receipt links: a whole delivery run, or one customer's pallets on a vehicle.
 const RECEIPT_URL_RE =
-  /^https:\/\/skan\.akrylik\.pl\/planer\/package-logistics\/receipt\/delivery\/(\d+)\/(\d+)\/([a-f0-9]{32,128})\/?$/i;
+  /^https:\/\/skan\.akrylik\.pl\/planer\/package-logistics\/receipt\/(delivery\/\d+\/\d+|vehicle\/\d+\/\d+\/\d+)\/([a-f0-9]{32,128})\/?$/i;
+const RECEIPT_IN_TEXT_RE =
+  /https:\/\/skan\.akrylik\.pl\/planer\/package-logistics\/receipt\/(?:delivery\/\d+\/\d+|vehicle\/\d+\/\d+\/\d+)\/[a-f0-9]{32,128}/i;
 
 export const AKRYLIK_RECEIVER_NAME = "Heze Warehouse App";
 
 export interface ReceiptLink {
   url: string;
-  deliveryId: string;
-  vehicleId: string;
+  kind: "delivery" | "vehicle";
   token: string;
 }
 
-// Only this exact URL shape is accepted, so user input can never make the server fetch anything else.
+// Only these exact URL shapes are accepted, so user input can never make the server fetch anything else.
 export function parseReceiptUrl(raw: string): ReceiptLink | null {
   const m = raw.trim().match(RECEIPT_URL_RE);
   if (!m) return null;
-  const [, deliveryId, vehicleId, token] = m;
+  const [, route, token] = m;
   return {
-    url: `https://skan.akrylik.pl/planer/package-logistics/receipt/delivery/${deliveryId}/${vehicleId}/${token}`,
-    deliveryId,
-    vehicleId,
+    url: `${RECEIPT_BASE}/${route}/${token}`,
+    kind: route.toLowerCase().startsWith("vehicle") ? "vehicle" : "delivery",
     token,
   };
 }
 
 export function findReceiptUrlInText(text: string): ReceiptLink | null {
-  const compact = text.replace(/\s+/g, "");
-  const m = compact.match(/https:\/\/skan\.akrylik\.pl\/planer\/package-logistics\/receipt\/delivery\/\d+\/\d+\/[a-f0-9]{32,128}/i);
+  const m = text.replace(/\s+/g, "").match(RECEIPT_IN_TEXT_RE);
   return m ? parseReceiptUrl(m[0]) : null;
 }
 
@@ -340,7 +342,11 @@ export function buildPreview(
     if (group.items.length) groups.push(group);
   }
 
-  if (pdfPackages) {
+  if (pdfPackages && pdfPackages.size === 0) {
+    warnings.push(
+      "This is Akrylik's short report (\"Wariant skrócony\"), which doesn't list box contents. Upload the extended report (\"Wariant rozszerzony\") to see what's in each box."
+    );
+  } else if (pdfPackages) {
     const missing = page.packages.filter((p) => !pdfPackages.has(p.code) && !alreadyImported.has(p.code));
     if (missing.length) {
       warnings.push(
